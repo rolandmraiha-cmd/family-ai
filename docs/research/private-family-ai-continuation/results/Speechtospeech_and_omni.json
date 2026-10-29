@@ -1,0 +1,775 @@
+{
+  "item_name": "Speech-to-speech and omni",
+  "research_date": "Cutoff and access date: 2026-10-26. Dated papers/releases before the cutoff are included. Mutable repository/model-card source dates are [uncertain] where not displayed; they establish the observed documentation, not an immutable historical revision.",
+  "scope": "Audit the original report's unresolved native speech question for a private family assistant. Compare verified open-weight speech-in/speech-out systems, full-duplex interaction, omni inputs, tool integration, languages, voices, serving, licenses and resource evidence against a modular ASR–text LLM–TTS design. No universal ranking is supported. Hosted demos and API branding do not establish downloadable weights. No inference runs, installations, downloads, training or paid calls occurred.",
+  "verified_findings": [
+    {
+      "claim": "Native open-weight speech-to-speech is established. Moshi uses concurrent user/assistant audio streams; its card explicitly limits complex tasks and says it cannot access tools.",
+      "source_ids": [
+        "S01",
+        "S02"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "A natural conversation model is not automatically a replacement for the family assistant's tool-using text brain."
+    },
+    {
+      "claim": "Qwen3-Omni Instruct has audio/text output; the Thinking and Captioner checkpoints produce text. Qwen2-Audio's voice-chat label means audio input and textual response, not native speech output.",
+      "source_ids": [
+        "S03",
+        "S19"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Select the exact checkpoint and complete speech decoder path, not the organization or family name."
+    },
+    {
+      "claim": "PersonaPlex documents simultaneous listening/speaking, interruption, overlap and role/voice conditioning. MiniCPM-o 4.5 documents concurrent audio/video input and text/speech output. These are explicit duplex claims; streaming generation in the other cards alone is insufficient to establish barge-in.",
+      "source_ids": [
+        "S07",
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for documented capability; [uncertain] for household reliability",
+      "practical_implication": "Use duplex candidates for interaction trials; test acoustic echo and actual stop latency at the loudspeaker."
+    },
+    {
+      "claim": "Step-Audio 2 mini publishes speech conversation, tool-calling and acoustic/text RAG examples, with a model-specific vLLM backend. MiMo-Audio publishes audio-to-audio, audio-to-text, text-to-audio and text-to-text capabilities with separate tokenizer weights.",
+      "source_ids": [
+        "S05",
+        "S11",
+        "S12"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Both merit evaluation, but neither audited release establishes a measured full-duplex household service."
+    },
+    {
+      "claim": "LFM2.5-Audio-1.5B is a smaller English speech/text model with interleaved conversational generation, sequential ASR/TTS routines and CPU-oriented GGUF support. The example is turn-based; full-duplex behavior is [uncertain].",
+      "source_ids": [
+        "S14"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for modalities; limited for interruption",
+      "practical_implication": "A useful resource-constrained candidate rather than an assumed equivalent to large omni models."
+    },
+    {
+      "claim": "The original cascade remains a defensible integration default: whisper.cpp is an ASR runtime, Kokoro is TTS, and a separately chosen text model supplies tools and reasoning. Their documentation does not measure this complete assembled system.",
+      "source_ids": [
+        "S16",
+        "S17"
+      ],
+      "evidence_type": "derived",
+      "confidence": "high",
+      "practical_implication": "It provides explicit text for inspection and permission checks, while losing some raw-audio cues and adding staged latency."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "candidate": "Moshi",
+      "exact_ids": [
+        "kyutai/moshiko-pytorch-bf16",
+        "kyutai/moshika-pytorch-bf16",
+        "kyutai/moshiko-mlx-q4"
+      ],
+      "revision": "main observed; immutable revision [uncertain]",
+      "capabilities": "Native duplex speech/text; 7B temporal model; fixed male/female checkpoint voices.",
+      "constraints": "English; no tools according to card; research-use guidance and limited complex reasoning.",
+      "source_ids": [
+        "S01",
+        "S02"
+      ]
+    },
+    {
+      "candidate": "PersonaPlex",
+      "exact_ids": [
+        "nvidia/personaplex-7b-v1",
+        "NVIDIA/personaplex"
+      ],
+      "revision": "v1.0; release 2026-01-15 according to card",
+      "capabilities": "Moshi-derived native duplex; English audio input/output, parallel text, text role prompt and audio voice conditioning.",
+      "constraints": "Official baseline is Linux/PyTorch on NVIDIA. Prepackaged voice prompts; arbitrary voice-cloning rights and robust tool integration [uncertain].",
+      "source_ids": [
+        "S07",
+        "S08"
+      ]
+    },
+    {
+      "candidate": "Qwen3-Omni",
+      "exact_ids": [
+        "Qwen/Qwen3-Omni-30B-A3B-Instruct"
+      ],
+      "revision": "Technical report v1, 2025-09-22; card main unpinned",
+      "capabilities": "Text/image/audio/video input, text/speech output, system prompting and audio function-call cookbook; Ethan, Chelsie and Aiden output voices.",
+      "constraints": "Large total resident weights despite 3B-active Thinker designation. Thinking/Captioner are not speech-output substitutes. Full-duplex interruption reliability [uncertain].",
+      "source_ids": [
+        "S03",
+        "S04",
+        "S20"
+      ]
+    },
+    {
+      "candidate": "MiniCPM-o 4.5",
+      "exact_ids": [
+        "openbmb/MiniCPM-o-4_5",
+        "OpenBMB/MiniCPM-V"
+      ],
+      "revision": "4.5; card records local-demo release 2026-02-06; exact commit [uncertain]",
+      "capabilities": "9B total; English/Chinese speech, reference voice customization, vision, continuous duplex omni mode and system prompts.",
+      "constraints": "Authors disclose mixed-language responses, mispronunciation and immature duplex foundation capabilities; documented runtime-specific memory thresholds.",
+      "source_ids": [
+        "S09",
+        "S10"
+      ]
+    },
+    {
+      "candidate": "Step-Audio 2 mini",
+      "exact_ids": [
+        "stepfun-ai/Step-Audio-2-mini",
+        "stepfun-ai/Step-Audio2"
+      ],
+      "revision": "Mini release recorded 2025-08-29 in project history; repo main unpinned",
+      "capabilities": "Approximately 8B checkpoint; speech-in/speech-out, text, acoustic reasoning, tool calls and audio-search timbre switching.",
+      "constraints": "Do not transfer larger Step-Audio 2/API scores to mini. No verified duplex stop-latency number. Vendor-specific parser and runtime.",
+      "source_ids": [
+        "S05",
+        "S06"
+      ]
+    },
+    {
+      "candidate": "MiMo-Audio",
+      "exact_ids": [
+        "XiaomiMiMo/MiMo-Audio-7B-Instruct",
+        "XiaomiMiMo/MiMo-Audio-Tokenizer"
+      ],
+      "revision": "Paper v1 dated 2025-12-29; repository/card main unpinned",
+      "capabilities": "Native speech/text understanding and generation; style instruction and speech continuation capabilities in the family.",
+      "constraints": "Tokenizer is separate (1.2B parameters). Authors report unstable voice timbre, audio quality, pronunciation and system-prompt compliance. Full duplex, production tools and latency [uncertain].",
+      "source_ids": [
+        "S11",
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "candidate": "LFM2.5-Audio",
+      "exact_ids": [
+        "LiquidAI/LFM2.5-Audio-1.5B"
+      ],
+      "revision": "2.5 card observed; exact release date [uncertain]",
+      "capabilities": "Small English audio/text input/output model; 32,768-token context and 1.2B language backbone; CPU GGUF option.",
+      "constraints": "Custom LFM license, upstream component licenses; not verified as full duplex or a tool-using assistant.",
+      "source_ids": [
+        "S14",
+        "S15"
+      ]
+    },
+    {
+      "candidate": "Modular baseline",
+      "exact_ids": [
+        "ggml-org/whisper.cpp",
+        "hexgrad/Kokoro-82M"
+      ],
+      "revision": "ASR runtime main unpinned; Kokoro v1.0 released 2025-01-27",
+      "capabilities": "Explicit ASR transcript → independently chosen text LLM → 82M TTS; components replaceable by language/hardware need.",
+      "constraints": "Requires orchestrator, endpointing, cancellation, echo control and independent LLM/tool authorization. End-to-end latency and Finnish TTS quality [uncertain].",
+      "source_ids": [
+        "S16",
+        "S17"
+      ]
+    }
+  ],
+  "deployment_requirements": [
+    {
+      "candidate": "Moshi",
+      "documented": "Python >=3.10, 3.12 recommended. PyTorch GPU guidance says 24GB; MLX Mac support and Rust backend exist. Windows is explicitly not officially supported. README both lists experimental Q8 checkpoints and retains an older statement saying PyTorch quantization unsupported.",
+      "interpretation": "[uncertain] Pin a tested runtime/checkpoint pair before claiming Q8 production support; do not treat 24GB as a concurrency guarantee.",
+      "source_ids": [
+        "S01"
+      ]
+    },
+    {
+      "candidate": "PersonaPlex",
+      "documented": "Linux preferred, PyTorch; card lists A100/H100 compatibility and A100 80GB test hardware. Repository requires Opus and license acceptance, and describes CPU offload via accelerate.",
+      "interpretation": "A100 80GB is test hardware, not a proven minimum. Offload permission does not prove real-time CPU/offload performance [uncertain].",
+      "source_ids": [
+        "S07",
+        "S08"
+      ]
+    },
+    {
+      "candidate": "Qwen3-Omni",
+      "documented": "Card's Transformers BF16/FlashAttention2 table gives 78.85GB for 15s video and 144.81GB for 120s, labeled theoretical minima. Disabling Talker saves about 10GB but removes speech output. A dated 2026-07-01 runtime-team source documents vLLM-Omni staged audio serving.",
+      "interpretation": "These video figures are not audio-only minima or concurrent-session measurements. Active MoE count is compute selection, not total weight memory. Exact version/commit compatibility remains [uncertain]; the old model-card vLLM warning is not the latest runtime evidence.",
+      "source_ids": [
+        "S03",
+        "S20"
+      ]
+    },
+    {
+      "candidate": "MiniCPM-o 4.5",
+      "documented": "Recommended PyTorch live demo: NVIDIA GPU >=28GB. Separate llama.cpp-omni instructions: half-duplex on Apple M3/M4/M5 >=16GB or NVIDIA >=12GB; full-duplex omni on M4 Max >=24GB or NVIDIA >=12GB.",
+      "interpretation": "Runtime and quantization conditions differ. Card's 19GB model table is not a substitute for the 28GB live-demo requirement; local Windows support and performance [uncertain].",
+      "source_ids": [
+        "S09",
+        "S10"
+      ]
+    },
+    {
+      "candidate": "Step-Audio 2 mini",
+      "documented": "Python >=3.10, PyTorch >=2.3-cu121, CUDA; example pins transformers 4.49.0. Vendor vLLM Docker example is step-audio-2-v20250909, max-model-len 16384, max-num-seqs 32, tensor-parallel-size 1, custom tool/audio parsers, trust-remote-code.",
+      "interpretation": "Example capacity flags are not evidence that 32 sessions fit or meet real-time targets on an unspecified GPU. Peak VRAM [uncertain].",
+      "source_ids": [
+        "S05"
+      ]
+    },
+    {
+      "candidate": "MiMo-Audio",
+      "documented": "Linux, Python 3.12, CUDA >=12.0, flash-attn 2.7.4.post1; tokenizer plus Instruct model are required.",
+      "interpretation": "7B model name omits the additional tokenizer/model machinery. Exact peak memory and supported serving version [uncertain].",
+      "source_ids": [
+        "S11",
+        "S12"
+      ]
+    },
+    {
+      "candidate": "Small/cascade alternatives",
+      "documented": "LFM card documents liquid-audio and GGUF CPU use. whisper.cpp supports CPU, Apple and GPU backends; its large-model table estimates ~3.9GB memory. Kokoro documents chunk generation with its own Python/G2P dependencies.",
+      "interpretation": "These are separate component profiles; add the chosen text LLM, audio buffers, service overhead and per-user state. No complete-stack measurement is available [uncertain].",
+      "source_ids": [
+        "S14",
+        "S16",
+        "S17"
+      ]
+    }
+  ],
+  "operating_profile": {
+    "observed_latency": [
+      {
+        "system": "Moshi",
+        "value": "160ms theoretical; as low as 200ms on L4, vendor-reported",
+        "boundary": "Not a p95 household end-of-utterance or overloaded multi-user service measurement.",
+        "source_ids": [
+          "S01"
+        ]
+      },
+      {
+        "system": "PersonaPlex",
+        "value": "FullDuplexBench card: 0.170s smooth-turn latency; 0.240s interruption latency, vendor measured; A100 80GB listed for inference testing.",
+        "boundary": "Different event definitions; not comparable directly with theoretical first-packet calculations.",
+        "source_ids": [
+          "S07"
+        ]
+      },
+      {
+        "system": "Qwen3-Omni",
+        "value": "234ms theoretical cold-start first audio packet in paper.",
+        "boundary": "Not model download/load time, total utterance completion, measured end-user latency or barge-in latency.",
+        "source_ids": [
+          "S04"
+        ]
+      }
+    ],
+    "memory_estimates": "Derived weight-only arithmetic: a nominal 7B BF16 language component is about 14GB decimal, before codecs/encoders, KV cache, activations and runtime buffers. This is not a device-fit prediction. Qwen's active MoE parameter count must never replace total resident weights in this arithmetic.",
+    "unmeasured": "[uncertain] No local cold-start, p50/p95 latency, audio-only VRAM, sustained real-time factor, quantized speech fidelity or two/four-user concurrency was measured. Mutable revisions need pinning before comparison."
+  },
+  "language_evidence": {
+    "English": "Documented for Moshi, PersonaPlex, LFM2.5-Audio and MiniCPM-o 4.5; Step and MiMo papers evaluate English speech. Listed support is not proof of household accent/child-speech quality. Sources: S02,S07,S09,S14,S06,S13.",
+    "Finnish": "[uncertain] No verified Finnish speech-to-speech acceptance evidence in the audited candidates. Finnish is absent from Qwen3-Omni's displayed speech input/output lists and the English-only/bilingual candidate claims. Do not infer spoken Finnish from Qwen's 119 text languages. A modular design can substitute language-specific ASR/TTS, but Finnish quality remains a proposed evaluation, not a user requirement.",
+    "other_languages": "Qwen3 paper says 19 speech input/10 output languages; card explicitly lists 10 output languages: English, Chinese, French, German, Russian, Italian, Spanish, Portuguese, Japanese, Korean. Its displayed input list contains 18 names despite stating 19; missing/combined category [uncertain]. MiniCPM documents Chinese/English. Step paper studies Chinese-English conversation/translation and Japanese/Cantonese/Arabic ASR; do not infer these ASR languages all have TTS. MiMo paper provides Chinese/English ASR/TTS tests and multilingual demos without a verified complete quality table. Sources: S03,S04,S06,S09,S13."
+  },
+  "retrieval_and_memory_design": {
+    "status": "Proposed architecture; no family data was accessed.",
+    "design": "Route speech transcripts or model text to the same authenticated retrieval/tool service used by typed chat. Return document IDs and exact passages to the reasoning layer; show clickable citations in the UI and speak short source labels. Native audio embeddings and acoustic RAG are not a substitute for source permissions.",
+    "boundaries": "Keep raw audio, transcripts, voice references and durable memories as separately deletable records. Default session context to transient; require explicit selection of private versus shared family memory. Authenticate account/session independently of guessed speaker identity. Recheck document access on retrieval and before tools run.",
+    "model_implications": "Step explicitly supports text/acoustic RAG and tool calls (S05,S06); Moshi card says no tools (S02). Qwen's audio function-call cookbook establishes an integration route (S03), not a tested complete family-memory system. [uncertain] Exact multi-user isolation/deletion guarantees depend on an unselected application layer."
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "Speech-to-speech: Not verified.",
+      "verdict": "confirmed",
+      "explanation": "This accurately described the original report's evidence gap. The continuation now establishes multiple downloadable native audio candidates; it is no longer an unresolved existence question.",
+      "source_ids": [
+        "S01",
+        "S03",
+        "S05",
+        "S07",
+        "S09",
+        "S11",
+        "S14"
+      ]
+    },
+    {
+      "original_claim": "Open models were far behind closed ones in older data.",
+      "verdict": "unverified",
+      "explanation": "No dated comparable benchmark/harness was supplied. Current primary reports contain task-specific vendor comparisons, sometimes near or above named closed baselines, but do not establish universal parity or superiority.",
+      "source_ids": [
+        "S04",
+        "S06",
+        "S13"
+      ]
+    },
+    {
+      "original_claim": "Use the STT → LLM → TTS pipeline instead.",
+      "verdict": "partially_supported",
+      "explanation": "Still a reasonable tool/memory integration default and component-level fallback, not evidence that native speech is unavailable or always worse.",
+      "source_ids": [
+        "S02",
+        "S16",
+        "S17"
+      ]
+    },
+    {
+      "original_claim": "Serve each model with vLLM or SGLang; they all expose OpenAI-compatible /v1 APIs.",
+      "verdict": "refuted",
+      "explanation": "As a universal claim it is false: Moshi documents its own streaming framework/server, and Step requires specialized parsers/backends. Qwen audio output is documented in vLLM-Omni; ordinary text-server compatibility cannot be generalized to native duplex audio.",
+      "source_ids": [
+        "S01",
+        "S05",
+        "S20"
+      ]
+    },
+    {
+      "original_claim": "None blocks personal use.",
+      "verdict": "partially_supported",
+      "explanation": "Permissive licenses are common, but models differ: Moshi has research-only intended-use wording alongside CC BY weights; PersonaPlex requires NVIDIA terms; LFM has a custom revenue-conditioned license; MiMo's MIT card lacks a fetched standalone weight-license file. No universal legal clearance follows.",
+      "source_ids": [
+        "S02",
+        "S07",
+        "S12",
+        "S15",
+        "S18",
+        "L02"
+      ]
+    }
+  ],
+  "benchmark_caveats": [
+    "All quoted model latency numbers are author/vendor reports, not independent reproductions. Moshi 200ms, PersonaPlex interruption latency and Qwen theoretical 234ms measure different boundaries.",
+    "Step's tool tests use synthetic Chinese dialogues and an automated judge; acoustic understanding, content correctness, tool-schema validity and acoustic turn-taking are separate abilities. Larger Step-Audio 2 scores must not be silently assigned to mini (S06).",
+    "MiMo evaluates S2T and S2S separately and discloses unstable dialogue behavior. Strong ASR/TTS benchmark results do not establish long conversation reliability (S13).",
+    "Runtime-team serving evidence independently corroborates Qwen's deployable text/audio path, not the model vendor's intelligence ranking. vLLM-Omni is not identical to a generic vLLM text deployment (S20).",
+    "[uncertain] No uniform benchmark through the cutoff was independently reproduced across these exact checkpoints, quantizations, microphones, languages and concurrent users. Household tests decide the choice."
+  ],
+  "evaluation_plan": [
+    {
+      "step": 1,
+      "test": "Freeze exact weight hashes, code commits, license copies, hardware/driver versions, precision and prompts. Record sample rate and whether echo cancellation is enabled.",
+      "pass_fail": "No missing revision/license dependency; one documented execution path per candidate. Proposal only."
+    },
+    {
+      "step": 2,
+      "test": "Replay the same 100 consented or synthetic utterances per chosen language; include names, dates, corrections, accents, household noise and silence. Add Finnish only if later selected.",
+      "pass_fail": "Proposed gate: >=95% correct names/dates and no invented speech during 20 silent/noise-only trials; report ASR WER plus semantic answer correctness separately."
+    },
+    {
+      "step": 3,
+      "test": "Run 30 interruptions, 20 backchannels and 20 deliberate pauses with a headset, then loudspeaker/echo cancellation.",
+      "pass_fail": "Proposed duplex gate: >=95% correct interruption stops, p95 audible-stop <=500ms, no continuing cancelled tool actions, and no self-trigger loop. Backchannels must not erase the user's question."
+    },
+    {
+      "step": 4,
+      "test": "Measure first audible response after actual user completion, first packet, stop latency, real-time factor, cold load and peak RAM/VRAM at one/two/four sessions.",
+      "pass_fail": "Proposed interactive gate: p95 first audible response <=1.5s at agreed load, real-time factor <1, no drift/queue growth during 30 minutes. Separate network and endpointing time. Thresholds are proposed, not measured facts."
+    },
+    {
+      "step": 5,
+      "test": "Compare 50 tool/RAG requests against the cascade using identical permitted documents/tool schemas. Inspect generated text and spoken output, reference voices and language switching.",
+      "pass_fail": "Zero unauthorized actions or cross-account retrieval; >=95% valid intended tool calls; spoken dates/numbers agree with tool output. A cancelled utterance must not resurrect later."
+    },
+    {
+      "step": 6,
+      "test": "Two simultaneous authenticated household sessions with different private documents; delete one audio/transcript/memory set and attempt retrieval again.",
+      "pass_fail": "Zero cross-user leakage; deleted records and derivative search entries unavailable. Keep separate consent for any retained voice reference. No tests were executed in this research."
+    }
+  ],
+  "privacy_and_license": {
+    "deployment": "Local checkpoints enable a local data path but do not prove the chosen frontend, telemetry, external media URLs, tunnels or tools stay local. Model initialization can fetch artifacts. Proposed offline acceptance must test blocked egress after provisioning; avoid hosted demos for private recordings. This is an architecture recommendation, not a completed privacy audit.",
+    "license_checks": [
+      {
+        "candidate": "Moshi",
+        "code": "MIT Python/web client; Apache-2.0 Rust, per repository.",
+        "weights": "CC BY 4.0; preserve attribution and change notices when sharing. Card additionally says research only/intended-use limits.",
+        "uncertainty": "[uncertain] Do not equate card guidance with an unqualified production endorsement; reconcile intended use for the selected deployment.",
+        "source_ids": [
+          "S01",
+          "S02",
+          "L01"
+        ]
+      },
+      {
+        "candidate": "Qwen3-Omni",
+        "code": "Repository Apache-2.0 text inspected.",
+        "weights": "Apache-2.0 in paper and card. Keep license/notice obligations.",
+        "uncertainty": "No arbitrary voice-cloning permission inferred from the three supplied voices.",
+        "source_ids": [
+          "S03",
+          "S04",
+          "L03"
+        ]
+      },
+      {
+        "candidate": "Step-Audio 2 mini",
+        "code": "Repository Apache-2.0 text inspected.",
+        "weights": "Mini/Base/Think explicitly declared Apache-2.0 in repository; hosted Step API releases are separate.",
+        "uncertainty": "Acoustic search can send queries externally if configured; it is not intrinsically private.",
+        "source_ids": [
+          "S05",
+          "L04"
+        ]
+      },
+      {
+        "candidate": "PersonaPlex",
+        "code": "MIT license text inspected.",
+        "weights": "NVIDIA Open Model License governs; card also records CC BY 4.0 information. Repository requires accepting model terms.",
+        "uncertainty": "NVIDIA agreement permits commercial use and derivatives but is conditional; voice/personality rights are not blanket model-license grants.",
+        "source_ids": [
+          "S07",
+          "S08",
+          "S18",
+          "L05"
+        ]
+      },
+      {
+        "candidate": "MiniCPM-o 4.5",
+        "code": "Apache-2.0 text inspected.",
+        "weights": "Card explicitly assigns weights and code Apache-2.0.",
+        "uncertainty": "Reference-audio rights and consent remain separate from the model license.",
+        "source_ids": [
+          "S10",
+          "L06"
+        ]
+      },
+      {
+        "candidate": "MiMo-Audio",
+        "code": "Apache-2.0 repository license text inspected.",
+        "weights": "Card metadata says MIT.",
+        "uncertainty": "[uncertain] A standalone weight LICENSE URL was inaccessible and none appeared in the inspected root listing; retain this limitation rather than treating the code license as the weights license.",
+        "source_ids": [
+          "S11",
+          "S12",
+          "L02"
+        ]
+      },
+      {
+        "candidate": "LFM2.5-Audio",
+        "code": "LFM Open License v1.0 for package and weights; card lists NeMo/Mimi code and component-weight obligations.",
+        "weights": "Custom license conditions commercial rights on annual revenue threshold; defined threshold is USD10M, with exact section-5 language controlling.",
+        "uncertainty": "Private noncommercial family use appears within the grant, subject to terms; not an unconditional Apache/MIT release.",
+        "source_ids": [
+          "S14",
+          "S15"
+        ]
+      },
+      {
+        "candidate": "Cascade",
+        "code": "whisper.cpp is separate from Whisper weights; Kokoro integration dependencies are separate licenses.",
+        "weights": "Kokoro card states Apache-licensed weights. The text LLM/ASR checkpoint and chosen wrapper require their own review.",
+        "uncertainty": "[uncertain] This item does not establish a complete transitive license inventory for an unbuilt stack.",
+        "source_ids": [
+          "S16",
+          "S17"
+        ]
+      }
+    ]
+  },
+  "recommendation": {
+    "practical_default": "Use a modular transcript-first voice path for the private family assistant when tools, retrieval, account boundaries and interchangeable language support matter most. This is an integration recommendation, not a quality ranking; benchmark native options alongside it (S02,S16,S17).",
+    "native_shortlist": "For English duplex interaction, evaluate PersonaPlex against Moshi as the older baseline (S01,S07). For simultaneous vision/audio duplex and Chinese/English, evaluate MiniCPM-o 4.5 with its documented runtime/memory conditions (S09).",
+    "stronger_omni_option": "Where the hardware permits and wider documented speech-language coverage matters, evaluate Qwen3-Omni Instruct through a verified complete audio runtime such as vLLM-Omni (S03,S04,S20). It is not proven universally strongest, nor proven to meet household barge-in needs.",
+    "other_options": "Step-Audio 2 mini is relevant for explicit native-audio tools/RAG; MiMo-Audio is relevant for expressive audio research; LFM2.5-Audio is the smaller English candidate (S05,S11,S14).",
+    "decision_triggers": "[uncertain] User hardware, session count, languages and acceptable latency are unspecified. Finnish speech requirements, CPU-only operation, strict tool correctness, voice consent or concurrency measurements could change the choice. No purchase or deployment is recommended without those measurements."
+  },
+  "next_steps": [
+    "Agree whether duplex interruption, camera input or ordinary voice dictation is the actual priority; choose languages and maximum simultaneous sessions.",
+    "Freeze a dated primary-source/license snapshot for the chosen two native candidates and the modular baseline; resolve MiMo weight-license evidence before selecting it.",
+    "Prepare the common evaluation corpus and measurement harness specification; keep personal audio out until the recording/retention decision is explicit.",
+    "Run future local tests only after separate implementation/runtime authorization and hardware selection; record errors as well as scores.",
+    "Choose the voice path based on privacy, tool correctness, spoken quality and p95 responsiveness; retain a text fallback and document deletion behavior."
+  ],
+  "open_questions": [
+    "[uncertain] The exact latest release ranking at 2026-10-26 cannot be established from mutable cards and heterogeneous vendor tests; resolve with pinned releases and a common benchmark.",
+    "[uncertain] True full-duplex/barge-in behavior for Qwen3-Omni, Step-Audio 2 mini, MiMo-Audio and LFM2.5-Audio needs model-specific streaming protocol evidence and local interruption tests.",
+    "[uncertain] Finnish native input/output and quality are unestablished; resolve with an explicit supported-language statement and reproducible speech tests if Finnish is selected.",
+    "[uncertain] Qwen's speech-input headline says 19 while displayed list has 18 names. Resolve against a corrected card or training/evaluation appendix before claiming exact per-language coverage.",
+    "[uncertain] Precise CPU/offload latency, quantized speech stability, cold load and concurrent-session memory remain unmeasured.",
+    "[uncertain] Moshi README quantization guidance conflicts with its experimental Q8 listing; use an exact backend/commit-specific test rather than a universal statement.",
+    "[uncertain] MiMo's weight-license text was not available via the attempted LICENSE URL; its card MIT metadata and Apache code license must remain distinct.",
+    "[uncertain] No selected model/service yet establishes authenticated multi-user isolation, complete deletion or tool authorization; these require application-layer design and tests."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Moshi repository",
+      "url": "https://github.com/kyutai-labs/moshi",
+      "publisher": "Kyutai",
+      "published_or_updated": "[uncertain] mutable main; original model 2024",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Streaming architecture, backends, requirements, voices, licenses; internally inconsistent experimental quantization guidance."
+    },
+    {
+      "id": "S02",
+      "title": "Moshiko BF16 model card",
+      "url": "https://huggingface.co/kyutai/moshiko-pytorch-bf16",
+      "publisher": "Kyutai",
+      "published_or_updated": "[uncertain] model-card revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "English, limited tasks, no tools, fixed voice, research guidance and weight license."
+    },
+    {
+      "id": "S03",
+      "title": "Qwen3-Omni Instruct model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-Omni-30B-A3B-Instruct",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] mutable main; paper 2025-09-22",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Checkpoint modality distinctions, voices, languages, memory table and cookbook links; runtime section partly stale."
+    },
+    {
+      "id": "S04",
+      "title": "Qwen3-Omni Technical Report v1",
+      "url": "https://arxiv.org/abs/2509.17765v1",
+      "publisher": "Qwen authors / arXiv",
+      "published_or_updated": "2025-09-22",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Native omni architecture, theoretical latency and release license; vendor claims, not independent reproduction."
+    },
+    {
+      "id": "S05",
+      "title": "Step-Audio2 repository",
+      "url": "https://github.com/stepfun-ai/Step-Audio2",
+      "publisher": "StepFun",
+      "published_or_updated": "[uncertain] main revision; history records mini release 2025-08-29",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Mini weights, model-specific vLLM streaming/tool parsers, dependencies and code/weight declarations."
+    },
+    {
+      "id": "S06",
+      "title": "Step-Audio 2 Technical Report v2",
+      "url": "https://arxiv.org/html/2507.16632v2",
+      "publisher": "StepFun Audio Team / arXiv",
+      "published_or_updated": "2025-07-24",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Tool benchmark methodology, speech/translation evidence; larger-model results not interchangeable with mini."
+    },
+    {
+      "id": "S07",
+      "title": "PersonaPlex-7b-v1 model card",
+      "url": "https://huggingface.co/nvidia/personaplex-7b-v1",
+      "publisher": "NVIDIA",
+      "published_or_updated": "Release 2026-01-15; later card revision [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Duplex, English, conditioning, FullDuplexBench latency and test hardware."
+    },
+    {
+      "id": "S08",
+      "title": "PersonaPlex repository",
+      "url": "https://github.com/NVIDIA/personaplex",
+      "publisher": "NVIDIA",
+      "published_or_updated": "[uncertain] main revision",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Voice prompts, code/weights license separation, license gate, Opus and offload instructions."
+    },
+    {
+      "id": "S09",
+      "title": "MiniCPM-o 4.5 deployment documentation",
+      "url": "https://github.com/OpenBMB/MiniCPM-V/blob/main/docs/minicpm_o4dot5_en.md",
+      "publisher": "OpenBMB",
+      "published_or_updated": "[uncertain] mutable main",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Duplex versus simplex, hardware requirements per runtime, English/Chinese and known limitations."
+    },
+    {
+      "id": "S10",
+      "title": "MiniCPM-o 4.5 model card",
+      "url": "https://huggingface.co/openbmb/MiniCPM-o-4_5",
+      "publisher": "OpenBMB",
+      "published_or_updated": "2026-02-06 local-demo news; latest revision [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "9B architecture, reference voice, code/weight license and model-size versus live-demo memory distinction."
+    },
+    {
+      "id": "S11",
+      "title": "MiMo-Audio repository",
+      "url": "https://github.com/XiaomiMiMo/MiMo-Audio",
+      "publisher": "Xiaomi MiMo",
+      "published_or_updated": "[uncertain] mutable main",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Separate tokenizer/model, Linux/CUDA/Python prerequisites and inference examples."
+    },
+    {
+      "id": "S12",
+      "title": "MiMo-Audio-7B-Instruct card and file root",
+      "url": "https://huggingface.co/XiaomiMiMo/MiMo-Audio-7B-Instruct",
+      "publisher": "Xiaomi MiMo",
+      "published_or_updated": "[uncertain] mutable main",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Native modalities, MIT metadata; root listing inspected at /tree/main; attempted /raw/main/LICENSE inaccessible."
+    },
+    {
+      "id": "S13",
+      "title": "MiMo-Audio Technical Report v1",
+      "url": "https://arxiv.org/html/2512.23808v1",
+      "publisher": "Xiaomi MiMo / arXiv",
+      "published_or_updated": "2025-12-29",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "English/Chinese tests, native audio, and frank dialogue-stability limitations."
+    },
+    {
+      "id": "S14",
+      "title": "LFM2.5-Audio-1.5B card",
+      "url": "https://huggingface.co/LiquidAI/LFM2.5-Audio-1.5B",
+      "publisher": "Liquid AI",
+      "published_or_updated": "[uncertain] mutable card; exact release date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "English, small backbone, interleaved/sequential audio routines, CPU GGUF and component licenses."
+    },
+    {
+      "id": "S15",
+      "title": "LFM Open License v1.0 text",
+      "url": "https://huggingface.co/LiquidAI/LFM2.5-Audio-1.5B/raw/main/LICENSE",
+      "publisher": "Liquid AI",
+      "published_or_updated": "[uncertain] initial-license commit date not displayed",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual license grant, notices, USD10M revenue threshold and section-5 conditions."
+    },
+    {
+      "id": "S16",
+      "title": "whisper.cpp repository",
+      "url": "https://github.com/ggml-org/whisper.cpp",
+      "publisher": "ggml-org",
+      "published_or_updated": "[uncertain] mutable main",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "ASR runtime, platforms, resource estimates and quantization; not a complete voice assistant."
+    },
+    {
+      "id": "S17",
+      "title": "Kokoro-82M card",
+      "url": "https://huggingface.co/hexgrad/Kokoro-82M",
+      "publisher": "hexgrad",
+      "published_or_updated": "v1.0 release 2025-01-27; card revision [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "82M TTS, Apache weights, eight-language/54-voice release and chunk generation."
+    },
+    {
+      "id": "S18",
+      "title": "NVIDIA Open Model License Agreement",
+      "url": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/",
+      "publisher": "NVIDIA",
+      "published_or_updated": "2025-10-24 last modified",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual governing terms; commercial use and derivatives under conditions."
+    },
+    {
+      "id": "S19",
+      "title": "Qwen2-Audio-7B-Instruct card",
+      "url": "https://huggingface.co/Qwen/Qwen2-Audio-7B-Instruct",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] mutable main",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Audio input with textual response; prevents inference that all audio-branded checkpoints synthesize speech."
+    },
+    {
+      "id": "S20",
+      "title": "Serving multi-stage Qwen3-Omni in vLLM-Omni",
+      "url": "https://vllm-project.github.io/2026/07/01/qwen3-omni-optimization.html",
+      "publisher": "vLLM-Omni Team and Ant Group SCT Team",
+      "published_or_updated": "2026-07-01",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Dated runtime-team corroboration of text/audio OpenAI-compatible serving and staged execution; not independent model-quality evaluation."
+    },
+    {
+      "id": "L01",
+      "title": "CC BY 4.0 legal text",
+      "url": "https://creativecommons.org/licenses/by/4.0/legalcode.en",
+      "publisher": "Creative Commons",
+      "published_or_updated": "Version 4.0; page update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual weight attribution/sharing conditions; does not settle model-card intended-use wording."
+    },
+    {
+      "id": "L02",
+      "title": "MiMo-Audio code license",
+      "url": "https://raw.githubusercontent.com/XiaomiMiMo/MiMo-Audio/main/LICENSE",
+      "publisher": "Xiaomi MiMo",
+      "published_or_updated": "[uncertain] repository revision",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Apache-2.0 text; not evidence that the weight-license metadata is Apache."
+    },
+    {
+      "id": "L03",
+      "title": "Qwen3-Omni code license",
+      "url": "https://raw.githubusercontent.com/QwenLM/Qwen3-Omni/main/LICENSE",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] repository revision",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Apache-2.0 text inspected."
+    },
+    {
+      "id": "L04",
+      "title": "Step-Audio2 code license",
+      "url": "https://raw.githubusercontent.com/stepfun-ai/Step-Audio2/main/LICENSE",
+      "publisher": "StepFun",
+      "published_or_updated": "[uncertain] repository revision",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Apache-2.0 text inspected."
+    },
+    {
+      "id": "L05",
+      "title": "PersonaPlex code MIT license",
+      "url": "https://raw.githubusercontent.com/NVIDIA/personaplex/main/LICENSE-MIT",
+      "publisher": "NVIDIA",
+      "published_or_updated": "[uncertain] repository revision",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual MIT code terms; distinct from NVIDIA weight terms."
+    },
+    {
+      "id": "L06",
+      "title": "MiniCPM code license",
+      "url": "https://raw.githubusercontent.com/OpenBMB/MiniCPM-V/main/LICENSE",
+      "publisher": "OpenBMB",
+      "published_or_updated": "[uncertain] repository revision",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Apache-2.0 text inspected; card separately applies Apache to weights."
+    }
+  ],
+  "uncertain": [
+    "research_date",
+    "verified_findings",
+    "candidate_comparison",
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "retrieval_and_memory_design",
+    "benchmark_caveats",
+    "privacy_and_license",
+    "recommendation",
+    "open_questions",
+    "sources"
+  ]
+}

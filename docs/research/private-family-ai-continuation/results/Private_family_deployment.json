@@ -1,0 +1,761 @@
+{
+  "item_name": "Private family deployment",
+  "research_date": "Cutoff and access date: 2026-10-26. [uncertain] Many official pages are mutable and undated; their precise historical feature availability was not established. They inform a proposed design, not a claim that every live feature shipped before the cutoff. No known post-cutoff publication is included.",
+  "scope": "Research-only continuation of open-model-research-2026-10.md. Audit the deployment assumptions and propose an existing-hardware-first family system with explicit account, retrieval, memory, tool, network and recovery boundaries. No implementation, installation, model downloads, GPU use, training, purchases or paid calls occurred. Rankings and large-model hardware are handled by companion items; this item does not inherit them as facts.",
+  "verified_findings": [
+    {
+      "claim": "Open WebUI grants are additive: any allowed global/group permission wins; a restrictive group cannot revoke a grant elsewhere. UI permissions also do not scope the upstream provider's credentials.",
+      "source_ids": [
+        "S01"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for documented behavior; selected release still needs tests",
+      "practical_implication": "Start from minimal global grants, then add specific capabilities. Audit every membership and direct API access."
+    },
+    {
+      "claim": "Normal users can access their own and explicitly shared chats. Operators with database, host, application-secret or backup access belong to the data trust boundary. At-rest encryption does not hide data from the running application or its operator.",
+      "source_ids": [
+        "S02"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for threat model; not an isolation penetration test",
+      "practical_implication": "Explain administrator visibility to family members. Separate infrastructure and operators are needed for a separate operator trust boundary."
+    },
+    {
+      "claim": "Memories are documented as local, user-account-scoped database records with manual review and deletion. Automated selection and recall depend on the model.",
+      "source_ids": [
+        "S03"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for documentation; unmeasured for a selected model",
+      "practical_implication": "Begin with reviewed memory writes, and test cross-user recall separately from chat permissions."
+    },
+    {
+      "claim": "Knowledge can retrieve selected passages or send complete extracted content. Extraction, embeddings and inference each have their own provider/data boundary. Source references require comparison with the original file; their presence alone is not proof of correctness.",
+      "source_ids": [
+        "S04"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for documented modes; answer quality unmeasured",
+      "practical_implication": "Keep all processing stages local and evaluate extraction, retrieval and grounded generation independently."
+    },
+    {
+      "claim": "The documented file manager deletion path removes associated knowledge entries and embeddings. This does not prove that copies in chats, summaries, logs, caches or backups are erased.",
+      "source_ids": [
+        "S05"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for stated intended cleanup; propagation untested",
+      "practical_implication": "Use end-to-end deletion tests and a retention inventory rather than treating chat deletion as global erasure."
+    },
+    {
+      "claim": "Offline mode and Hugging Face offline flags control selected downloads/update checks. They do not block outbound model APIs, search, authentication or tools; the project explicitly calls for separate network controls and monitoring.",
+      "source_ids": [
+        "S06"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for limitation",
+      "practical_implication": "Use deny-by-default egress plus client and server observation. Pre-stage approved artifacts and verify restart while external access is blocked."
+    },
+    {
+      "claim": "The backup guide identifies database, uploads, vector data and caches under persistent storage. It warns that the admin database download can miss recent SQLite WAL writes. SQLite independently documents its Online Backup API for a consistent database snapshot.",
+      "source_ids": [
+        "S07",
+        "S08"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for database mechanics; full-stack consistency still a proposal",
+      "practical_implication": "Quiesce writes for a coordinated application/files/vector snapshot, or use a tested database-specific backup plan."
+    },
+    {
+      "claim": "Tools, Functions and Pipelines execute Python with the backend process's capabilities, including filesystem, secrets, database and network access. Plugin creation is a privileged operation rather than an ordinary chat feature.",
+      "source_ids": [
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for documented execution model",
+      "practical_implication": "Use no server plugins initially. Later tools need independent service identities, limited data access and explicit approval for consequential actions."
+    },
+    {
+      "claim": "vLLM documents Open WebUI connection through OPENAI_API_BASE_URL pointing at its /v1 API. This establishes the integration pattern, not support for every model architecture, quantization, vision or tool schema.",
+      "source_ids": [
+        "S12"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for connection pattern",
+      "practical_implication": "Pin a supported checkpoint/runtime pair and test the actual streaming, tools and multimodal paths before adding family data."
+    },
+    {
+      "claim": "The inspected upstream whisper.cpp server documents 127.0.0.1:8080 and /inference, with configurable request and inference paths. Kokoro-FastAPI documents port 8880, POST /v1/audio/speech and GET /v1/audio/voices.",
+      "source_ids": [
+        "S14",
+        "S15"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for inspected documentation; historical revision unpinned",
+      "practical_implication": "The original :2022/v1 STT value is not an upstream default. Confirm a chosen adapter's API contract instead of substituting a port."
+    },
+    {
+      "claim": "The Open WebUI reference documents AUDIO_STT_ENGINE=openai and AUDIO_STT_OPENAI_API_BASE_URL for compatible STT; local built-in STT uses an empty engine. TTS uses AUDIO_TTS_ENGINE=openai, AUDIO_TTS_OPENAI_API_BASE_URL, AUDIO_TTS_MODEL and AUDIO_TTS_VOICE. ConfigVar settings persist internally after initial setup.",
+      "source_ids": [
+        "S13"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for reference; [uncertain] applies to its documented release, not a pinned deployment",
+      "practical_implication": "Read the effective admin audio settings after restart. Explicitly select model and a voice that the local TTS server exposes."
+    },
+    {
+      "claim": "Qwen3 Embedding offers 0.6B, 4B and 8B embedding/reranking variants. The embedding card specifies instruction-aware queries, 32K context and configurable dimensions; its examples require Transformers >=4.51.0, Sentence Transformers >=2.7.0, or vLLM >=0.8.5.",
+      "source_ids": [
+        "S17",
+        "S19"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for vendor specification; no local compatibility test",
+      "practical_implication": "Evaluate the 0.6B pair first; larger sizes are conditional on a measured retrieval gain. Preserve pooling, normalization, query instructions and model revision in the index manifest."
+    },
+    {
+      "claim": "Qwen3 reranking is a separate relevance-scoring stage. Vendor comparisons use top-100 candidates from Qwen3-Embedding-0.6B and particular retrieval subsets, so their results are not end-to-end family-answer measurements.",
+      "source_ids": [
+        "S18"
+      ],
+      "evidence_type": "vendor-measured",
+      "confidence": "high for reported methodology; generalization unknown",
+      "practical_implication": "Compare retrieval with and without reranking at a fixed candidate budget and measure its added latency."
+    },
+    {
+      "claim": "Current Open WebUI code has a custom branding condition and retains earlier licenses for earlier material. OSI's AI definition requires more than downloadable weights, including appropriate data information and code.",
+      "source_ids": [
+        "S10",
+        "S11"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for text; legal interpretation kept conservative",
+      "practical_implication": "Use precise open-weight and license terms per component; do not describe the complete stack as OSI open-source solely because models are downloadable."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "approach": "One family Open WebUI instance, separate ordinary accounts",
+      "repository_id": "open-webui/open-webui",
+      "revision": "[uncertain] Choose and pin a release/image digest after security review; live reference states v0.12.1 but its release date was not established",
+      "capabilities": "Common UI and explicit private/shared resource access",
+      "constraints": "Common trusted administrator and backend data store; account boundaries require direct API tests",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ]
+    },
+    {
+      "approach": "Separate instances for stronger separation",
+      "repository_id": "open-webui/open-webui; separate databases, volumes, secrets and operator credentials",
+      "revision": "Proposal; no deployment performed",
+      "capabilities": "Reduces accidental cross-user/index/backup mixing",
+      "constraints": "Shared root host or shared operator remains a common trust boundary; adds maintenance cost",
+      "source_ids": [
+        "S02"
+      ]
+    },
+    {
+      "approach": "Local multilingual retrieval lead",
+      "repository_id": "Qwen/Qwen3-Embedding-0.6B + Qwen/Qwen3-Reranker-0.6B",
+      "revision": "[uncertain] main cards inspected; pin immutable checkpoint revisions before ingestion",
+      "capabilities": "1024-dimensional maximum embedding output; 32K model context; separate reranking",
+      "constraints": "Generative reranker needs its correct scoring template; Open WebUI drop-in compatibility is untested. Do not assume any CrossEncoder wrapper uses the vendor scoring correctly",
+      "source_ids": [
+        "S17",
+        "S18"
+      ]
+    },
+    {
+      "approach": "Larger retrieval candidates",
+      "repository_id": "Qwen/Qwen3-Embedding-4B or Qwen/Qwen3-Embedding-8B; Qwen/Qwen3-Reranker-4B or Qwen/Qwen3-Reranker-8B",
+      "revision": "[uncertain] Series list verified; specific checkpoint files, revisions and runtime fit not separately audited",
+      "capabilities": "Larger retrieval/ranking capacity; embedding maxima 2560/4096 dimensions",
+      "constraints": "Additional memory and query cost; no guarantee of better household retrieval",
+      "source_ids": [
+        "S17"
+      ]
+    },
+    {
+      "approach": "Small English baseline",
+      "repository_id": "sentence-transformers/all-MiniLM-L6-v2",
+      "revision": "[uncertain] main card inspected",
+      "capabilities": "384-dimensional sentence/paragraph embeddings",
+      "constraints": "English-oriented; not a Finnish quality claim; compare using the same extraction/chunk corpus",
+      "source_ids": [
+        "S20"
+      ]
+    },
+    {
+      "approach": "Small multilingual baseline",
+      "repository_id": "intfloat/multilingual-e5-small",
+      "revision": "[uncertain] raw main README inspected; immutable revision not recorded",
+      "capabilities": "384 dimensions, 100-language claim including Finnish metadata",
+      "constraints": "512-token truncation; query:/passage: prefixes required even for non-English inputs",
+      "source_ids": [
+        "S21"
+      ]
+    },
+    {
+      "approach": "Optional chat-model baseline on existing hardware",
+      "repository_id": "Qwen/Qwen3-8B",
+      "revision": "[uncertain] main model card inspected; select a trusted quantized artifact and runtime separately",
+      "capabilities": "A reproducible smaller text baseline for task-routing experiments",
+      "constraints": "Not claimed to lead the 2026 market; actual hardware fit and tool/retrieval reliability are unmeasured",
+      "source_ids": [
+        "S22",
+        "S23"
+      ]
+    },
+    {
+      "approach": "Local modular speech",
+      "repository_id": "ggml-org/whisper.cpp or Open WebUI built-in Whisper; remsky/Kokoro-FastAPI using hexgrad/Kokoro-82M",
+      "revision": "[uncertain] Pin speech service, checkpoint and voicepack revisions",
+      "capabilities": "STT and TTS can remain local and can be replaced independently",
+      "constraints": "Upstream whisper.cpp needs a verified compatible endpoint/adaptation; browser speech can have a separate processing boundary",
+      "source_ids": [
+        "S13",
+        "S14",
+        "S15",
+        "S24"
+      ]
+    }
+  ],
+  "deployment_requirements": {
+    "boundary": "[uncertain] User hardware, family size, remote-access needs and language requirements are unspecified. No minimum complete-stack hardware or measured concurrency is established.",
+    "topology_proposal": "Browser -> authenticated TLS front end -> Open WebUI -> private inference, extraction, embedding, optional reranking/STT/TTS services. Bind model and database services to private interfaces; only the authenticated front end is reachable by normal clients. Use LAN or authenticated private remote access, with a tested recovery sign-in path.",
+    "persistent_state": "Persist /app/backend/data; inventory external database/vector/object-store data separately. Keep configuration, model/tokenizer revision manifests, encryption keys and restore instructions in the recovery plan. Caches are reproducible only when their exact artifacts remain available. [S07]",
+    "voice_configuration": "For compatible STT use the S13 setting names and verify the adapter's actual route and multipart contract. Do not use :2022/v1 as a whisper.cpp default. For Kokoro, use a reachable private service /v1 base, model=kokoro and a voice returned by its voices endpoint. Docker localhost is container-local; network reachability must be tested from the actual service. [S13,S14,S15]",
+    "versions": "Qwen embedding example requirements are in finding 12. [uncertain] Those minimum examples are not a tested version matrix for a current Open WebUI image, its bundled libraries, a given GPU, or the reranker adapter. Freeze compatible dependencies and test rather than installing the oldest listed versions.",
+    "platform": "Kokoro wrapper documents CPU and GPU variants; configuration can load an extra model copy per worker. [S15,S16] [uncertain] Full Windows/Linux/container support depends on the chosen model runtime and hardware; no native Windows vLLM promise is made.",
+    "maintenance_proposal": "Record image digests, checkpoint hashes and effective settings; review security notices; stage upgrades against a restored copy with synthetic data; rerun isolation/voice/retrieval tests; take a consistent pre-migration backup. Roll back application plus compatible state, not just an older image over a migrated database."
+  },
+  "operating_profile": {
+    "status": "[uncertain] No local memory, latency, cold-start, throughput or multi-user measurements were performed.",
+    "derived_weight_estimates": "Approximate weights only at two bytes per parameter: each 0.6B Qwen retrieval model about 1.2 GB decimal; pair about 2.4 GB; each 4B about 8 GB and each 8B about 16 GB. These are arithmetic estimates from parameter counts, excluding activations, framework buffers, tokenizer, cache, allocation overhead and service duplication. [S17,S18]",
+    "derived_index_estimates": "Raw float32 vector storage for 100,000 chunks is 100000 * dimensions * 4 bytes: 384 dimensions = 153.6 MB; 1024 = 409.6 MB; 2560 = 1.024 GB; 4096 = 1.6384 GB. These exclude index structures, metadata, source text, replicas and backups; actual disk/RAM use will be larger.",
+    "context_concurrency_proposal": "Begin experiments with one active generation and a fixed modest context/output budget, then test two and actual family-peak concurrency. Measure STT, retrieval, reranking, prompt prefill, first token, tokens/sec and first audible speech separately. Include cold restart and concurrent ingestion.",
+    "cold_start_caveat": "Stage artifacts before restricting egress; test a cold restart with approved caches. A warm successful answer does not show that a missing model will work offline. [S06]",
+    "canonical_artifacts": "[uncertain] No immutable deployment bill of materials was selected. IDs in candidate_comparison are research leads, not downloaded or validated runtime artifacts."
+  },
+  "language_evidence": {
+    "english": "MiniLM is an English-oriented control. Use the same factual and retrieval tasks for every candidate. [S20]",
+    "finnish": "Finnish is an optional evaluation example, not a requirement supplied by the user. E5 metadata explicitly lists fi; its multilingual claim is not a Finnish score. [S21] [uncertain] No household Finnish quality, scanned-document OCR quality or speech intelligibility is established.",
+    "other_languages": "Qwen3 retrieval documentation claims over 100 languages. [S17,S18] This does not establish equal quality across languages or mixed-language documents. Test names, dates, inflection, accents and cross-language queries on authorized representative files.",
+    "voice": "Use the companion speech research for language candidates. [uncertain] Do not enable a language solely because STT recognizes it; independently test TTS pronunciation and supported voices."
+  },
+  "retrieval_and_memory_design": {
+    "proposal_only": true,
+    "stores": "Use private knowledge collections per person by default, plus a separately curated shared household collection. Share only intended resources with explicit users/groups. Directories inside a KB organize content; they must not be treated as an authorization boundary. Personal memories remain separate from the curated shared document store. [S01,S03,S04]",
+    "authorization": "Apply authorization before retrieval and reranking; exclude unauthorized content and metadata from candidate sets, prompts, citations, error messages and logs. Never let a user-supplied owner ID or model instruction select another person's store. A separate vector collection is useful defense in depth but does not replace backend authorization.",
+    "extraction": "Test local extraction on text PDFs, scans, tables and spreadsheets. Store document checksum, owner/access grants, extraction version, page/section locators and ingestion status. Treat OCR/model extraction as fallible. Do not send private files to a remote parser merely because chat inference is local. [S04]",
+    "embeddings": "Compare the Qwen 0.6B lead with E5-small and the MiniLM control. Freeze chunk boundaries and normalize as the selected model requires; preserve query instructions/prefixes. Changing embedding model/dimension requires a separate rebuilt index, not mixed vectors. Validate any query-prefix support in the UI/runtime adapter. [S17,S20,S21]",
+    "reranking": "Start without reranking as an ablation, then rerank an authorized candidate set using Qwen3-Reranker-0.6B with its correct relevance-scoring procedure. Retain it only if blinded retrieval/answer gains justify measured cost. A /v1 text-generation API alone does not establish a rerank endpoint. [S18]",
+    "citations": "Require answers to point to the actual authorized file and page/section when available. Check that each citation supports the associated assertion; omit unsupported details and allow 'not found'. For small files compare full-context and retrieved modes at the same model/context limits. [S04]",
+    "memory": "Keep visible, editable, user-scoped memories. For the initial design require an explicit save/review step for durable facts and no silent promotion of private facts into shared knowledge. Test incorrect-memory correction, deletion and isolation across fresh chats. [S03]",
+    "deletion_propagation": "Maintain a deletion checklist across original upload, extracted text, per-file/KB vectors, personal memory, saved chat quotations/summaries, generated audio, caches, logs, exports and backups. Revoke shares first; verify actual cleanup rather than merely hiding the UI item. Document that retained backups may preserve old content until expiry; restore must reapply a deletion ledger before service resumes. [S05]",
+    "retention_proposal": "Set separate household-approved retention periods for chats, uploads, personal memory, audio/temp files, logs and backups before real data is loaded. Use short temporary-audio lifetime, metadata-only routine logs, and user-visible deletion/export rules. [uncertain] No universal built-in retention or secure-erasure guarantee was established."
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "Serve each model with vLLM/SGLang; all expose OpenAI-compatible /v1 APIs.",
+      "verdict": "partially_supported",
+      "explanation": "vLLM documents this connection pattern. Model support and non-chat modalities/tool schemas need individual verification; no universal compatibility established here.",
+      "source_ids": [
+        "S12"
+      ]
+    },
+    {
+      "original_claim": "Open WebUI can point OPENAI_API_BASE_URL to the vLLM /v1 endpoint.",
+      "verdict": "confirmed",
+      "explanation": "Documented integration, with environment/persisted configuration and container networking to verify in a deployment.",
+      "source_ids": [
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "original_claim": "whisper.cpp STT default is :2022/v1.",
+      "verdict": "refuted",
+      "explanation": "Upstream server documentation instead specifies port 8080 and /inference. Another wrapper may use 2022, but that is not the upstream default.",
+      "source_ids": [
+        "S14"
+      ]
+    },
+    {
+      "original_claim": "Kokoro-FastAPI default is :8880/v1.",
+      "verdict": "confirmed",
+      "explanation": "README documents this base and speech/voices endpoints; voice selection and reachability are additional configuration.",
+      "source_ids": [
+        "S15"
+      ]
+    },
+    {
+      "original_claim": "Add family accounts, memory and document search inside Open WebUI.",
+      "verdict": "partially_supported",
+      "explanation": "Features exist in inspected docs, but accounts alone do not establish tested isolation or privacy from administrators.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04"
+      ]
+    },
+    {
+      "original_claim": "Local front end plus local models constitutes private deployment.",
+      "verdict": "partially_supported",
+      "explanation": "All processing stages, plugins, clients, logs and remote services need a data-flow audit and separate egress control.",
+      "source_ids": [
+        "S06"
+      ]
+    },
+    {
+      "original_claim": "None of the models' licenses blocks personal use.",
+      "verdict": "unverified",
+      "explanation": "This blanket statement cannot be inferred across the original report's unaudited checkpoints. This item verifies selected component terms only.",
+      "source_ids": [
+        "S10",
+        "S23",
+        "S24",
+        "S25",
+        "S26",
+        "S27"
+      ]
+    }
+  ],
+  "benchmark_caveats": [
+    "No household deployment benchmark or security audit was run. Documentation is evidence of intended behavior, not proof of a selected release's access-control correctness.",
+    "Qwen retrieval results are vendor evidence; model cards and the paper are from the same model authors and are not independent replications. Do not infer family-answer quality or Finnish quality from an aggregate multilingual rank. [S18,S19]",
+    "Hold extraction, chunking, candidate count, reranker template, model revision, precision, context, prompt and corpus constant when comparing. Rebuild indexes for embedding changes and report ingestion as well as query costs.",
+    "Quantization and larger contexts can change both quality and memory. [uncertain] No tested quantized Qwen retrieval or generation artifact was selected.",
+    "Source freshness: undated current documentation may include changes not proven available by the cutoff. Check a release's pinned code/changelog before relying on any exact setting."
+  ],
+  "evaluation_plan": {
+    "status": "Proposed future acceptance tests only; none executed.",
+    "reproducibility": "Create a synthetic non-sensitive fixture corpus with unique canary facts for user A, user B and a shared KB. Record versions/digests, effective settings, hardware, model hashes/precision, extraction/chunk/index configs, language, request size, concurrency and every result.",
+    "tests": [
+      {
+        "name": "Account and API isolation",
+        "pass_fail": "For A/B/anonymous/pending/removed accounts, test chat listing/read/edit/export/share, file content/download, knowledge search, memory APIs, model visibility and citation downloads using UI and direct API requests. Pass only with zero unauthorized content, titles, snippets, vector results or metadata in the defined test matrix."
+      },
+      {
+        "name": "Additive grants",
+        "pass_fail": "Test a denied group alongside a granted default/second group, membership removal and inherited groups if supported by the pinned version. Pass only when effective rights match the documented grant union and the desired policy; correct the defaults rather than expecting deny precedence."
+      },
+      {
+        "name": "Private/shared retrieval",
+        "pass_fail": "Private A canary must never appear for B, even when B guesses IDs, asks to enumerate stores, invokes tools, or queries a shared model. Shared canary must be accessible to intended users and disappear after access revocation, including citations and direct downloads."
+      },
+      {
+        "name": "Extraction and grounding",
+        "pass_fail": "Proposed initial gate: at least 90% recall@5 for answer-bearing chunks and at least 95% manually verified citation support on a versioned representative question set; zero invented answers on designated absent-fact questions. Treat these as proposed design gates, not observed scores. Report results separately for text, scanned, tabular and each required language."
+      },
+      {
+        "name": "Embedding/reranking ablation",
+        "pass_fail": "Evaluate MiniLM, E5-small, Qwen0.6B embeddings; compare no reranker and Qwen0.6B reranker using the same authorized candidates. Choose the least costly setup meeting quality gates. Retain larger models only for a recorded improvement worth their latency/resource cost."
+      },
+      {
+        "name": "Memory correctness",
+        "pass_fail": "Save a unique preference for A; verify correct recall in A's fresh session and none for B. Correct then delete it; verify it no longer reaches new prompts or searches after restart. Test that private memories never enter shared knowledge, exports to others or automatic summaries."
+      },
+      {
+        "name": "Deletion and retention",
+        "pass_fail": "Delete fixture uploads through the documented path and verify source bytes, extracted content and vector entries are absent; separately delete chat copies, memories, audio and exports. Verify revoked links fail. Trace scheduled log/backup expiry and reapply deletions during restore before allowing sign-in. No claim of forensic erasure without separate storage evidence."
+      },
+      {
+        "name": "Offline and egress",
+        "pass_fail": "With approved artifacts staged, cold-restart and run text, upload, OCR/extraction, embeddings, retrieval, reranking and optional voice. Observe server/container and client DNS/network traffic; test deny rules with a known prohibited destination. Pass only if no unapproved external connection succeeds and required workflows complete. Missing model must fail visibly rather than silently falling back to cloud."
+      },
+      {
+        "name": "Voice contract and client behavior",
+        "pass_fail": "Verify STT route/form fields and TTS speech/voices calls from the WebUI service, then microphone permission, secure browser access, playback, cancellation and two users concurrently. Capture which service receives audio/text and confirm temporary artifacts expire. Test each language/voice independently."
+      },
+      {
+        "name": "Prompt injection and tools",
+        "pass_fail": "Put malicious instructions in uploaded docs, retrieved snippets and tool output. Attempt cross-user retrieval and external exfiltration. Pass only if authorization/network controls prevent disclosure and no write/action occurs without the specified approval. Model refusal alone is insufficient."
+      },
+      {
+        "name": "Persistence and recovery",
+        "pass_fail": "Create chats/files/memory/shared grants; restart and recreate application containers while retaining state; verify records remain. Then restore an encrypted backup into an isolated new instance, check DB integrity and file hashes, retrieval/memory behavior, permissions and deletion ledger. Proposed initial targets: <=24h recoverable data loss and <=2h recovery; household must approve or replace these targets."
+      },
+      {
+        "name": "Upgrade and routing regression",
+        "pass_fail": "Repeat critical isolation/deletion/recovery and endpoint tests on a staged upgrade. Route easy tasks to the smaller model and escalate to an approved stronger local endpoint only when evaluated. Proposed gate: at least 90% task rubric success on each routed category and zero privacy/tool-policy failures; failed or sensitive categories remain manual. Do not route to cloud automatically."
+      }
+    ]
+  },
+  "privacy_and_license": {
+    "data_boundary": "Local inference can keep prompts inside controlled infrastructure only if extraction, embeddings, reranking, voice, identity, tools and clients also meet that policy. A rented cloud GPU remains remote processing even when self-managed. [S02,S06]",
+    "access_proposal": "Separate ordinary accounts, minimal grants, restricted registration, authenticated TLS, optional MFA/private remote access and no directly exposed model/vector/voice ports. State clearly who administers the machine and can restore backups.",
+    "component_terms": [
+      {
+        "component": "Open WebUI",
+        "terms": "Current custom Open WebUI License requires preserved branding except stated exceptions, including deployments of at most 50 natural-person users in a rolling 30-day period; prior materials keep their earlier licenses. Keep branding and review the pinned release. Do not label current whole UI BSD-only.",
+        "source_ids": [
+          "S10"
+        ]
+      },
+      {
+        "component": "vLLM",
+        "terms": "Apache-2.0 runtime license text read; does not license a served checkpoint.",
+        "source_ids": [
+          "S27"
+        ]
+      },
+      {
+        "component": "whisper.cpp",
+        "terms": "MIT runtime license text read; review the actual Whisper checkpoint separately.",
+        "source_ids": [
+          "S26"
+        ]
+      },
+      {
+        "component": "Kokoro-FastAPI / Kokoro-82M",
+        "terms": "Wrapper Apache-2.0 text read; model card separately declares Apache-licensed weights. [uncertain] Full standalone weight LICENSE URL could not be fetched; do not treat arbitrary custom/tuned voicepacks as covered.",
+        "source_ids": [
+          "S24",
+          "S25"
+        ]
+      },
+      {
+        "component": "Qwen3-8B",
+        "terms": "Actual Apache-2.0 checkpoint LICENSE read. Preserve applicable license/notices; no inference that all Qwen models use this license.",
+        "source_ids": [
+          "S23"
+        ]
+      },
+      {
+        "component": "Qwen3 Embedding/Reranker",
+        "terms": "Official cards and dated paper declare Apache-2.0. [uncertain] Standalone license-file URLs attempted were inaccessible; verify the immutable checkpoint's complete license/notices before distribution.",
+        "source_ids": [
+          "S17",
+          "S18",
+          "S19"
+        ]
+      },
+      {
+        "component": "Small embedding baselines",
+        "terms": "MiniLM card declares Apache-2.0; E5-small card declares MIT. [uncertain] Standalone checkpoint license texts were not separately audited here.",
+        "source_ids": [
+          "S20",
+          "S21"
+        ]
+      }
+    ],
+    "open_weight_distinction": "Use open-weight for accessible checkpoint weights. Apache/MIT on particular components does not by itself establish that the complete AI system meets OSI's Open Source AI Definition, whose preferred modification form includes data information and training/run code. [S11]",
+    "voice_and_family_data": "Proposal: use stock voices first, obtain permission for family recordings/custom voices, limit speaker access and provide a deletion path. [uncertain] Jurisdiction-specific privacy/child-data/voice rights obligations are outside this technical audit.",
+    "telemetry_and_retention": "Do not assert zero telemetry from a toggle. Inventory version checks, model/dependency fetches, remote providers, web search, plugins, CDN/browser services and log forwarding. Enforce and observe approved destinations. [S06] [uncertain] Whole-stack no-egress and secure deletion have not been demonstrated."
+  },
+  "recommendation": {
+    "practical_default": "Use an existing machine if it can meet the acceptance gates: Open WebUI with separate user accounts; a supported local smaller chat model; local extraction; Qwen3-Embedding-0.6B as a retrieval lead compared with E5-small/MiniLM; optional Qwen0.6B reranking; and optional local modular speech. No server plugins initially. This is a testable baseline, not a universal model winner. [S01,S03,S04,S17,S18,S20,S21]",
+    "stronger_option": "If measured quality/context/concurrency misses the household target and stronger hardware already exists or is independently authorized, keep the same access/retention architecture while moving inference and retrieval to private supported server runtimes. Evaluate larger retrieval models or a stronger local generator only on the categories that fail. Separate instances/operators if privacy from the household administrator is required. [S02,S12,S17]",
+    "routing": "Use measured per-task routing: small model for categories it passes, stronger approved local model for documented failures, explicit uncertainty/manual review when neither passes. Do not let prompt text choose privileged tools, another user's store, or a remote provider. RAG comes before storing household facts in model weights.",
+    "choice_changes": "[uncertain] Final choice depends on existing hardware, number of simultaneous users, languages, data sensitivity, administrator trust, acceptable response delay and maintenance capacity. No purchase or cloud expenditure recommendation follows from this research."
+  },
+  "next_steps": [
+    "Inventory existing hardware and required devices/languages/concurrency, then agree the administrator trust boundary and which data may ever leave the local network.",
+    "Choose a pinned Open WebUI release and supported model/runtime revisions with exact licenses; audit release notes against the research cutoff and verify effective configuration semantics.",
+    "Create a data-flow and state inventory covering extraction, embeddings, reranking, speech, browser services, logs, caches, secrets, databases and backup destinations.",
+    "Prepare a synthetic acceptance corpus and isolation/deletion matrix before any family files are ingested.",
+    "Run the proposed small-model/retrieval ablations on authorized existing hardware; measure resource/latency profiles and set approved routing and concurrency limits.",
+    "Define retention and recovery targets; demonstrate a consistent encrypted backup and restore in a separate instance, including reapplication of deletions.",
+    "Stage upgrades and rerun critical tests before moving real data; no implementation or deployment is initiated by this report."
+  ],
+  "open_questions": [
+    "[uncertain] Which exact Open WebUI release was available by 2026-10-26 and implements every current documented control? Resolve with pinned release/tag/changelog and code inspection; mutable pages are not historical proof.",
+    "[uncertain] Do all chat/file/memory/knowledge/vector routes in that release enforce the intended family boundaries? Resolve with adversarial multi-user direct API tests.",
+    "[uncertain] Is Qwen3 reranking correctly supported by the selected Open WebUI/backend adapter, including instructions and score calculation? Resolve with known query/document fixtures and comparison to the vendor reference.",
+    "[uncertain] What is deletion behavior for chat-referenced uploads, source-text fallbacks, externally stored files, duplicated indexes, memory vectors and background jobs in that release? Resolve with state inspection before/after deletion and cold restart.",
+    "[uncertain] What retention remains in backups/logs/audio and what recovery targets are acceptable? Resolve with a household-approved policy and demonstrated restore/deletion reconciliation.",
+    "[uncertain] Hardware fit, Finnish/other-language quality, client browser speech processing, concurrent voice latency and exact runtime artifacts remain unmeasured.",
+    "[uncertain] License historical revisions, standalone retrieval/voice weight-license files and third-party voicepack provenance need final review before redistribution."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Open WebUI RBAC permissions",
+      "url": "https://docs.openwebui.com/features/authentication-access/rbac/permissions/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Additive permission grants and provider-side boundary."
+    },
+    {
+      "id": "S02",
+      "title": "Chat Data Privacy & Encryption",
+      "url": "https://docs.openwebui.com/security/chat-data-privacy-and-encryption/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "User/admin/operator trust, local providers, storage encryption and temporary-chat limits."
+    },
+    {
+      "id": "S03",
+      "title": "Memory & Personalization",
+      "url": "https://docs.openwebui.com/features/chat-conversations/memory/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Account-scoped local memories and user management; model-dependent automation."
+    },
+    {
+      "id": "S04",
+      "title": "Knowledge Bases and Document Chat",
+      "url": "https://docs.openwebui.com/features/workspace/knowledge/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Extraction/provider boundary, focused/full-context retrieval, citations and asynchronous processing."
+    },
+    {
+      "id": "S05",
+      "title": "FAQ: file management",
+      "url": "https://docs.openwebui.com/faq/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "File deletion is documented to clean associated KB entries and embeddings."
+    },
+    {
+      "id": "S06",
+      "title": "Run Open WebUI Offline",
+      "url": "https://docs.openwebui.com/tutorials/maintenance/offline-mode/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Offline flags are not outbound network controls; stage local dependencies and test."
+    },
+    {
+      "id": "S07",
+      "title": "Backing Up Your Instance",
+      "url": "https://docs.openwebui.com/tutorials/maintenance/backups/",
+      "publisher": "Open WebUI documentation; community-contributed tutorial",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Persistent /app/backend/data, uploads/vectors/database, and SQLite WAL warning. Guide labels itself unsupported community contribution."
+    },
+    {
+      "id": "S08",
+      "title": "SQLite Online Backup API",
+      "url": "https://sqlite.org/backup.html",
+      "publisher": "SQLite project",
+      "published_or_updated": "[uncertain] Live documentation date not stated",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Independent database-owner confirmation of consistent live backup mechanisms."
+    },
+    {
+      "id": "S09",
+      "title": "Security Policy: Tools, Functions and Pipelines",
+      "url": "https://docs.openwebui.com/security/security-policy/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Plugins execute arbitrary Python with backend privileges."
+    },
+    {
+      "id": "S10",
+      "title": "Open WebUI License",
+      "url": "https://github.com/open-webui/open-webui/blob/main/LICENSE",
+      "publisher": "Open WebUI Inc.",
+      "published_or_updated": "[uncertain] main revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual current custom license includes branding restrictions and prior-license preservation."
+    },
+    {
+      "id": "S11",
+      "title": "The Open Source AI Definition 1.0",
+      "url": "https://opensource.org/ai/open-source-ai-definition",
+      "publisher": "Open Source Initiative",
+      "published_or_updated": "2024-10; definition 1.0",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Weights alone do not establish OSI Open Source AI; data information, code and parameters required."
+    },
+    {
+      "id": "S12",
+      "title": "Open WebUI integration",
+      "url": "https://docs.vllm.ai/en/latest/deployment/frameworks/open-webui/",
+      "publisher": "vLLM project",
+      "published_or_updated": "2025-10-02 displayed on page; live latest URL",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Documents /v1 connection configuration and persistent data mount; not universal model compatibility."
+    },
+    {
+      "id": "S13",
+      "title": "Environment Variable Configuration",
+      "url": "https://docs.openwebui.com/reference/env-configuration/",
+      "publisher": "Open WebUI",
+      "published_or_updated": "[uncertain] Live page describes v0.12.1; release date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Exact audio setting names and persisted configuration semantics."
+    },
+    {
+      "id": "S14",
+      "title": "whisper.cpp server README",
+      "url": "https://github.com/ggml-org/whisper.cpp/blob/master/examples/server/README.md",
+      "publisher": "ggml-org",
+      "published_or_updated": "[uncertain] master revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Port 8080 and /inference defaults; configurable path and multipart request examples."
+    },
+    {
+      "id": "S15",
+      "title": "Kokoro-FastAPI README",
+      "url": "https://github.com/remsky/Kokoro-FastAPI",
+      "publisher": "remsky project",
+      "published_or_updated": "[uncertain] master revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Documented /v1/audio/speech and /v1/audio/voices, default port 8880 and CPU/GPU deployment choices."
+    },
+    {
+      "id": "S16",
+      "title": "Kokoro-FastAPI configuration",
+      "url": "https://github.com/remsky/Kokoro-FastAPI/blob/master/docs/configuration.md",
+      "publisher": "remsky project",
+      "published_or_updated": "2026-08-11 stated last update",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Download, binding, temporary files, worker and model-copy behavior."
+    },
+    {
+      "id": "S17",
+      "title": "Qwen3-Embedding-0.6B model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] Live main; series existed by dated 2025 paper",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "0.6B/4B/8B series, dimensions, context, instructions, language claim and library versions."
+    },
+    {
+      "id": "S18",
+      "title": "Qwen3-Reranker-0.6B model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-Reranker-0.6B",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] Live main; series existed by dated 2025 paper",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Generative relevance scoring, 32K context and vendor retrieval evaluation conditions."
+    },
+    {
+      "id": "S19",
+      "title": "Qwen3 Embedding paper v3",
+      "url": "https://arxiv.org/abs/2506.05176v3",
+      "publisher": "Qwen authors / arXiv",
+      "published_or_updated": "2025-06-11; v1 2025-06-05",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Dated original paper; series and Apache-2.0 statement. Vendor evidence, not an independent replication."
+    },
+    {
+      "id": "S20",
+      "title": "all-MiniLM-L6-v2 model card",
+      "url": "https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2",
+      "publisher": "Sentence Transformers",
+      "published_or_updated": "[uncertain] Live main date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "384-dimensional English-oriented baseline and Apache-2.0 declaration."
+    },
+    {
+      "id": "S21",
+      "title": "multilingual-e5-small model card",
+      "url": "https://huggingface.co/intfloat/multilingual-e5-small/raw/main/README.md",
+      "publisher": "intfloat / E5 authors",
+      "published_or_updated": "[uncertain] Live main; references 2024 report",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "384 dimensions, 512-token truncation, prefixes, Finnish listed and MIT declaration. Normal model page was inaccessible due size; raw README read."
+    },
+    {
+      "id": "S22",
+      "title": "Qwen3-8B model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-8B",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] Live main date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Exact optional smaller chat baseline; no claim of 2026 leadership."
+    },
+    {
+      "id": "S23",
+      "title": "Qwen3-8B license",
+      "url": "https://huggingface.co/Qwen/Qwen3-8B/raw/main/LICENSE",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] main revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual Apache-2.0 text read."
+    },
+    {
+      "id": "S24",
+      "title": "Kokoro-82M model card",
+      "url": "https://huggingface.co/hexgrad/Kokoro-82M",
+      "publisher": "hexgrad",
+      "published_or_updated": "[uncertain] Live main; includes dated 2025 notes",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Weight-license declaration; separate from wrapper and voicepack provenance."
+    },
+    {
+      "id": "S25",
+      "title": "Kokoro-FastAPI license",
+      "url": "https://raw.githubusercontent.com/remsky/Kokoro-FastAPI/master/LICENSE",
+      "publisher": "remsky project",
+      "published_or_updated": "[uncertain] master revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual Apache-2.0 wrapper license text read."
+    },
+    {
+      "id": "S26",
+      "title": "whisper.cpp license",
+      "url": "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE",
+      "publisher": "ggml-org",
+      "published_or_updated": "[uncertain] master revision not pinned; copyright through 2026",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual MIT runtime license text read."
+    },
+    {
+      "id": "S27",
+      "title": "vLLM license",
+      "url": "https://raw.githubusercontent.com/vllm-project/vllm/main/LICENSE",
+      "publisher": "vLLM project",
+      "published_or_updated": "[uncertain] main revision not pinned",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual Apache-2.0 runtime license text read."
+    }
+  ],
+  "uncertain": [
+    "research_date",
+    "verified_findings",
+    "candidate_comparison",
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "retrieval_and_memory_design",
+    "benchmark_caveats",
+    "privacy_and_license",
+    "recommendation",
+    "open_questions",
+    "sources"
+  ]
+}

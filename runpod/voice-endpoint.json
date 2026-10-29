@@ -1,0 +1,55 @@
+{
+  "id": "b8yk3ju5yc5kqx",
+  "name": "family-ai-voice",
+  "type": "LOAD_BALANCER",
+  "image": "ghcr.io/speaches-ai/speaches:0.9.0-rc.3-cuda-12.6.3",
+  "flashboot": "FLASHBOOT",
+  "disk": 30,
+  "ports": [
+    "8000/http"
+  ],
+  "cmd": [
+    "python",
+    "-c",
+    "<contents of voice/voice_start.py>"
+  ],
+  "gpu": {
+    "count": 1,
+    "minCudaVersion": "12.6",
+    "pools": [
+      "AMPERE_16",
+      "AMPERE_24"
+    ]
+  },
+  "dataCenterIds": [
+    "EU-SE-1",
+    "EUR-IS-2",
+    "EU-RO-1",
+    "EUR-IS-1",
+    "EU-CZ-1"
+  ],
+  "workers": {
+    "min": 0,
+    "max": 1,
+    "idleTimeout": 300
+  },
+  "scaling": {
+    "type": "REQUEST_COUNT",
+    "requestCount": 4
+  },
+  "timeout": 300000,
+  "env": {
+    "PORT": "8000",
+    "PORT_HEALTH": "8000",
+    "UVICORN_HOST": "0.0.0.0",
+    "UVICORN_PORT": "8000",
+    "ENABLE_UI": "false",
+    "LOG_LEVEL": "info",
+    "PRELOAD_MODELS": "[\"Systran/faster-whisper-large-v3\", \"speaches-ai/piper-fi_FI-harri-medium\", \"speaches-ai/piper-sv_SE-nst-medium\", \"speaches-ai/piper-en_US-amy-medium\"]",
+    "STT_MODEL_TTL": "-1",
+    "TTS_MODEL_TTL": "-1",
+    "WHISPER__COMPUTE_TYPE": "float16",
+    "WHISPER__INFERENCE_DEVICE": "cuda",
+    "HEALTH_CHECK_PATH": "/health"
+  }
+}

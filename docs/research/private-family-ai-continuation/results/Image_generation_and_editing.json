@@ -1,0 +1,698 @@
+{
+  "item_name": "Image generation and editing",
+  "research_date": "Research cutoff and access date: 2026-10-26. Dated releases through this date are included; undated moving documentation is identified separately.",
+  "scope": "Continue the original report's unresolved FLUX / Qwen-Image / HiDream lead. Verify released local weights, generation versus editing, base versus distilled variants, evidence for fidelity and text rendering, licensing and realistic hardware assumptions. Hosted-only products are context, not private deployment candidates. Research only: no generation, downloads of weights, installations, GPU work or runtime tests occurred.",
+  "verified_findings": [
+    {
+      "claim": "FLUX 3 Image Klein was released on 2026-10-15 with downloadable 5.6B-generator distilled and base checkpoints. It combines generation, editing, up to 10 references and bounding-box control. This is a newer verified FLUX image release than FLUX.2.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Include this October release in the shortlist; do not stop at FLUX.1 or FLUX.2."
+    },
+    {
+      "claim": "The FLUX 3 generator is only one component. The official package adds a Qwen3-VL-4B text encoder, an autoencoder and a separate 9B prompt upsampler. The reference implementation strongly recommends upsampling and supports running it separately.",
+      "source_ids": [
+        "S02",
+        "S04"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Budget all components and preserve the prompt-rewriting stage when comparing quality."
+    },
+    {
+      "claim": "Qwen-Image-2.1 weights were released on 2026-09-20 and Turbo on 2026-10-09. The unified architecture has a 7B visual generator and a separate Qwen3-VL-8B encoder, supports RGBA generation/editing and up to 10 reference images. Turbo uses an eight-step saved schedule.",
+      "source_ids": [
+        "S07",
+        "S08",
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "The old generation/editing split is no longer universal, but the new model's license must be checked independently."
+    },
+    {
+      "claim": "The Qwen 2.1 code and model license defines its permitted noncommercial use as research or evaluation only. The older Qwen-Image-2512 and Qwen-Image-Edit-2511 cards declare Apache 2.0; the original Qwen-Image code repository has actual Apache license text.",
+      "source_ids": [
+        "S10",
+        "S12",
+        "S13",
+        "S14"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Do not treat everyday family use of the research-only release as automatically authorized, or transfer the older Apache license to it."
+    },
+    {
+      "claim": "HiDream-O1-Image is a May 2026 unified pixel-space model with no separate VAE or disjoint text encoder. Official full and Dev checkpoints use 50 and 28 steps; Dev-2604 is a later text-to-image-focused release. The authors recommend the full model for editing. MIT covers the O1 repository code and models.",
+      "source_ids": [
+        "S15",
+        "S16",
+        "S17"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "O1 is the relevant newer HiDream candidate; retain distinct quality and speed configurations."
+    },
+    {
+      "claim": "The original HiDream-I1 lead is real but older: its April 2025 Full, Dev and Fast generation checkpoints use 50/28/16 steps. E1/E1-1 are separate editing releases. I1's example separately loads gated Llama-3.1-8B-Instruct.",
+      "source_ids": [
+        "S19"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Do not call I1-Fast a smaller model or claim its MIT label covers every encoder dependency."
+    },
+    {
+      "claim": "In BFL's internal October comparison, FLUX 3 Klein gains 91 text-to-image Elo and 70 editing Elo over FLUX.2 Klein 9B. These are publisher measurements, not a verified global ranking.",
+      "source_ids": [
+        "S01"
+      ],
+      "evidence_type": "vendor-measured",
+      "confidence": "medium",
+      "practical_implication": "A reason to test the newer model, not proof it wins on family photographs or every language."
+    },
+    {
+      "claim": "HiDream-O1's disclosed author tables report GenEval 0.90 and DPG-Bench 89.83 for O1, versus 0.87 and 88.32 for the original Qwen-Image. These comparisons predate the September Qwen 2.1 and October FLUX 3 releases.",
+      "source_ids": [
+        "S15",
+        "S16"
+      ],
+      "evidence_type": "vendor-measured",
+      "confidence": "medium",
+      "practical_implication": "Do not use this table to rank the newest candidates."
+    },
+    {
+      "claim": "Bounding boxes in the local FLUX 3 model guide placement and scale; its model card explicitly says they are not hard pixel masks. BFL's hosted product advertises a pixel-restoration stage separately.",
+      "source_ids": [
+        "S01",
+        "S03"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Exact preservation of unedited photo regions requires pipeline verification; do not infer it from a bounding box."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "candidate": "Current compact FLUX candidate",
+      "model_ids": [
+        "black-forest-labs/flux-3-image-klein",
+        "black-forest-labs/flux-3-image-klein-base",
+        "black-forest-labs/flux-3-image-klein-comfy"
+      ],
+      "release": "2026-10-15; exact full commit pins [uncertain], not captured.",
+      "capabilities": "Distilled: 16 steps, no CFG. Base: 50 steps with CFG, suited to adaptation. Both generation and editing; publisher advertises up to 4K.",
+      "constraints": "5.6B excludes encoder and upsampler. CFG examples differ between reference code and ComfyUI; use the selected runtime's documented recipe. Custom weight license; gated files.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04"
+      ]
+    },
+    {
+      "candidate": "Permissive smaller default",
+      "model_ids": [
+        "black-forest-labs/FLUX.2-klein-4B",
+        "black-forest-labs/FLUX.2-klein-base-4B"
+      ],
+      "release": "2026-01-15; full revisions [uncertain].",
+      "capabilities": "Unified generation and reference editing. Distilled 4B example uses four steps; base is not step- or guidance-distilled.",
+      "constraints": "Apache 2.0 weights. Less recent; lettering can distort. Model card says about 13 GB, while product table lists 8.4 GB for distilled and 9.2 GB for base under incompletely specified conditions.",
+      "source_ids": [
+        "S05",
+        "S06",
+      "S22",
+      "S30"
+      ]
+    },
+    {
+      "candidate": "Larger FLUX.2 alternatives",
+      "model_ids": [
+        "black-forest-labs/FLUX.2-klein-9B",
+        "black-forest-labs/FLUX.2-klein-base-9B",
+        "black-forest-labs/FLUX.2-klein-9b-kv",
+        "black-forest-labs/FLUX.2-dev"
+      ],
+      "release": "FLUX.2-dev: 2025-11-25; original Klein: 2026-01-15; KV-specific release date [uncertain].",
+      "capabilities": "Generation and single/multiple reference editing. 9B Klein is distilled, base is not; 32B dev is guidance-distilled but not step-distilled.",
+      "constraints": "Custom noncommercial weights, separate from 4B Apache terms. Larger footprint makes them lower-priority than an initial 4B versus FLUX 3 comparison.",
+      "source_ids": [
+        "S05",
+        "S23"
+      ]
+    },
+    {
+      "candidate": "Newest Qwen evaluation candidates",
+      "model_ids": [
+        "Qwen/Qwen-Image-2.1",
+        "Qwen/Qwen-Image-2.1-Turbo"
+      ],
+      "release": "2026-09-20 / 2026-10-09; full revisions [uncertain].",
+      "capabilities": "Unified generation/editing, native alpha channel, local edits and multiple references. Base example: 40 steps. Turbo: eight saved denoising steps and CFG=1.",
+      "constraints": "Research/evaluation license. Different generator, encoder and VAE from 2512/2511; not a drop-in weight replacement. A changed num_inference_steps alone does not replace Turbo's saved schedule.",
+      "source_ids": [
+        "S07",
+        "S08",
+        "S09",
+        "S10"
+      ]
+    },
+    {
+      "candidate": "Older permissive Qwen pair",
+      "model_ids": [
+        "Qwen/Qwen-Image-2512",
+        "Qwen/Qwen-Image-Edit-2511"
+      ],
+      "release": "2025-12-31 / 2025-12-23, documented by the original repository; revisions [uncertain].",
+      "capabilities": "2512 generates images and improves realism/text in author evaluations. Edit-2511 is a separate editing checkpoint emphasizing character consistency and reduced drift; example uses two references, 40 steps and true CFG 4.",
+      "constraints": "20B-generation family, much heavier than the new 7B generator. Both cards declare Apache 2.0. Their performance claims are not current cross-family rankings.",
+      "source_ids": [
+        "S11",
+        "S12",
+        "S13"
+      ]
+    },
+    {
+      "candidate": "Permissive newer HiDream option",
+      "model_ids": [
+        "HiDream-ai/HiDream-O1-Image",
+        "HiDream-ai/HiDream-O1-Image-Dev",
+        "HiDream-ai/HiDream-O1-Image-Dev-2604"
+      ],
+      "release": "Full/Dev: 2026-05-08; Dev-2604 announcement: 2026-05-14. Revisions [uncertain].",
+      "capabilities": "Unified generation, instruction editing, multi-reference subject preservation, layout/skeleton workflows, up to 2048x2048. Full for editing; Dev-2604 targets text-to-image.",
+      "constraints": "Officially described as 8B; implementation-author header count is 8.80B, not an 8 GB footprint. CUDA-centric custom pipeline. Prompt agent is an additional dependency.",
+      "source_ids": [
+        "S15",
+        "S16",
+        "S17",
+        "S18"
+      ]
+    },
+    {
+      "candidate": "Historical HiDream baseline",
+      "model_ids": [
+        "HiDream-ai/HiDream-I1-Full",
+        "HiDream-ai/HiDream-I1-Dev",
+        "HiDream-ai/HiDream-I1-Fast"
+      ],
+      "release": "2025-04-07; revisions [uncertain].",
+      "capabilities": "17B generation family; Full undistilled, Dev/Fast distilled.",
+      "constraints": "Multiple encoder dependencies and older benchmarks. Editing belongs to the separate E1 line, not automatically to I1.",
+      "source_ids": [
+        "S19"
+      ]
+    }
+  ],
+  "deployment_requirements": {
+    "common": "Use an image-specific pipeline and a queue. A language-model OpenAI-compatible endpoint is not by itself an image engine. No assumed user GPU, operating system deployment target or concurrent request count. The following are documented recipes, not installations performed.",
+    "flux3_reference": {
+      "requirements": "Observed pyproject: Python >=3.10,<3.13; torch==2.11.0, torchvision==0.26.0, triton==3.6.0, vllm==0.21.0, transformers==5.8.1. README tests Python 3.12 with CUDA 13.0 wheels on B200. Reference FP8 targets Ada/Hopper/Blackwell; NVFP4 needs Blackwell and optional FlashInfer dependencies.",
+      "source_ids": [
+        "S02",
+        "S20"
+      ],
+      "limitations": "[uncertain] Documentation is a moving main branch without a captured historical commit; these exact requirements are an observed access-date snapshot. Native Windows compatibility is not verified."
+    },
+    "flux3_smaller": {
+      "requirements": "ComfyUI has distinct INT8 transformer, encoder and quantized upsampler packages; publisher documents an 8 GB GPU path. Reference code has no INT8 path. Offload or separate prompt-upsample execution is necessary when components cannot coexist.",
+      "source_ids": [
+        "S02",
+        "S04"
+      ],
+      "limitations": "[uncertain] Host RAM, cold-start time and 8 GB end-to-end latency are not specified. Do not add file sizes and call the sum a VRAM minimum."
+    },
+    "qwen21": {
+      "requirements": "Model card specifies torch>=2.4.0, transformers>=5.17 and Diffusers source. Turbo additionally needs pipeline-configured sigmas support in Diffusers PR #14950; CPU model offload is documented.",
+      "source_ids": [
+        "S08",
+        "S09"
+      ],
+      "limitations": "[uncertain] Pin an actual tested Diffusers commit later. The runtime-author vLLM recipe says Qwen 2.1 support is untagged and unmerged PR #7759, despite Qwen's day-zero support announcement. Recipe dating is unknown; do not treat it as confirmed cutoff-time stable support.",
+      "source_ids_for_limitation": [
+        "S07",
+        "S21"
+      ]
+    },
+    "hidream_o1": {
+      "requirements": "Official CUDA assertion, BF16 load, torch>=2.10 and transformers==4.57.1. FlashAttention is recommended; the current instructions require disabling its pipeline flag if unavailable. README warns against PyTorch 2.9.x. Dev-2604 uses the repository's dev branch.",
+      "source_ids": [
+        "S15",
+        "S17",
+        "S24",
+        "S25"
+      ],
+      "limitations": "[uncertain] No verified low-VRAM offload recipe, native Windows build or low-memory speed measurement was found in the official O1 sources reviewed."
+    }
+  },
+  "operating_profile": {
+    "flux3_full_pipeline": "Independent runtime-author measurement: H100 80 GB, distilled 16 steps, three warm runs, no offload: 1024x1024 generation 1.93 s, single-reference editing 3.87 s; reported peak 23.8 GiB. A separate table reports 20.72 GiB BF16, 16.27 GiB FP8 and 15.3 GiB NVFP4 peaks under its stated configurations. Do not collapse these different measurements into one minimum. [S26]",
+    "flux3_reference": "BFL reports B200 peak nvidia-smi memory without prompt upsampling: distilled BF16/FP8/NVFP4 = 31/26/25 GB; base = 31/29/26 GB at 1024x1024. The upsampler can reserve an additional fraction of GPU memory, default 0.35. [S02]",
+    "flux3_consumer": "Publisher/NVIDIA-measured 16-step 1 MP generation: about 4 s on RTX 5090 and under 9 s on RTX 4070 using the quickest INT8 ComfyUI builds. These are GPU generation timings, not request-to-file latency including queueing and rewriting. [S01]",
+    "flux2_4b": "Publisher table: distilled about 1.2 s on RTX 5090, base about 17 s; VRAM entries 8.4 and 9.2 GB. [uncertain] Resolution, memory accounting and relation to model card's about-13-GB claim are insufficiently specified. [S06,S30]",
+    "qwen21": "Runtime-author on-disk components: 17.5 GB BF16 encoder + 14.2 GB BF16 DiT + 1.4 GB FP32 VAE = derived 33.1 GB before activations/runtime overhead. Recipe reports one GB300 1024x1024, 40-step trial at 4.5 s and 34.0 GB peak. [uncertain] Undated recipe and unmerged runtime branch limit historical and production applicability; no local measurement. [S21]",
+    "hidream_o1": "Implementation-author header count: 8,804,887,792 parameters, 35.22 GB FP32 storage; BF16 weight arithmetic about 17.6 GB before activations and prompt agent. Official inference loads BF16 on CUDA. [uncertain] Usable minimum VRAM, latency, and cold start remain unmeasured here. [S18,S25]",
+    "concurrency": "[uncertain] All quoted speed evidence is single-request, not a family-concurrency guarantee. Start acceptance testing at batch 1; cold start, system RAM, offload transfer cost and queue delay require measurement. Image resolution and reference count replace text-only context length as key workload dimensions."
+  },
+  "language_evidence": {
+    "english": "English prompts and lettering appear throughout the official examples. These establish intended use, not a per-language accuracy guarantee. HiDream's optional reasoning agent rewrites requests into English. [S02,S07,S15]",
+    "finnish": "[uncertain] No reviewed primary source supplies a Finnish prompt-adherence or text-rendering score for these current checkpoints. Finnish is a conditional test example only, not an assumed household requirement.",
+    "other_languages": "Original Qwen-Image and editing cards explicitly emphasize Chinese/English lettering. HiDream reports multilingual/long-text capabilities, but these are not evidence that all scripts or diacritics render equally well. [S11,S13,S15,S16]",
+    "test_implication": "Score prompt understanding separately from exact rendered text; optionally compare a Finnish instruction with an independently checked English translation."
+  },
+  "retrieval_and_memory_design": {
+    "applicability": "Document retrieval, embedding and reranking are outside this image-engine item's scope.",
+    "proposed_boundaries": "Treat uploaded photos, edit masks, rewritten prompts, cached embeddings, outputs and thumbnails as per-user private artifacts by default. Sharing must be explicit. Deletion should cover references, derived thumbnails and cached embeddings as well as visible history; shared assets need their own ACLs. This is a proposed design, not verified runtime behavior.",
+    "grounding": "Generated diagrams, labels and pictures are synthetic content, not factual citations. Store exact model/adapter revision, seed, dimensions and edit lineage for reproducibility; do not add personal photos automatically to a shared RAG corpus."
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "Image generation: Not verified. No claim survived checking; follow up FLUX / Qwen-Image / HiDream.",
+      "verdict": "partially_supported",
+      "explanation": "The report correctly labels its own image section unresolved. The unseen earlier voting process cannot be audited. Current primary sources now establish released local candidates; absence of earlier verified claims was not evidence that no useful model existed.",
+      "source_ids": [
+        "S01",
+        "S07",
+        "S15",
+        "S19"
+      ]
+    },
+    {
+      "original_claim": "Best open image-generation model and the VRAM it needs remain open questions.",
+      "verdict": "partially_supported",
+      "explanation": "Conditional candidates and workload-specific memory evidence can now be supplied. A single best model or universal minimum remains unsupported because licenses, text fidelity, edit preservation, precision and workload differ.",
+      "source_ids": [
+        "S01",
+        "S06",
+        "S10",
+        "S21",
+        "S26"
+      ]
+    },
+    {
+      "original_claim": "Serve each model with vLLM (or SGLang). They all expose OpenAI-compatible /v1 APIs.",
+      "verdict": "partially_supported",
+      "explanation": "This cannot be generalized to image engines. FLUX 3 has Diffusers/ComfyUI integrations; Qwen 2.1 support requires checking the diffusion-specific runtime and release. HiDream O1 documents its custom CUDA pipeline. API path compatibility does not prove image model support.",
+      "source_ids": [
+        "S02",
+        "S07",
+        "S15",
+        "S21"
+      ]
+    },
+    {
+      "original_claim": "Check each model's license. None blocks personal use.",
+      "verdict": "unverified",
+      "explanation": "The original statement concerned a different list without an image pick, so it cannot be retrospectively refuted for every listed model here. It must not be extended to this continuation: Qwen 2.1 permits research/evaluation rather than all personal activity, and FLUX custom licenses impose conditions absent from Apache/MIT.",
+      "source_ids": [
+        "S10",
+        "S27",
+        "S23"
+      ]
+    }
+  ],
+  "benchmark_caveats": [
+    "Quality claims are primarily publisher measurements or selected examples. No independent, same-harness October head-to-head of all shortlisted exact checkpoints was verified. [uncertain]",
+    "FLUX 3 internal Elo measures human preference within its comparison pool; it is not interchangeable with Arena Elo, GenEval, DPG-Bench or OCR accuracy. Qwen 2512's 10,000-plus Arena rounds are a December 2025 vendor claim, not a current universal rank. [S01,S12]",
+    "HiDream's paper and original I1 tables compare older releases. Record model variant, prompt rewriting, output size, seed list, CFG, negative prompt, denoising schedule and evaluator versions before reproducing them. [S16,S19]",
+    "Compare base and distilled checkpoints at their intended schedules. Fewer steps do not imply proportionally less VRAM. Quantization can change speed and fidelity; CPU offloading trades resident VRAM for host memory and transfers.",
+    "GPU-only, warm end-to-end, API and cold-start timings have different boundaries. Reference-image count and resolution increase sequence/activation costs. Report median/p95 and failures, not only the fastest image."
+  ],
+  "evaluation_plan": [
+    {
+      "order": 1,
+      "proposal": "Before any future run, record GPU/VRAM, RAM, OS/runtime support, acceptable wait and intended license use. Pin model and runtime revisions and archive licenses. Pass only if every enabled component is usable within its terms."
+    },
+    {
+      "order": 2,
+      "proposal": "Build a permission-cleared set of 40 generation prompts: portraits, hands, household objects, counting/spatial relations, typography and simple diagrams. Use the same 1024x1024 output size, four fixed seeds, published schedules and batch 1. Blind pairwise scoring; pass prompt fidelity if at least 90% of required attributes are satisfied. Report both raw prompts and model-recommended local rewriting tracks."
+    },
+    {
+      "order": 3,
+      "proposal": "Use 20 edits with explicit target masks, including object removal, clothing color, text replacement and two-person composition. Predeclare that identities and untargeted content must remain acceptable in at least 90% of cases. For a pixel-exact preservation claim, require zero changed pixels outside the permitted mask after alignment; otherwise label results approximate."
+    },
+    {
+      "order": 4,
+      "proposal": "For lettering, test 20 exact English strings and any actually required language; optionally Finnish strings with diacritics. Require exact human-transcribed string match for at least 95% of short labels. Keep typography aesthetics and OCR character error separate."
+    },
+    {
+      "order": 5,
+      "proposal": "Measure cold load, rewriting, encoding, denoising, decode, file save, total latency, peak VRAM and peak host RAM. Repeat warm runs; then queue two household users. Pass if no OOM across the suite and observed p95 is within a user-chosen wait target. [uncertain] No target is invented here."
+    },
+    {
+      "order": 6,
+      "proposal": "Offline test after a separately authorized setup: deny network access during inference, inspect failed egress attempts and verify no external prompt-refiner fallback. Test account isolation, explicit sharing and deletion of references/caches. Pass if there is no unintended egress or cross-user access."
+    }
+  ],
+  "privacy_and_license": {
+    "flux3": "Weights: FLUX Kommunity v1.0; code: Apache 2.0; upsampler and Qwen encoder separately Apache. The weight license covers private entertainment/hobbies but also excludes end-user-facing use from its noncommercial definition. Qualifying Users below US$5M gross annualized revenue including affiliates have a production/output exception, subject to filtering or pre-distribution review and other restrictions. [uncertain] Confirm treatment of a multi-user household service against the complete terms; no blanket production permission. Gated weight access shares HF account information. [S03,S04,S20,S27] Actual code license text is S29.",
+    "flux2": "4B/base-4B weights: actual Apache 2.0 text. 9B and dev: FLUX Non-Commercial v2.1 with restrictions on production/end-user interaction and filtering/review requirements; commercial output use is distinct from permission to operate commercially. [S05,S22,S23]",
+    "qwen": "2.1/Turbo: Qwen Research License covers both code/materials and weights; noncommercial means research/evaluation, not unrestricted household entertainment. Separate commercial permission does not automatically resolve a noncommercial nonresearch use. Older 2512/Edit-2511 cards declare Apache 2.0 and original code has Apache text. [uncertain] Separate weight-license files for those older exact IDs could not be fetched; retain this distinction between card declaration and file verification. [S10,S12,S13,S14]",
+    "hidream": "O1 code and models: MIT, verified in actual license plus official declaration. Its optional Gemma local prompt agent has a separate gated license, and an API refiner sends prompts to its chosen provider. I1's gated Llama encoder is another separate license dependency. [S15,S17,S19] Actual MIT text is S28.",
+    "privacy": "Local weights permit local processing but do not prove an implementation is offline. Explicitly select a local rewriter, restrict artifact access and disable public demo sharing. Do not upload family photos to hosted demos to evaluate privacy. Proposed controls must be tested later; no private media was processed."
+  },
+  "recommendation": {
+    "practical_default": "For a household prioritizing simple permissive terms and a smaller first test, shortlist FLUX.2-klein-4B. It provides both generation and editing and has an Apache license. This is a licensing/deployment preference, not a claim that it has the highest fidelity. Confirm the actual hardware path because its official memory figures differ. [S05,S06,S22,S30]",
+    "stronger_current_candidate": "Evaluate FLUX 3 Image Klein distilled as the current compact all-round candidate; its release, multi-reference editing and independent runtime evidence are concrete. [uncertain] Adopt only after full license fit, quality and measured memory/latency pass; do not promise pixel-exact edits or an 8 GB all-resident pipeline. [S01,S03,S26,S27]",
+    "permissive_quality_alternative": "HiDream-O1-Image full is a useful MIT alternative for editing and subject consistency evaluation; Dev-2604 is the generation-speed branch to compare. Expect custom CUDA integration and measure total memory. Older Qwen 2512/Edit-2511 remain sensible permissive, heavier baselines, especially for Chinese/English lettering. [S12,S13,S15,S17]",
+    "restricted_evaluation_option": "Qwen-Image-2.1/Turbo merit research comparison for transparency and editing, but the research-only license prevents recommending them as an unqualified everyday household default. [S07,S10]",
+    "choice_changes": "Real GPU/RAM, native Windows versus a supported Linux environment, required language, edit-preservation needs, latency tolerance and license permission can change the choice. No purchase or deployment is recommended from parameter arithmetic alone."
+  },
+  "next_steps": [
+    "Resolve intended use and available hardware before selecting one or two checkpoints for a future authorized evaluation.",
+    "Capture full model/runtime commits and component licenses, including encoders and prompt refiners; resolve FLUX multi-user terms and Qwen 2.1 permission if relevant.",
+    "Choose one documented runtime per candidate and reconcile access-date moving documentation with a stable version; avoid assuming generic vLLM image support.",
+    "Prepare the acceptance corpus and timing ledger; then separately authorize downloads and local testing. Keep private family media local.",
+    "Use measured p95 latency, VRAM/RAM and blind quality results to choose a default; preserve stronger/slower models as optional queued jobs only if justified."
+  ],
+  "open_questions": [
+    "[uncertain] No independent same-date image-quality winner across FLUX 3, Qwen 2.1 and HiDream O1 was established. Resolve with a shared prompt/edit corpus and blinded assessment.",
+    "[uncertain] FLUX 3 official README advertises 4K, while some release-adjacent demo discussions describe narrower supported resolution tiers. Verify the chosen local runtime/checkpoint at each intended output size before promising native 4K.",
+    "[uncertain] FLUX.2 4B card's about-13-GB claim differs from the product table's 8.4-GB entry; the complete configuration and peak-memory definition would resolve this.",
+    "[uncertain] Native Windows and low-memory O1 operation have not been demonstrated by this research. Exact driver, kernel and runtime support is needed.",
+    "[uncertain] Qwen 2.1 day-zero runtime announcements conflict with an undated recipe describing an unmerged PR; inspect pinned release/PR history before installation.",
+    "[uncertain] Household-service permission under FLUX custom terms and ordinary nonresearch use under Qwen Research terms require clarification; being private does not erase license conditions.",
+    "[uncertain] Full immutable artifact revisions, cold starts, concurrency, Finnish lettering, quantized quality and offload latency remain unmeasured. No missing evidence is treated as evidence of failure.",
+    "[uncertain] Some source pages are undated moving branches. Their contents were observed on the access date; claims lacking a dated release anchor are not established historical facts."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "FLUX 3 Image Klein release",
+      "url": "https://bfl.ai/blog/flux-3-image-klein",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "2026-10-15",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Release, internal Elo, NVIDIA consumer timing, component-versus-generator limits."
+    },
+    {
+      "id": "S02",
+      "title": "FLUX 3 reference README",
+      "url": "https://github.com/black-forest-labs/flux-3-image-klein",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Moving main; October 2026 release",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Steps, prompt upsampler, memory table, quantization hardware, runtime paths."
+    },
+    {
+      "id": "S03",
+      "title": "FLUX 3 distilled model card",
+      "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Card update date; released 2026-10-15",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Exact ID, gated access, soft bounding boxes, component licenses."
+    },
+    {
+      "id": "S04",
+      "title": "FLUX 3 ComfyUI model card",
+      "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Exact update date; October 2026",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Packaged quantized components, file sizes, 8 GB claim and sampler defaults."
+    },
+    {
+      "id": "S05",
+      "title": "FLUX.2 reference README",
+      "url": "https://github.com/black-forest-labs/flux2",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "2025-11-25 / 2026-01-15 release entries; later updates [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Exact model links; step/guidance-distilled and license distinctions."
+    },
+    {
+      "id": "S06",
+      "title": "FLUX.2 Klein product comparison",
+      "url": "https://bfl.ai/models/flux-2-klein",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Undated live product page",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Publisher GPU timing and memory entries; incomplete benchmark conditions."
+    },
+    {
+      "id": "S07",
+      "title": "Qwen-Image-2.1 repository",
+      "url": "https://github.com/QwenLM/Qwen-Image-2.1",
+      "publisher": "Qwen / Tongyi Lab",
+      "published_or_updated": "2026-09-20 and 2026-10-09 news; moving updates [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Released exact IDs, encoder, RGBA, runtime announcements."
+    },
+    {
+      "id": "S08",
+      "title": "Qwen-Image-2.1 model card",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1",
+      "publisher": "Qwen / Tongyi Lab",
+      "published_or_updated": "2026-09-20 release; exact card update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "40-step base, component architecture, software minima, CPU offload."
+    },
+    {
+      "id": "S09",
+      "title": "Qwen-Image-2.1 Turbo model card",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2.1-Turbo",
+      "publisher": "Qwen / Tongyi Lab",
+      "published_or_updated": "2026-10-09 release; exact card update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Eight-step saved schedule, CFG, Diffusers PR requirement."
+    },
+    {
+      "id": "S10",
+      "title": "Qwen Research License Agreement",
+      "url": "https://raw.githubusercontent.com/QwenLM/Qwen-Image-2.1/main/LICENSE",
+      "publisher": "Tongyi Lab",
+      "published_or_updated": "2026-09-20",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual license: code and weights; research/evaluation-only noncommercial definition."
+    },
+    {
+      "id": "S11",
+      "title": "Original Qwen-Image repository",
+      "url": "https://github.com/QwenLM/Qwen-Image",
+      "publisher": "Qwen",
+      "published_or_updated": "2025-12-23 / 2025-12-31 release entries; later edits [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Dates, older 20B line and community memory support; no current best inference."
+    },
+    {
+      "id": "S12",
+      "title": "Qwen-Image-2512 model card",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-2512",
+      "publisher": "Qwen",
+      "published_or_updated": "2025-12-31 release; card update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Apache declaration, realism/text improvements, vendor Arena claim."
+    },
+    {
+      "id": "S13",
+      "title": "Qwen-Image-Edit-2511 model card",
+      "url": "https://huggingface.co/Qwen/Qwen-Image-Edit-2511",
+      "publisher": "Qwen",
+      "published_or_updated": "2025-12-23 release; card update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Apache declaration, consistency improvements, separate editing pipeline."
+    },
+    {
+      "id": "S14",
+      "title": "Original Qwen-Image code license",
+      "url": "https://raw.githubusercontent.com/QwenLM/Qwen-Image/main/LICENSE",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] Undated license file; Apache 2.0 text",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual Apache code license; not a fetched per-checkpoint weight-license file."
+    },
+    {
+      "id": "S15",
+      "title": "HiDream-O1-Image repository",
+      "url": "https://github.com/HiDream-ai/HiDream-O1-Image",
+      "publisher": "HiDream.ai",
+      "published_or_updated": "2026-05-08 / 2026-05-14 releases; latest listed news 2026-06-22",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Full/Dev/editing recommendation, MIT declaration, prompt-agent backends, author benchmarks."
+    },
+    {
+      "id": "S16",
+      "title": "HiDream-O1-Image technical report v1",
+      "url": "https://arxiv.org/html/2605.11061v1",
+      "publisher": "HiDream.ai / arXiv",
+      "published_or_updated": "2026-05-11",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Original architecture and benchmark report; not independent validation."
+    },
+    {
+      "id": "S17",
+      "title": "HiDream-O1-Image-Dev-2604 card",
+      "url": "https://huggingface.co/HiDream-ai/HiDream-O1-Image-Dev-2604",
+      "publisher": "HiDream.ai",
+      "published_or_updated": "2026-05-14 announcement; exact update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Generation-focused Dev branch, prompt-refiner endpoint, 28 steps."
+    },
+    {
+      "id": "S18",
+      "title": "AI Toolkit O1 implementation notes",
+      "url": "https://ostris.com/docs/ai-toolkit/models/hidream-o1",
+      "publisher": "Ostris / AI Toolkit",
+      "published_or_updated": "[uncertain] Undated live documentation",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Implementation-author tensor-header count and storage arithmetic; not a runtime VRAM test."
+    },
+    {
+      "id": "S19",
+      "title": "HiDream-I1 repository",
+      "url": "https://github.com/HiDream-ai/HiDream-I1",
+      "publisher": "HiDream.ai",
+      "published_or_updated": "2025-04-07 release; news through 2025-07-16",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Historical Full/Dev/Fast, separate E1 line, gated Llama dependency and author scores."
+    },
+    {
+      "id": "S20",
+      "title": "FLUX 3 source dependency declaration",
+      "url": "https://raw.githubusercontent.com/black-forest-labs/flux-3-image-klein/main/pyproject.toml",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Undated moving source; project version 0.1.0",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Exact observed runtime pins; links Apache code license."
+    },
+    {
+      "id": "S21",
+      "title": "vLLM Qwen-Image-2.1 recipe",
+      "url": "https://recipes.vllm.ai/Qwen/Qwen-Image-2.1",
+      "publisher": "vLLM project",
+      "published_or_updated": "[uncertain] Undated access-date page; historical applicability unresolved",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Runtime-author components, GB300 trial and explicit unmerged-PR caveat."
+    },
+    {
+      "id": "S22",
+      "title": "FLUX.2 Klein 4B actual weight license",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B/blob/main/LICENSE.md",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Release commit shown as 6dfcebf; exact date unshown",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual Apache 2.0 weight-license text."
+    },
+    {
+      "id": "S23",
+      "title": "FLUX Non-Commercial v2.1 actual text",
+      "url": "https://raw.githubusercontent.com/black-forest-labs/flux2/main/model_licenses/LICENSE-FLUX-NON-COMMERICAL",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Undated license text",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Noncommercial, production/end-user exclusions, output rights and review conditions."
+    },
+    {
+      "id": "S24",
+      "title": "HiDream-O1 requirements",
+      "url": "https://raw.githubusercontent.com/HiDream-ai/HiDream-O1-Image/main/requirements.txt",
+      "publisher": "HiDream.ai",
+      "published_or_updated": "[uncertain] Undated moving source",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "torch>=2.10 and transformers==4.57.1."
+    },
+    {
+      "id": "S25",
+      "title": "HiDream-O1 inference source",
+      "url": "https://raw.githubusercontent.com/HiDream-ai/HiDream-O1-Image/main/inference.py",
+      "publisher": "HiDream.ai",
+      "published_or_updated": "[uncertain] Undated moving source",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "CUDA assertion and BF16 actual load."
+    },
+    {
+      "id": "S26",
+      "title": "Welcome FLUX 3 in Diffusers",
+      "url": "https://huggingface.co/blog/flux-3",
+      "publisher": "Hugging Face Diffusers maintainers",
+      "published_or_updated": "2026-10-15",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Independent runtime-author warm H100 timing, memory boundaries, quantization and modular support."
+    },
+    {
+      "id": "S27",
+      "title": "FLUX Kommunity License v1.0 actual text",
+      "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein/blob/main/LICENSE.md",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] License-file date; visible commit 3cf1c2d",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Full custom license including Qualifying User exception and review/filter requirements; raw URL returned 401 but HTML text readable."
+    },
+    {
+      "id": "S28",
+      "title": "HiDream-O1 actual MIT license",
+      "url": "https://raw.githubusercontent.com/HiDream-ai/HiDream-O1-Image/main/LICENSE",
+      "publisher": "HiDream.ai",
+      "published_or_updated": "2026 copyright; exact file date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual MIT permission and notice requirements."
+    },
+    {
+      "id": "S29",
+      "title": "FLUX 3 inference code actual Apache license",
+      "url": "https://raw.githubusercontent.com/black-forest-labs/flux-3-image-klein/main/LICENSE",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "[uncertain] Undated license file",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual Apache 2.0 code terms; separate from weight license."
+    },
+    {
+      "id": "S30",
+      "title": "FLUX.2 Klein 4B model card",
+      "url": "https://huggingface.co/black-forest-labs/FLUX.2-klein-4B",
+      "publisher": "Black Forest Labs",
+      "published_or_updated": "2026-01-15 release; card update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Four-step BF16 example, model CPU offload, about-13-GB claim, lettering limitations."
+    }
+  ],
+  "uncertain": [
+    "candidate_comparison",
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "benchmark_caveats",
+    "evaluation_plan",
+    "privacy_and_license",
+    "recommendation",
+    "open_questions",
+    "sources"
+  ]
+}

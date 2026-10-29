@@ -1,0 +1,89 @@
+fields:
+  basic_info:
+  - name: item_name
+    description: Exact outline item name. Use flat top-level JSON keys for every named field in this file.
+    detail_level: brief
+  - name: research_date
+    description: 'Research cutoff and access date: 2026-10-26. Exclude claims published after the cutoff; state
+      if source date is unknown.'
+    detail_level: brief
+  - name: scope
+    description: Research question, inclusion/exclusion boundaries, and relationship to the original report.
+    detail_level: moderate
+  technical_features:
+  - name: verified_findings
+    description: Detailed array of evidence-grounded findings. Each finding includes claim, source_ids, evidence_type
+      (primary/vendor-measured/independently-measured/derived), confidence, and practical implication. Use official
+      model cards, licenses, technical papers and source repositories. Read sources before citing; do not infer
+      exact releases from organization listings.
+    detail_level: detailed
+  - name: candidate_comparison
+    description: Compare relevant candidates or approaches with exact model/repository IDs, release/revision if
+      available, capabilities, constraints, and source_ids. Include deployable smaller alternatives where appropriate;
+      avoid an unsupported universal best.
+    detail_level: detailed
+  - name: deployment_requirements
+    description: Exact documented software/hardware requirements and version constraints, memory versus active MoE
+      parameters, precision, context/concurrency assumptions, platform support, and integration maturity. Clearly
+      label arithmetic estimates and unmeasured latency. No model downloads, installs, training, paid services or
+      runtime deployments are authorized.
+    detail_level: detailed
+  - name: operating_profile
+    description: Measured or estimated memory, latency, cold start, context and concurrency profile with exact assumptions;
+      use not applicable with reason if not relevant. Include canonical artifact/revision and runtime compatibility
+      if known.
+    detail_level: moderate
+  - name: language_evidence
+    description: Separate evidence for English, Finnish and other languages; a documented language list is not a
+      quality measurement. Finnish is a conditional evaluation example, not a user-stated requirement.
+    detail_level: moderate
+  - name: retrieval_and_memory_design
+    description: Relevant document extraction, embedding/reranker, grounding/citations and personal/shared memory
+      implications, including deletion and access boundaries; use not applicable with reason when outside this item's
+      scope.
+    detail_level: moderate
+  performance_metrics:
+  - name: original_claim_audit
+    description: Audit concrete relevant statements in the original report. Each entry includes original_claim,
+      verdict (confirmed/partially_supported/refuted/unverified), explanation, source_ids. Distinguish failure to
+      find evidence from evidence of falsity.
+    detail_level: detailed
+  - name: benchmark_caveats
+    description: Benchmark task/version, prompt and tool harness, vendor versus independent measurements, quantization
+      and context effects, lack of cross-model comparability, and practical tests needed. Do not repeat uncited
+      scores.
+    detail_level: moderate
+  - name: evaluation_plan
+    description: Concrete future local acceptance tests, including reproducible comparison conditions and pass/fail
+      criteria. This is a proposal only; do not claim tests or model runs happened. Cover multilingual and multi-user
+      behavior where relevant.
+    detail_level: moderate
+  business_info:
+  - name: privacy_and_license
+    description: Check exact code and weight licenses separately, access restrictions and acceptable-use conditions,
+      cloud egress and family-data exposure. Cite actual license text or official documentation. Treat legal interpretation
+      conservatively and mark uncertainties.
+    detail_level: detailed
+  market_positioning:
+  - name: recommendation
+    description: 'Conditional recommendations for a private family AI: practical default, stronger option, reasons,
+      limitations, and what would change the choice. No invented user hardware, budget, family language requirement
+      or measured performance.'
+    detail_level: detailed
+  - name: next_steps
+    description: Ordered, concrete follow-up work with dependencies and questions. Stay within research; do not
+      initiate implementation or purchasing.
+    detail_level: moderate
+  history:
+  - name: open_questions
+    description: Unresolved evidence gaps, conflicting sources, source dating limits, and what evidence would resolve
+      each. Put [uncertain] directly into uncertain values and list corresponding top-level field names in uncertain.
+    detail_level: moderate
+  - name: sources
+    description: 'Source ledger: id, title, direct URL, publisher, published_or_updated (or [uncertain]), accessed
+      (2026-10-26), primary flag, and concise support note. Aim for 6-12 distinct relevant primary sources; use
+      fewer if evidence is unavailable. Cite source IDs throughout factual findings and recommendations. Mark inaccessible
+      pages; do not treat search snippets as full-page verification. Do not quote more than 25 words total from
+      any single source.'
+    detail_level: detailed
+uncertain: []

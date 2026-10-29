@@ -1,0 +1,709 @@
+{
+  "item_name": "Hardware and serving",
+  "research_date": "Cutoff and access date: 2026-10-26. Artifact and code revisions below predate or fall on the cutoff. [uncertain] Live documentation often has no revision date, so its contents are observed documentation rather than proven historical minimum requirements.",
+  "scope": "Hardware/serving audit of open-model-research-2026-10.md. Covers MiMo, GLM, DeepSeek, Qwen and the Kimi proxy. Only cards, small configs, source code and Hub file metadata were read; no model downloads, installs, training, GPU use, deployment or paid calls occurred.",
+  "verified_findings": [
+    {
+      "claim": "Active MoE parameters describe conditional compute, not the storage of all weights. MiMo documents 1.02T total/42B active; Kimi 1T/32B. DeepSeek distinguishes a 552B backbone, 196B Engram memory, and 8B prefill/16B decode activation.",
+      "source_ids": [
+        "S01",
+        "S03",
+        "S05"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Budget the actual tensors and runtime state, not only active parameters."
+    },
+    {
+      "claim": "MiMo's config says quant_method=fp8 but store_dtype=mxfp4 with 32-element blocks. Main safetensors total 566.048 GB; including separate audio-tokenizer and DFlash tensors gives 573.457 GB. These are stored file bytes, not measured resident memory.",
+      "source_ids": [
+        "S01"
+      ],
+      "evidence_type": "derived",
+      "confidence": "High for metadata; [uncertain] resident repacking",
+      "practical_implication": "The released artifact does not match an all-FP8 one-terabyte proxy."
+    },
+    {
+      "claim": "GLM FP8 shards total 755.632 GB, DeepSeek Flash-1017 mixed FP4/FP8 510.297 GB, Qwen BF16 55.563 GB and official FP8 30.867 GB. Exact bytes and revisions appear in candidate_comparison.",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S04"
+      ],
+      "evidence_type": "derived",
+      "confidence": "High for file totals",
+      "practical_implication": "Device fit requires additional memory and kernel evidence."
+    },
+    {
+      "claim": "Kimi official weights already use native INT4 compressed-tensors. Unsloth BF16 main GGUFs total 2.053 TB. Its guide's roughly 610 GB full-precision wording confuses the original compressed checkpoint with BF16 precision.",
+      "source_ids": [
+        "S05",
+        "S06"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Use artifact bytes and configuration rather than quantization names."
+    },
+    {
+      "claim": "ggml-org MiMo MXFP4 retains native routed experts. Its Q2 variant retains down projections at MXFP4 and quantizes gate/up projections further; the conversion card says Q2 has no imatrix calibration.",
+      "source_ids": [
+        "S07"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "The smaller artifact needs its own quality test and separate sidecar budget."
+    },
+    {
+      "claim": "Pinned backend code contains relevant architecture registrations/implementations. Registration alone does not establish a working checkpoint, precision, device kernel, parser and modality combination.",
+      "source_ids": [
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for code presence; [uncertain] end-to-end compatibility",
+      "practical_implication": "Pin and test the complete configuration."
+    },
+    {
+      "claim": "vLLM documents extra CUDA-graph allocations, context/sequence limits for memory control, and potentially repeated full-checkpoint reads by tensor-parallel workers.",
+      "source_ids": [
+        "S10"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Cold start and runtime memory must be measured separately from serialized weight storage."
+    },
+    {
+      "claim": "MLX unified memory shares CPU/GPU storage within an Apple-silicon machine. Distributed communication uses explicit process operations and TCP/MPI/JACCL backends; these docs do not establish a transparent shared hardware memory pool across Macs.",
+      "source_ids": [
+        "S12"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "A cluster needs supported sharding, communication and per-node capacity."
+    },
+    {
+      "claim": "llama.cpp RPC is documented as proof-of-concept, fragile and insecure, with a warning against open networks and sensitive environments.",
+      "source_ids": [
+        "S13"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Do not assume RPC is an appropriate sensitive family-data transport."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "model_id": "XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "revision": "b61f21852680ee02a29e946e18cf8697f4844061",
+      "stored_file_bytes": 566048103896,
+      "decimal_GB": 566.048104,
+      "binary_GiB": 527.173377,
+      "format": "Mixed MXFP4/FP8/BF16 main safetensors",
+      "interpretation": "All repository safetensors including audio_tokenizer/dflash: 573457361664 bytes. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S01"
+      ]
+    },
+    {
+      "model_id": "zai-org/GLM-5.3",
+      "revision": "ba32f8c19c8738e2c57c71798c601d477a7bf844",
+      "stored_file_bytes": 755632050320,
+      "decimal_GB": 755.63205,
+      "binary_GiB": 703.737187,
+      "format": "Native FP8 with BF16/F32 tensors",
+      "interpretation": "Text-only; counting conventions do not change this file sum. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S02"
+      ]
+    },
+    {
+      "model_id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "stored_file_bytes": 510296708312,
+      "decimal_GB": 510.296708,
+      "binary_GiB": 475.250844,
+      "format": "Mixed FP4 experts/FP8/BF16/F32",
+      "interpretation": "[uncertain] Resident repacking not measured. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S03"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.8-27B",
+      "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+      "stored_file_bytes": 55563006776,
+      "decimal_GB": 55.563007,
+      "binary_GiB": 51.747083,
+      "format": "BF16",
+      "interpretation": "27781427952 logical tensor elements, including multimodal modules. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S04"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.8-27B-FP8",
+      "revision": "017b9c7af6b5689d5dd426a76e0bc077eb5ca20a",
+      "stored_file_bytes": 30866866928,
+      "decimal_GB": 30.866867,
+      "binary_GiB": 28.74701,
+      "format": "FP8 plus retained BF16",
+      "interpretation": "Same logical tensor count; not uniformly one byte per parameter. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S04"
+      ]
+    },
+    {
+      "model_id": "moonshotai/Kimi-K2.6",
+      "revision": "7eb5002f6aadc958aed6a9177b7ed26bb94011bb",
+      "stored_file_bytes": 595177988208,
+      "decimal_GB": 595.177988,
+      "binary_GiB": 554.302696,
+      "format": "Native INT4 compressed-tensors",
+      "interpretation": "Original compressed artifact, not BF16. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S05"
+      ]
+    },
+    {
+      "model_id": "ggml-org/MiMo-V2.6-Pro-RL-GGUF:MXFP4",
+      "revision": "5f387f5260fc110678396a3076a140c469b41eaa",
+      "stored_file_bytes": 554211764672,
+      "decimal_GB": 554.211765,
+      "binary_GiB": 516.149928,
+      "format": "Main GGUF shards",
+      "interpretation": "mmproj/MTP/DFlash sidecars additional. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S07"
+      ]
+    },
+    {
+      "model_id": "ggml-org/MiMo-V2.6-Pro-RL-GGUF:Q2_K",
+      "revision": "5f387f5260fc110678396a3076a140c469b41eaa",
+      "stored_file_bytes": 418769299904,
+      "decimal_GB": 418.7693,
+      "binary_GiB": 390.009303,
+      "format": "Mixed Q2_K/MXFP4 main GGUF",
+      "interpretation": "No imatrix calibration per card. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S07"
+      ]
+    },
+    {
+      "model_id": "unsloth/Kimi-K2.6-GGUF:UD-Q2_K_XL",
+      "revision": "47c7cab1e440dd9fcfc57c469e4737983408a6f2",
+      "stored_file_bytes": 340477209888,
+      "decimal_GB": 340.47721,
+      "binary_GiB": 317.094112,
+      "format": "Mixed dynamic main GGUF",
+      "interpretation": "Projector and runtime additional. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S06"
+      ]
+    },
+    {
+      "model_id": "unsloth/Kimi-K2.6-GGUF:UD-Q4_K_XL",
+      "revision": "47c7cab1e440dd9fcfc57c469e4737983408a6f2",
+      "stored_file_bytes": 583710875520,
+      "decimal_GB": 583.710876,
+      "binary_GiB": 543.623115,
+      "format": "Mixed dynamic main GGUF",
+      "interpretation": "Only 10.834 GB below Q8 variant. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S06"
+      ]
+    },
+    {
+      "model_id": "unsloth/Kimi-K2.6-GGUF:UD-Q8_K_XL",
+      "revision": "47c7cab1e440dd9fcfc57c469e4737983408a6f2",
+      "stored_file_bytes": 594544652160,
+      "decimal_GB": 594.544652,
+      "binary_GiB": 553.712856,
+      "format": "Mixed dynamic main GGUF",
+      "interpretation": "[uncertain] Losslessness not independently established. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S06"
+      ]
+    },
+    {
+      "model_id": "unsloth/Kimi-K2.6-GGUF:BF16",
+      "revision": "47c7cab1e440dd9fcfc57c469e4737983408a6f2",
+      "stored_file_bytes": 2053155814880,
+      "decimal_GB": 2053.155815,
+      "binary_GiB": 1912.15036,
+      "format": "BF16 main GGUF",
+      "interpretation": "About 2.053 TB. Stored metadata only; not observed resident memory.",
+      "source_ids": [
+        "S06"
+      ]
+    }
+  ],
+  "deployment_requirements": {
+    "accounting": "1 GB = 1,000,000,000 bytes; 1 GiB = 1,073,741,824 bytes; 1 TB = 1,000 GB. Plan resident weights + KV/recurrent state + activations/workspaces + graphs/runtime + encoders/projectors + speculative state + concurrent auxiliary models + OS reserve. File sizes include serialization metadata; loaders may repack or expand tensors. No universal overhead percentage or observed-fit guarantee is claimed.",
+    "hardware_conditions": [
+      {
+        "hardware": "Existing CPU-only machine",
+        "assessment": "llama.cpp supports CPU and hybrid offload. [uncertain] User RAM/bandwidth/CPU/storage are unknown. Hundreds of GiB of weights fitting in RAM does not establish interactive speed. Prefer a smaller supported candidate when capacity is insufficient.",
+        "source_ids": [
+          "S11"
+        ]
+      },
+      {
+        "hardware": "One nominal 24 GB GPU",
+        "assessment": "Official Qwen FP8 is 28.747 GiB and BF16 51.747 GiB: both exceed even 24 GiB before overhead. Ideal 27B at four bits is 13.5 GB/12.573 GiB, but metadata, retained tensors, vision and cache add memory. [uncertain] No exact four-bit artifact was proven to fit here. A recipe's 24.6 GiB NVFP4 allocation also exceeds 24 GiB.",
+        "source_ids": [
+          "S04",
+          "S08"
+        ]
+      },
+      {
+        "hardware": "One nominal 48 GB GPU",
+        "assessment": "Qwen BF16 exceeds 48 GB or 48 GiB. Official FP8 leaves a conditional runtime/cache budget. [uncertain] Kernel support, context, images and auxiliary coexistence need actual tests.",
+        "source_ids": [
+          "S04"
+        ]
+      },
+      {
+        "hardware": "One nominal 96 GB GPU",
+        "assessment": "Qwen BF16 storage is below this capacity, making it a conditional candidate with runtime headroom. None of the audited MiMo/GLM/DeepSeek/Kimi giant artifacts is fully GPU resident on one such card. [uncertain] Usable fit remains unmeasured.",
+        "source_ids": [
+          "S01",
+          "S02",
+          "S03",
+          "S04",
+          "S05"
+        ]
+      },
+      {
+        "hardware": "Multiple 24/48/96 GB GPUs",
+        "assessment": "Capacity is not automatically pooled: require supported partitioning, duplicated-tensor accounting and interconnect topology. Four hypothetical 96 GiB devices total 384 GiB, below MiMo Q2 main GGUF at 390.009 GiB before sidecars. Eight total 768 GiB; GLM FP8 stored tensors alone consume 703.737 GiB. [uncertain] Subtraction does not establish usable fit.",
+        "source_ids": [
+          "S02",
+          "S07",
+          "S10"
+        ]
+      },
+      {
+        "hardware": "H200/B200 examples",
+        "assessment": "GLM recipe specifies eight 141 GB H200/H20 for FP8 and eight 180 GB B200 for full 1M context with FP8 KV. Those are recipe configurations, not universal specifications or purchase quotes. [uncertain] MiMo TP8/two-node examples do not establish every eight-GPU machine works.",
+        "source_ids": [
+          "S01",
+          "S08"
+        ]
+      },
+      {
+        "hardware": "Mac unified memory or cluster",
+        "assessment": "Within-machine shared storage avoids a separate CPU/GPU copy, but OS/runtime capacity still matters. Across-machine inference requires explicit partitioning and communication. [uncertain] No exact flagship conversion, node layout or throughput was verified on a Mac cluster.",
+        "source_ids": [
+          "S12",
+          "S13"
+        ]
+      }
+    ],
+    "runtime_matrix": [
+      {
+        "candidate": "MiMo-V2.6-Pro-RL",
+        "documented": "MiMoV2ForCausalLM. Card specifies vllm/vllm-openai:mimov25-cu129, TP8, mimo parsers; SGLang example TP16/EP16/DP2, two nodes and DeepEP. Linked cookbook is titled V2.5. ggml-org supplies exact V2.6 GGUF; llama.cpp has mimo2.",
+        "limits": "[uncertain] Exact stable minimum and all-modality support at this image are unproven; mutable images require digest pinning.",
+        "source_ids": [
+          "S01",
+          "S07",
+          "S08",
+          "S09"
+        ]
+      },
+      {
+        "candidate": "GLM-5.3",
+        "documented": "GlmMoeDsaForCausalLM; dynamic e4m3 FP8, 128x128 blocks. Recipe uses TP8, glm47 parsers, FP8 cache, Transformers >=5.15.0. SGLang glm4_moe.py exposes that class; llama.cpp has glm-dsa.",
+        "limits": "[uncertain] Recipe header says vLLM 0.29.0+, prerequisites/install say 0.28.0. Exact GLM-5.3 GGUF load not verified.",
+        "source_ids": [
+          "S02",
+          "S08",
+          "S09"
+        ]
+      },
+      {
+        "candidate": "DeepSeek-V4.1-Flash-1017",
+        "documented": "DeepseekV41ForCausalLM; fp8 quant method, expert_dtype=fp4, 32x32 blocks, ue8m0 scales. Pinned vLLM registry contains this exact class; llama.cpp has deepseek41.cpp. SGLang V4 code contains V4.1 compressor/indexer logic.",
+        "limits": "[uncertain] Inspected SGLang entry class is DeepseekV4ForCausalLM; exact V4.1 dispatch/alias and minimum release unresolved. Code presence is not successful deployment.",
+        "source_ids": [
+          "S03",
+          "S09"
+        ]
+      },
+      {
+        "candidate": "Qwen3.8-27B",
+        "documented": "Qwen3_5ForConditionalGeneration appears in pinned vLLM/SGLang; llama.cpp has qwen35. Recipe header says vLLM >=0.17.0, Transformers >=5.8.0, but exact tested two-RTX-5090 case uses 0.26.1rc1.dev608+g99a10304d.",
+        "limits": "[uncertain] Header minimum is not proof every precision/feature works there. Recipe verifies text serving; vision needs separate evidence.",
+        "source_ids": [
+          "S04",
+          "S08",
+          "S09"
+        ]
+      },
+      {
+        "candidate": "Kimi-K2.6",
+        "documented": "KimiK25ForConditionalGeneration in pinned vLLM/SGLang. Native INT4 pack-quantized compressed-tensors, group32, higher-precision exclusions. Card reuses K2.5 guidance and requires Transformers >=4.57.1,<5.0.0.",
+        "limits": "[uncertain] Minimum engine release and arbitrary GGUF modality correctness unresolved. Card limits experimental video support to official API.",
+        "source_ids": [
+          "S05",
+          "S09"
+        ]
+      }
+    ],
+    "platform_and_pinning": "vLLM GPU documentation targets Linux and excludes native Windows; WSL requires compatible Linux/GPU drivers. SGLang installation targets Linux/NVIDIA; observed current instructions require CUDA13, which does not override a model-specific older image. llama.cpp documents Windows CPU/CUDA/Vulkan builds. Pin model revision/file hashes, tokenizer/processor/template, quantizer revision, engine commit/image digest, driver/CUDA/PyTorch/FlashInfer. Keep rollback manifests and retest before upgrades. [uncertain] Installed user stack was not inventoried.",
+    "source_ids": [
+      "S08",
+      "S09",
+      "S10",
+      "S11"
+    ]
+  },
+  "operating_profile": {
+    "status": "[uncertain] No cold start, TTFT, throughput, peak resident RAM/VRAM, concurrent-user capacity or first-audio time was measured.",
+    "kv_arithmetic": "Derived GQA cache formula sums tokens x KV_heads x (K_dimension + V_dimension) x element_bytes across full-attention layers and sequences. Qwen has 16 full-attention layers, four KV heads, 256-dimensional K/V: BF16 gives 65,536 bytes/token/sequence; 32,768 tokens = 2 GiB; 262,144 = 16 GiB; 1,000,000 = 61.035 GiB. Excludes 48 linear layers' recurrent state, padding, vision, activations and graphs. Supported FP8 KV halves this ideal attention-cache arithmetic. Sharing/scheduling alter aggregate demand.",
+    "architecture_caveat": "MiMo SWA/global attention and DeepSeek CSA2/MLA/Engram need architecture-specific state accounting. DeepSeek card's 890 bytes/token concerns compressed global KV: at one million tokens, 0.890 GB, not all runtime state. [uncertain] Exact 1017 implementation behavior was not independently measured.",
+    "latency_design": "Proposed measurement separates process-to-ready, queue delay, tokenization/encoding, prefill-to-first-generated-token, decode inter-token delay, and first visible answer after thinking. Voice adds endpointing/STT, first speakable LLM chunk, TTS first chunk and playback. No numerical prediction is given.",
+    "cold_start": "Derived lower bound only: bytes read divided by sustained storage bytes/second; no disk rate was assumed. Worker rereads, conversion, compilation, graph capture and communication add time. Filesystem-cache-warm startup is a different condition.",
+    "auxiliary_models": "Proposed budget includes simultaneous STT, TTS, embedding/reranking and image generation. Scheduling/swapping may reduce simultaneous capacity but adds queue delays and cold starts.",
+    "source_ids": [
+      "S01",
+      "S03",
+      "S04",
+      "S10"
+    ]
+  },
+  "language_evidence": {
+    "status": "Not a language-quality study. [uncertain] No hardware-specific English, Finnish or other-language quality/latency measurements were verified. Finnish is an optional test example, not an assumed requirement.",
+    "proposal": "Compare the same household-language prompts/audio across configurations; record tokenizer expansion and output length."
+  },
+  "retrieval_and_memory_design": {
+    "status": "Detailed RAG/access control is outside this item's scope. Proposed capacity plan reserves memory for embedding/reranking and includes document encoding/prefill. Context is not durable memory.",
+    "proposal": "Check shared prefix/KV caches and logs for cross-user reuse and personal-data retention. Deletion/access tests must cover caches and saved prompts. This is a proposal, not inspected implementation.",
+    "source_ids": [
+      "S10"
+    ]
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "Kimi full weights: about 610 GB.",
+      "verdict": "partially_supported",
+      "explanation": "Official native INT4 shards total 595.178 GB; Unsloth BF16 main GGUF is 2,053.156 GB. Rough compressed storage and full precision are different quantities.",
+      "source_ids": [
+        "S05",
+        "S06"
+      ]
+    },
+    {
+      "original_claim": "Kimi UD-Q2 340-350 GB, Q4 about 584 GB, Q8 about 595 GB.",
+      "verdict": "confirmed",
+      "explanation": "Main GGUF metadata gives 340.477, 583.711 and 594.545 GB. Projector and runtime state are additional.",
+      "source_ids": [
+        "S06"
+      ]
+    },
+    {
+      "original_claim": "MiMo about 1 TB+ FP8 or 350-600 GB quantized, inferred from Kimi.",
+      "verdict": "partially_supported",
+      "explanation": "Ideal all-FP8 arithmetic is 1.02 TB, but the released artifact uses mixed MXFP4 storage. Verified main GGUFs are 418.769/554.212 GB. [uncertain] No checked MiMo artifact establishes the 350 GB lower bound or resident fit.",
+      "source_ids": [
+        "S01",
+        "S07"
+      ]
+    },
+    {
+      "original_claim": "Requires eight H200/B200-class GPUs or several Macs.",
+      "verdict": "partially_supported",
+      "explanation": "Serving examples exist, including explicit GLM hardware. [uncertain] No universal GPU count or usable Mac cluster is established; context, precision, concurrency and interconnect matter.",
+      "source_ids": [
+        "S01",
+        "S08",
+        "S12"
+      ]
+    },
+    {
+      "original_claim": "27B vision fits a single 24-48 GB GPU.",
+      "verdict": "refuted",
+      "explanation": "Unqualified fit is false for BF16: stored tensors are 55.563 GB. Official FP8 is 30.867 GB; 24 GB needs another quantization/offload/smaller model. [uncertain] Exact 24 GB vision fit unproven.",
+      "source_ids": [
+        "S04",
+        "S08"
+      ]
+    },
+    {
+      "original_claim": "Serve every model with vLLM or SGLang; all expose /v1.",
+      "verdict": "partially_supported",
+      "explanation": "API compatibility does not establish exact artifact support, tools, modalities or kernels. Model-specific versions and parsers remain necessary.",
+      "source_ids": [
+        "S08",
+        "S09",
+        "S11"
+      ]
+    }
+  ],
+  "benchmark_caveats": "Compare prefill throughput, per-user decode, aggregate throughput, first generated token, first visible answer and first audio separately. Fix lengths, reasoning budget, precision, cache warmth and concurrency. Maintainer Blackwell results do not predict another device. Precision names do not imply identical kernels or quality. [uncertain] No controlled cross-hardware comparison of every artifact was verified.",
+  "evaluation_plan": [
+    "Proposal only: inventory CPU/RAM bytes, GPU/usable VRAM bytes, OS/WSL, driver, topology, storage and power envelope before selecting hardware.",
+    "Pin exact artifacts/hashes and runtime digest; fail if required architecture/kernel is absent or a loader silently expands into an unaffordable precision.",
+    "After separate execution authorization, test one user at 8K/32K, then needed longer contexts, with fixed 256-token outputs and separate thinking workloads. Test concurrency 1/2/4 with synthetic data. Capacity passes only below available memory with agreed reserve, no OOM/paging thrash/failed requests.",
+    "Measure uncached process start, warm filesystem cache and warm service separately. Report p50/p95 queueing/TTFT/inter-token/final-answer delay and prefill/decode rates. Agree latency targets with the user; none are invented here.",
+    "Test required image/document/tools/streaming/cancellation features and actual household languages at the chosen precision. Compare quantized quality with an authorized reference. HTTP success alone is insufficient.",
+    "Co-run representative STT/TTS, embedding/reranking and image generation; measure peak memory and first-audio delay. Test synthetic cross-user cache/log isolation and deletion.",
+    "Repeat the same acceptance suite before engine/model/driver upgrades; retain the working manifest and rollback build."
+  ],
+  "privacy_and_license": {
+    "weights": "DeepSeek checked text is MIT; Qwen BF16/FP8 is Apache2.0. GLM5.3 custom terms include review conditions for very large Model-as-a-Service businesses. Kimi modified MIT adds commercial attribution thresholds. [uncertain] MiMo card declares MIT but standalone applicable license text was not established here.",
+    "code": "llama.cpp repository declares MIT. [uncertain] Exact vLLM/SGLang/container/transitive dependency licenses were not completely audited; code and weight grants are distinct.",
+    "operation": "Proposed deployment keeps prompts/audio/images/cache/logs on controlled devices and discloses cloud endpoints. Downloadability does not establish no telemetry. RPC has additional trust boundaries and an explicit sensitive-environment warning.",
+    "source_ids": [
+      "S01",
+      "S03",
+      "S04",
+      "S05",
+      "S13",
+      "S14"
+    ]
+  },
+  "recommendation": {
+    "practical_default": "Reuse existing hardware conditionally with a supported smaller model or tested Qwen quantization. Official FP8 is a plausible 48 GB-class candidate; BF16 a plausible 96 GB-class candidate at controlled context. On 24 GB/CPU select a smaller model if the exact conversion cannot retain runtime headroom. These are shortlist decisions, not fit guarantees.",
+    "stronger_option": "Treat MiMo/GLM/DeepSeek as server-scale candidates pending exact representation, per-rank memory, kernel and context/concurrency tests. Prefer documented configurations; do not purchase servers or Mac clusters from a Kimi proxy.",
+    "choice_changes": "[uncertain] Hardware, budget, users, modalities, languages, context and tolerated TTFT/audio delay are unknown. No price or throughput is invented.",
+    "source_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S08",
+      "S10",
+      "S12"
+    ]
+  },
+  "next_steps": [
+    "Obtain actual hardware and concurrent-user/context/audio needs.",
+    "Resolve GLM minimum-version conflict and exact SGLang V4.1 dispatch.",
+    "Pin one small baseline and one conditional stronger candidate with license/quantization provenance.",
+    "After separate deployment authorization, run proposed memory, quality, latency and isolation acceptance tests.",
+    "Only then compare hardware with current specifications and quotes; this research authorizes no purchases or paid GPU use."
+  ],
+  "open_questions": [
+    "[uncertain] Peak resident allocation, repacking/dequantization and per-rank state need a real load; shard bytes do not prove fit.",
+    "[uncertain] GLM recipe says 743B/39B versus approximately 753B/40B elsewhere; counting conventions remain unresolved.",
+    "[uncertain] Earliest stable versions and all exact modality/format combinations are not established by current source presence.",
+    "[uncertain] SGLang DeepSeek V4.1 dispatch and 1017 compressed-KV behavior need direct recipe/execution evidence.",
+    "[uncertain] Multi-Mac exact conversion, partition, bandwidth and latency remain unvalidated.",
+    "[uncertain] Unsloth's lossless Q8 description was not independently checked for bitwise identity or equal generated outputs.",
+    "[uncertain] Undated live docs may change, and actual user hardware/requirements remain unknown."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "MiMo RL official artifacts and blob metadata",
+      "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "publisher": "Xiaomi MiMo / Hugging Face",
+      "published_or_updated": "Modified 2026-10-09; revision recorded in comparison",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Card/config read; blobs=true file-size sums separated by main/audio_tokenizer/dflash. No weights fetched.",
+      "supporting_urls": [
+        "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL/raw/main/config.json",
+        "https://huggingface.co/api/models/XiaomiMiMo/MiMo-V2.6-Pro-RL?blobs=true"
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "GLM5.3 official artifacts and blob metadata",
+      "url": "https://huggingface.co/zai-org/GLM-5.3",
+      "publisher": "Z.ai / Hugging Face",
+      "published_or_updated": "Modified 2026-10-14; revision recorded in comparison",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read config and summed safetensors including serialized metadata and scale tensors.",
+      "supporting_urls": [
+        "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+        "https://huggingface.co/api/models/zai-org/GLM-5.3?blobs=true"
+      ]
+    },
+    {
+      "id": "S03",
+      "title": "DeepSeek V4.1 and Flash1017 artifacts",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "publisher": "DeepSeek / Hugging Face",
+      "published_or_updated": "1017 modified 2026-10-17; revision recorded",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read predecessor architecture, 1017 config/blob metadata. KV vendor claim is not full runtime memory.",
+      "supporting_urls": [
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/raw/main/config.json",
+        "https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4.1-Flash-1017?blobs=true"
+      ]
+    },
+    {
+      "id": "S04",
+      "title": "Qwen3.8-27B BF16/FP8 official artifacts",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "publisher": "Qwen / Hugging Face",
+      "published_or_updated": "Both modified 2026-08-14; revisions recorded",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read card/config and blob metadata. Weight/KV arithmetic derived explicitly.",
+      "supporting_urls": [
+        "https://huggingface.co/Qwen/Qwen3.8-27B-FP8",
+        "https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json",
+        "https://huggingface.co/api/models/Qwen/Qwen3.8-27B?blobs=true",
+        "https://huggingface.co/api/models/Qwen/Qwen3.8-27B-FP8?blobs=true"
+      ]
+    },
+    {
+      "id": "S05",
+      "title": "Kimi K2.6 official artifacts",
+      "url": "https://huggingface.co/moonshotai/Kimi-K2.6",
+      "publisher": "Moonshot / Hugging Face",
+      "published_or_updated": "Modified 2026-05-19; revision recorded",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read card, native INT4 config and blob file sizes.",
+      "supporting_urls": [
+        "https://huggingface.co/moonshotai/Kimi-K2.6/raw/main/config.json",
+        "https://huggingface.co/api/models/moonshotai/Kimi-K2.6?blobs=true"
+      ]
+    },
+    {
+      "id": "S06",
+      "title": "Unsloth Kimi GGUF metadata and guide",
+      "url": "https://huggingface.co/unsloth/Kimi-K2.6-GGUF",
+      "publisher": "Unsloth",
+      "published_or_updated": "Modified 2026-04-22; guide date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Grouped main GGUF bytes by precision. Guide is evidence of converter claims, not independent quality/memory validation.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/unsloth/Kimi-K2.6-GGUF?blobs=true",
+        "https://unsloth.ai/docs/models/kimi-k2.6.md"
+      ]
+    },
+    {
+      "id": "S07",
+      "title": "ggml-org MiMo V2.6 conversion",
+      "url": "https://huggingface.co/ggml-org/MiMo-V2.6-Pro-RL-GGUF",
+      "publisher": "ggml-org",
+      "published_or_updated": "2026-10-02; revision recorded",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Grouped split shards. Q8 mmproj 1611230816 bytes; MTP Q4_0 2149176480; DFlash Q8_0 4939541984; chosen sidecars additional.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/ggml-org/MiMo-V2.6-Pro-RL-GGUF?blobs=true"
+      ]
+    },
+    {
+      "id": "S08",
+      "title": "vLLM maintainer recipes",
+      "url": "https://recipes.vllm.ai/zai-org/GLM-5.3",
+      "publisher": "vLLM",
+      "published_or_updated": "Qwen 2026-10-15; other live dates [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read version conflicts, device examples, exact tested build and Qwen text-only verified scope.",
+      "supporting_urls": [
+        "https://recipes.vllm.ai/Qwen/Qwen3.8-27B",
+        "https://recipes.vllm.ai/XiaomiMiMo/MiMo-V2.5"
+      ]
+    },
+    {
+      "id": "S09",
+      "title": "Pinned engine registries and implementations",
+      "url": "https://github.com/vllm-project/vllm/blob/33a73daf1771eaa1014d1f272b4ae6815ee62d7e/vllm/model_executor/models/registry.py",
+      "publisher": "vLLM / SGLang / ggml-org",
+      "published_or_updated": "2026-10-26 commits; exact SHAs embedded in URLs",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Raw source read at cutoff commits selected with GitHub commits API until=2026-10-26T23:59:59Z. Presence is not minimum-release or successful-load evidence.",
+      "supporting_urls": [
+        "https://github.com/sgl-project/sglang/blob/ae579c5e00300e77f446b5f33996121c15a9c78d/python/sglang/srt/models/mimo_v2.py",
+        "https://github.com/sgl-project/sglang/blob/ae579c5e00300e77f446b5f33996121c15a9c78d/python/sglang/srt/models/glm4_moe.py",
+        "https://github.com/sgl-project/sglang/blob/ae579c5e00300e77f446b5f33996121c15a9c78d/python/sglang/srt/models/qwen3_5.py",
+        "https://github.com/sgl-project/sglang/blob/ae579c5e00300e77f446b5f33996121c15a9c78d/python/sglang/srt/models/kimi_k25.py",
+        "https://github.com/sgl-project/sglang/blob/ae579c5e00300e77f446b5f33996121c15a9c78d/python/sglang/srt/models/deepseek_v4.py",
+        "https://github.com/ggml-org/llama.cpp/blob/caa8191df159f764fb0160e3d2fc6be008948aee/src/llama-arch.cpp",
+        "https://github.com/ggml-org/llama.cpp/blob/caa8191df159f764fb0160e3d2fc6be008948aee/src/models/deepseek41.cpp"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "vLLM conserving memory",
+      "url": "https://docs.vllm.ai/en/latest/configuration/conserving_memory/",
+      "publisher": "vLLM",
+      "published_or_updated": "[uncertain] Undated live latest",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read context/sequence/graph/cache/load sections.",
+      "supporting_urls": []
+    },
+    {
+      "id": "S11",
+      "title": "Platform installation and native builds",
+      "url": "https://docs.vllm.ai/en/latest/getting_started/installation/gpu/",
+      "publisher": "vLLM / SGLang / ggml-org",
+      "published_or_updated": "[uncertain] Undated live docs; llama commit 2026-10-26",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read Linux/Windows/WSL/CUDA and native build support.",
+      "supporting_urls": [
+        "https://docs.sglang.io/docs/get-started/install",
+        "https://github.com/ggml-org/llama.cpp/blob/caa8191df159f764fb0160e3d2fc6be008948aee/docs/build.md",
+        "https://github.com/ggml-org/llama.cpp"
+      ]
+    },
+    {
+      "id": "S12",
+      "title": "MLX unified memory and distributed communication",
+      "url": "https://ml-explore.github.io/mlx/build/html/usage/unified_memory.html",
+      "publisher": "Apple MLX project",
+      "published_or_updated": "Displays 0.32.4; update date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read shared-pool semantics and explicit communication backends.",
+      "supporting_urls": [
+        "https://ml-explore.github.io/mlx/build/html/usage/distributed.html"
+      ]
+    },
+    {
+      "id": "S13",
+      "title": "Pinned llama.cpp RPC documentation",
+      "url": "https://github.com/ggml-org/llama.cpp/blob/caa8191df159f764fb0160e3d2fc6be008948aee/tools/rpc/README.md",
+      "publisher": "ggml-org",
+      "published_or_updated": "Commit 2026-10-26; individual file date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read raw warning and remote-device design.",
+      "supporting_urls": []
+    },
+    {
+      "id": "S14",
+      "title": "Exact model license texts",
+      "url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/LICENSE",
+      "publisher": "Z.ai / Moonshot / Qwen / DeepSeek",
+      "published_or_updated": "Copyright notices 2026/2023; Apache2 January2004; file dates [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual texts opened; personal operation appears permitted subject to terms, with code/dependency licensing separate.",
+      "supporting_urls": [
+        "https://huggingface.co/moonshotai/Kimi-K2.6/raw/main/LICENSE",
+        "https://huggingface.co/Qwen/Qwen3.8-27B-FP8/raw/main/LICENSE",
+        "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/raw/main/LICENSE"
+      ]
+    }
+  ],
+  "uncertain": [
+    "research_date",
+    "verified_findings",
+    "candidate_comparison",
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "original_claim_audit",
+    "benchmark_caveats",
+    "privacy_and_license",
+    "recommendation",
+    "open_questions",
+    "sources"
+  ]
+}

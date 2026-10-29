@@ -1,0 +1,168 @@
+topic: 'Best open-weight models for a private family AI: verified continuation and practical deployment'
+research_date: '2026-10-26'
+time_range: All relevant historical evidence and releases available through 2026-10-26
+source_report: ../open-model-research-2026-10.md
+source_report_sha256: 7E9950D60928D652D489AADED73C5B50D9EFB7B9126F97CA50D2F1F85D07935B
+scope_approval: User explicitly approved the eight-item scope and defaults, including one web_researcher per item
+  and three simultaneous researchers, and requested completion of research followed by research-deep.
+items:
+- name: Model rankings and coding
+  category: Reasoning and agentic tools
+  description: Audit MiMo-V2.6-Pro versus actual MiMo-V2.6-Pro-RL or other released checkpoint, GLM-5.3, DeepSeek-V4.1-Flash-1017,
+    Step 5 Preview, Kimi K3 and Qwen3.8 Max claims. Verify weights versus API-only availability, precise model IDs,
+    parameters, context, release status and licenses. Compare reasoning, coding/tool execution and practical small-model
+    alternatives. Audit AA/BenchLM rankings as unverified unless their primary methodology and exact comparable
+    version support them. Vendor benchmark results must be identified as such. Scope is model identity and ability;
+    hardware item owns detailed capacity planning. Include function-calling/structured-output evidence and effective
+    long-context tests such as BFCL and RULER; advertised context is not measured effective context.
+  id: '01'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Vision and documents
+  category: Multimodal understanding
+  description: Verify Qwen3.8-27B, Qwen3.6-27B and Qwen3.6-35B-A3B claims and evaluate documented alternatives including
+    small visual models and dedicated OCR/document parsers. Investigate GLM-5.3-Flash or other confirmed visual
+    releases. Distinguish OCR, page layout, charts, screenshots, multi-image and video. Check parameter precision,
+    image/video token growth, context, local serving maturity, multilingual evidence, and realistic 24/48 GB scenarios
+    without claiming tested fit. Include extraction and grounding interfaces relevant to RAG; leave embedding/reranking
+    architecture to deployment item.
+  id: '02'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Speech recognition and synthesis
+  category: Modular voice
+  description: Audit whisper.cpp as an inference engine rather than a model, Kokoro-82M language count and API integration
+    assumptions. Compare released open-weight ASR/TTS alternatives from official sources, including English and
+    Finnish where evidence exists. Separate model, serving wrapper and voice licenses, streaming versus pseudo-streaming,
+    VAD and turn detection, CPU/GPU memory, voice cloning restrictions, and maintained integration routes. Finnish
+    is an evaluation example, not a confirmed user requirement.
+  id: '03'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Speech-to-speech and omni
+  category: Native audio
+  description: 'Resolve the original unverified native audio question. Compare documented open-weight full-duplex/omni/native
+    audio candidates and a modular ASR-LLM-TTS pipeline: examples to investigate include Moshi, Qwen omni/audio,
+    Step audio, MiMo audio and other current primary releases. Verify actual audio-in/audio-out capabilities, streaming,
+    interruption/barge-in, text/tool integration, language support, voice restrictions, latency evidence, licenses
+    and hardware. Do not infer audio support from a text-only checkpoint.'
+  id: '04'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Image generation and editing
+  category: Generative images
+  description: Resolve FLUX, Qwen-Image and HiDream leads from the original report; identify exact current released
+    variants, including generation versus editing and base versus distilled checkpoints. Compare fidelity, text
+    rendering, edit consistency and practical local options using disclosed benchmarks. Verify model/code licenses,
+    noncommercial restrictions, weight availability, offloading and quantization memory assumptions; separate minimum
+    memory from usable speed. No image generation or weight downloads.
+  id: '05'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Hardware and serving
+  category: Local infrastructure
+  description: Audit full-resident memory and serving support for verified MiMo, GLM, DeepSeek and Qwen checkpoints
+    and the original Kimi K2.6 proxy quantities. Distinguish total/active MoE parameters, actual shard bytes, quantization
+    formats and metadata, KV cache, activations, concurrency and context; spell out GB versus GiB and derived estimates.
+    Check official vLLM/SGLang/llama.cpp support at exact architectures/versions. Compare existing CPU/24/48/96GB/multi-GPU
+    hardware conditionally, Windows/Linux constraints and distributed unified-memory claims without invented throughput
+    or purchase quotes. Cover cold start, time to first token/audio, prefill versus generation, concurrent auxiliary
+    models, pinning and upgrade compatibility.
+  id: '06'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Customization and abliteration
+  category: Adaptation and quality
+  description: Audit the original LoRA retention/HumanEval values and assertions about distillation and RL reasoning
+    against the actual papers and their evaluation scope. Compare prompting, RAG, LoRA, full fine-tuning, distillation
+    and RL for persona, private facts and reasoning; examine dated empirical evidence on refusal-removal/abliteration
+    and quality loss, including whether evidence generalizes to current MoE models. Treat family privacy, data ownership
+    and contamination. Provide only a high-level evidence assessment of refusal removal, no bypass recipes. Include
+    retrieval failure modes and data contamination; do not conflate RAG with weight training.
+  id: '07'
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+- name: Private family deployment
+  category: System design and governance
+  description: 'Build a research-only deployment recommendation from primary documentation: Open WebUI and model-server
+    integrations; verify voice API routes/settings rather than copying assumed defaults. Cover per-user account/chat/file/memory/vector-store
+    isolation, permissions, retention/deletion, backups, egress/telemetry, access control, prompt injection and
+    tool privileges, maintenance and upgrades. Offer existing-hardware-first and stronger-server conditional stacks,
+    not a purchase recommendation. Distinguish open-weight versus OSI open-source, exact model licenses versus UI/code/voice
+    licenses, and local inference versus remote cloud privacy. Include end-to-end acceptance criteria and small-model
+    evaluation-driven routing. Explicitly compare local embeddings/rerankers (including Qwen3 Embedding leads),
+    retrieval citations, private/shared stores, deletion propagation, administrator visibility, additive permissions,
+    persistent storage and tested backup recovery proposals. Offline settings alone do not prove no network egress.'
+  id: 08
+  instructions: Read C:/Users/Roland/Documents/AI DESTROYER/open-model-research-2026-10.md for source context. Treat
+    its assertions as claims to audit, not established evidence. Primary sources only for technical conclusions;
+    cross-check surprising claims against an independent primary source when possible, otherwise flag the limitation.
+    Research cutoff 2026-10-26. You are not alone in the workspace; own only the explicitly assigned result JSON
+    and do not revert or modify others' files, source report, outline or fields. Browse sources and save substantive
+    findings in the assigned file; finish with a brief completion/status message rather than a long chat report.
+    No implementation, package installs, model downloads, training, GPU use or paid calls.
+execution:
+  batch_size: 3
+  items_per_agent: 1
+  agent_type: web_researcher
+  output_dir: ./results
+  task_output: Saved result files; concise completion messages only
+  resume: Skip only validated complete JSON results; verify expected files exist
+constraints:
+- Research only; preserve source report.
+- Use primary technical sources and explicit claim audits.
+- No paid services, implementation, package installs, model downloads or training.
+preliminary_research:
+  method: Initial framework from model knowledge, followed by a dedicated web_researcher supplementary pass. User
+    approved scope and defaults before deep execution.
+  supplements:
+  - Tool calling and structured outputs
+  - Effective context rather than advertised limits
+  - Embedding, reranking and grounding
+  - Component-level privacy and operator access
+  - Pinned upgrades and recovery
+  - End-to-end family acceptance evaluation
+  sources:
+  - https://qwenlm.github.io/blog/qwen3-embedding/
+  - https://gorilla.cs.berkeley.edu/leaderboard
+  - https://arxiv.org/abs/2404.06654
+  - https://docs.openwebui.com/features/authentication-access/rbac/permissions/
+  - https://github.com/open-webui/docs/blob/main/docs/security/chat-data-privacy-and-encryption.mdx
+  - https://docs.openwebui.com/getting-started/advanced-topics/hardening/
+  - https://docs.openwebui.com/getting-started/updating/
+  - https://github.com/ggml-org/llama.cpp/blob/master/tools/server/bench/speed-bench/README.md

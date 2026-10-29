@@ -1,0 +1,14 @@
+# Secrets: never commit
+.env
+.env.*
+*.key
+*credentials*
+*secret*
+
+# Backups of Open WebUI data (private family chats)
+backups/
+*.db
+*.sqlite
+
+.claude/settings.local.json
+__pycache__/

@@ -1,0 +1,283 @@
+{
+  "item_name": "Speech recognition and synthesis",
+  "research_date": "Cutoff and source access: 2026-10-26. No post-cutoff release claims are included. Several moving repository pages have [uncertain] revision dates; they establish what was documented on access, not an independently pinned historical snapshot.",
+  "scope": "Audit the source report's modular STT/TTS choices, model/runtime distinction, language count, API compatibility, licensing, streaming and household deployment assumptions. Compare deployable released alternatives without naming a universal winner. Finnish is an optional evaluation example, not a confirmed household requirement. Native speech-to-speech is covered by another outline item. No installations, downloads of model weights, inference runs, paid calls or implementation occurred.",
+  "verified_findings": [
+    {
+      "claim": "whisper.cpp is a C/C++ inference implementation for OpenAI Whisper checkpoints, not an ASR model or a quality ranking. An actionable selection must name the checkpoint, precision and runtime separately.",
+      "source_ids": ["S01", "S02"],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Record a combination such as multilingual Whisper small through whisper.cpp, rather than calling whisper.cpp the best speech model."
+    },
+    {
+      "claim": "The upstream whisper-server source defaults to 127.0.0.1:8080 and /inference. Its source does not contain /audio/transcriptions. Open WebUI's self-hosted audio guide expects /v1/audio/transcriptions.",
+      "source_ids": ["S03", "S17"],
+      "evidence_type": "primary",
+      "confidence": "high for the inspected upstream source",
+      "practical_implication": "The report's :2022/v1 address is wrapper-specific or unverified. Specify and test an adapter; changing the port or adding /v1 does not establish request/response compatibility."
+    },
+    {
+      "claim": "Kokoro v1.0 documents 82 million parameters, a 2025-01-27 release, eight languages and 54 voices. Its voice list treats US and British English separately as accents, but they are one language. Finnish is absent.",
+      "source_ids": ["S06", "S07"],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "The eight-language claim is supported; it does not establish equal quality across languages or suitability for a Finnish voice."
+    },
+    {
+      "claim": "Kokoro-FastAPI is a separate wrapper exposing /v1/audio/speech at port 8880. Its documentation includes CPU and GPU operation and an Open WebUI integration example.",
+      "source_ids": ["S08", "S08a", "S08b"],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "The TTS endpoint proposal is concrete, provided model, voice, audio format, container routing and wrapper release are fixed."
+    },
+    {
+      "claim": "Whisper's normal transcription operates on sliding audio windows. whisper.cpp's microphone example periodically retranscribes captured audio; it documents a basic VAD mode. This differs from a model with a causal encoder designed to consume an ongoing audio stream.",
+      "source_ids": ["S01", "S04", "S18"],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Distinguish windowed live transcription, incremental model inference, HTTP audio byte streaming and incremental text input; the word streaming alone proves none of the others."
+    },
+    {
+      "claim": "Qwen3-ASR's official toolkit documents offline and streaming operation. Its streaming implementation requires the vLLM backend and currently excludes batch inference and timestamp return. Its vLLM examples include audio input through chat completions.",
+      "source_ids": ["S09"],
+      "evidence_type": "primary",
+      "confidence": "high for documented interface, actual local behavior untested",
+      "practical_implication": "A vLLM server can still need an STT protocol adapter for a front end that specifically uploads multipart audio to /audio/transcriptions."
+    },
+    {
+      "claim": "The Qwen3-TTS README still describes vLLM-Omni as offline-only, but the runtime's stable Speech API documentation describes online /v1/audio/speech, PCM/SSE output and a WebSocket text-input route. The sources are inconsistent about integration maturity.",
+      "source_ids": ["S11", "S12"],
+      "evidence_type": "primary",
+      "confidence": "high that the documentation differs; [uncertain] exact minimum compatible release",
+      "practical_implication": "Prefer the runtime's version-pinned documentation and a contract test before deployment. Do not repeat the stale offline-only statement as a current universal limitation."
+    },
+    {
+      "claim": "Silero VAD detects speech activity, not sentence meaning or household identity. Its repository documents 8 kHz and 16 kHz inputs, ONNX/PyTorch routes and MIT licensing. faster-whisper integrates it as an optional silence filter.",
+      "source_ids": ["S05", "S16"],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Endpointing, pause tolerance, echo suppression, interruption cancellation and user authentication remain application responsibilities. Treat this last design conclusion as derived."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "candidate": "OpenAI Whisper multilingual small / large-v3 / large-v3-turbo",
+      "exact_ids": ["openai/whisper", "ggml-org/whisper.cpp", "SYSTRAN/faster-whisper"],
+      "release_or_revision": "Checkpoint names verified; [uncertain] immutable runtime revisions were not selected.",
+      "capabilities": "Broad multilingual transcription, including English and Finnish; CPU-oriented native runtime or Python/CTranslate2 alternative.",
+      "constraints": "The English-only .en checkpoints must not be substituted for multilingual Finnish use. Windowed live transcription requires an endpointing strategy. Turbo is not a translation substitute.",
+      "source_ids": ["S01", "S02", "S04", "S05"]
+    },
+    {
+      "candidate": "Qwen3-ASR 0.6B and 1.7B",
+      "exact_ids": ["Qwen/Qwen3-ASR-0.6B", "Qwen/Qwen3-ASR-1.7B", "QwenLM/Qwen3-ASR"],
+      "release_or_revision": "Official repository news dates release to 2026-01-29; native Transformers checkpoint variants were announced 2026-06-26.",
+      "capabilities": "Language identification; 30 languages plus 22 Chinese dialects, rather than 52 independent languages. English and Finnish appear in the list. Smaller and larger options share the toolkit.",
+      "constraints": "Streaming restrictions are recorded above. [uncertain] Household accuracy and latency relative to Whisper are unmeasured.",
+      "source_ids": ["S09"]
+    },
+    {
+      "candidate": "Parakeet TDT 0.6B v3",
+      "exact_ids": ["nvidia/parakeet-tdt-0.6b-v3"],
+      "release_or_revision": "Model card release date: 2025-08-14; [uncertain] deployment revision not pinned.",
+      "capabilities": "600M-parameter transcription model; 25 European languages including English and Finnish; punctuation and timestamps; NeMo and documented Transformers routes.",
+      "constraints": "Do not substitute the English-only v2 checkpoint. Long-file limits depend on attention mode and hardware. Native incremental streaming was not established from this card.",
+      "source_ids": ["S10"]
+    },
+    {
+      "candidate": "Voxtral Mini 4B Realtime 2602",
+      "exact_ids": ["mistralai/Voxtral-Mini-4B-Realtime-2602"],
+      "release_or_revision": "Mistral announcement: 2026-02-04; [uncertain] selected serving revision.",
+      "capabilities": "Causal streaming ASR architecture and configurable latency; English among 13 documented languages.",
+      "constraints": "Finnish is absent. Model-card prose has conflicting lower delay bounds and stale runtime statements; low-latency claims are vendor claims, not measured household latency. Do not conflate the open Realtime checkpoint with the hosted batch Mini Transcribe V2 product.",
+      "source_ids": ["S18"]
+    },
+    {
+      "candidate": "Kokoro v1.0 with Kokoro-FastAPI",
+      "exact_ids": ["hexgrad/Kokoro-82M", "remsky/Kokoro-FastAPI"],
+      "release_or_revision": "Model v1.0 released 2025-01-27; wrapper README names tested model commit 41e5892b9d8b43e56fc560f892312a328a410973, which is not an independently verified immutable deployment pin.",
+      "capabilities": "Lightweight preset-voice TTS, voice mixing and chunked output; small CPU-capable baseline.",
+      "constraints": "Language support and quality limitations are in S07. Voice mixing is not arbitrary reference-audio cloning. The wrapper's optional external clone-tuner is a separate feature, not a native Kokoro guarantee.",
+      "source_ids": ["S06", "S07", "S08"]
+    },
+    {
+      "candidate": "Piper with a selected Finnish voice",
+      "exact_ids": ["OHF-Voice/piper1-gpl", "rhasspy/piper-voices/fi/fi_FI/harri/medium"],
+      "release_or_revision": "[uncertain] Release and immutable voice revision were not pinned; the inspected card was associated with commit 2f8dbe0.",
+      "capabilities": "Local VITS/ONNX preset-voice synthesis; Harri card identifies one Finnish speaker, 22,050 Hz audio and medium quality. Python API yields audio chunks.",
+      "constraints": "Each voice needs both ONNX weights and JSON configuration. This is not zero-shot cloning. Source repository currently seeks maintainers, so do not promise maintenance continuity.",
+      "source_ids": ["S13", "S14"]
+    },
+    {
+      "candidate": "Qwen3-TTS 12Hz 0.6B / 1.7B variants",
+      "exact_ids": ["Qwen/Qwen3-TTS-12Hz-0.6B-Base", "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice", "Qwen/Qwen3-TTS-12Hz-1.7B-Base", "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign", "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"],
+      "release_or_revision": "Official repository release announcement: 2026-01-22.",
+      "capabilities": "Base supports reference-audio cloning; CustomVoice provides presets; VoiceDesign provides description-based voice design. Documented 10-language scope includes English.",
+      "constraints": "Finnish is absent. The checkpoint task types are not interchangeable, and a 0.6B VoiceDesign checkpoint must not be invented. Serving documentation disagreement is recorded above.",
+      "source_ids": ["S11", "S12"]
+    },
+    {
+      "candidate": "Chatterbox Multilingual",
+      "exact_ids": ["ResembleAI/chatterbox", "resemble-ai/chatterbox"],
+      "release_or_revision": "[uncertain] The inspected pages describe V3 and legacy V2, but no dated V3 release was established. Treat V3-specific improvements as unverified historical claims until a dated revision is pinned.",
+      "capabilities": "500M-class multilingual reference-audio TTS; documented language list includes Finnish and English. Project includes audio watermarking.",
+      "constraints": "No reproducible Finnish quality result or household latency measurement was established. Original English Chatterbox and English Turbo/Nano must not inherit the multilingual language list. No maintained upstream OpenAI audio API contract was established from the inspected README.",
+      "source_ids": ["S15"]
+    }
+  ],
+  "deployment_requirements": {
+    "whisper_runtimes": "whisper.cpp supports CPU, CUDA, Metal, Vulkan and other build-specific backends; converted ggml-format checkpoints are distinct artifacts. faster-whisper requires Python >=3.9; its current README specifies CUDA 12 cuBLAS and CUDA 12 cuDNN 9 for its GPU route. These are runtime-specific requirements, not shared model requirements. [S02,S05]",
+    "tts_wrappers": "Kokoro-FastAPI supplies CPU/CUDA container routes and native Windows launch scripts; MPS uses native execution and ROCm is marked experimental. Verify actual image architectures and CUDA variant against the target machine. Piper uses ONNX/config per voice; CUDA requires onnxruntime-gpu. [S08,S13]",
+    "qwen": "Official ASR and TTS quickstarts recommend isolated Python 3.12 environments; that recommendation is not proof of a strict minimum. GPU examples load BF16 on CUDA. FlashAttention 2 is optional and hardware-dependent. [uncertain] No single exact minimal compatible package matrix was established across qwen-asr, Transformers, vLLM and vLLM-Omni. [S09,S11,S12]",
+    "integration": "Open WebUI has separate audio provider settings; configuring only the language-model OPENAI_API_BASE_URL does not prove voice integration. Use a reachable backend address and the required audio route. A container's localhost points to itself. Kokoro's integration guide documents host.docker.internal:8880/v1 for Docker Desktop. [S08b,S17]",
+    "alternative_wrapper": "speaches-ai/speaches documents an OpenAI-compatible server covering faster-whisper STT and Kokoro/Piper TTS. This is a candidate integration route, with its own code and dependency licenses; compatibility still needs pinned-version testing. [S19]",
+    "scope_limit": "No required hardware was assumed and no dependencies or models were installed. Checkpoint license and runtime support must be checked together before any future download."
+  },
+  "operating_profile": {
+    "whisper_cpp_documented_memory": "Upstream README approximate runtime memory: tiny 273 MB; base 388 MB; small 852 MB; medium 2.1 GB; large 3.9 GB. These are project guidance, not a guarantee for a chosen backend, model revision, quantization, audio length or concurrency. They differ from PyTorch Whisper's VRAM guidance. [S02]",
+    "comparison_measurement": "The faster-whisper maintainers report large-v2 INT8 at 2,926 MB VRAM versus 4,525 MB FP16 on RTX 3070 Ti 8GB, beam 5; batching 8 raises INT8 to 4,500 MB. These are maintainer measurements of that workload, not independent measurements or proof of current model quality. [S05]",
+    "arithmetic_only": "82M parameters at four bytes each are about 328 MB of raw weights. A 0.6B model at BF16 is about 1.2 GB and a 1.7B model about 3.4 GB of raw parameter storage. These derived decimal-GB figures exclude the audio tokenizer/vocoder, caches, activations, framework and process overhead. They are not minimum RAM or VRAM requirements. [S06,S09,S11]",
+    "tts_latency": "[uncertain] No local first-audio, cold-start or real-time-factor measurements exist. Kokoro wrapper timing examples and Qwen's as-low-as latency claims must not be copied as household service-level guarantees. HTTP byte streaming can begin after a chunk is synthesized, while text may still be buffered. [S08,S11,S12]",
+    "concurrency": "Kokoro-FastAPI documents one synchronous inference worker by default and a separate model copy for each additional worker. Budget queueing and peak memory using simultaneous ASR, LLM and TTS, not isolated weight sizes. [S08a]",
+    "revision_and_compatibility": "[uncertain] Final deployment artifact hashes, voice hashes and runtime versions were not selected. Pin them together before comparing memory or speed."
+  },
+  "language_evidence": {
+    "english": "Whisper, Qwen3-ASR, Parakeet v3, Voxtral Realtime, Kokoro, Piper, Qwen3-TTS and Chatterbox have documented English support. This does not rank dialect or child-speech quality. [S01,S06,S09,S10,S11,S13,S15,S18]",
+    "finnish_asr": "Whisper's tokenizer contains fi; Qwen3-ASR and Parakeet v3 explicitly list Finnish. [uncertain] This review did not establish a reproducible, apples-to-apples Finnish WER winner for the target household. [S01,S09,S10]",
+    "finnish_tts": "Piper's Harri card is a concrete Finnish voice artifact; Chatterbox's general multilingual list includes fi. Kokoro and Qwen3-TTS do not list Finnish. [uncertain] Finnish intelligibility, names, numbers, inflections, accent and cross-language cloning quality need listening tests. [S07,S11,S13,S14,S15]",
+    "other_languages": "Kokoro: English, Japanese, Mandarin, Spanish, French, Hindi, Italian and Brazilian Portuguese. Its author warns of weak or thin non-English coverage. Qwen3-TTS: Chinese, English, Japanese, Korean, German, French, Russian, Portuguese, Spanish and Italian. [S07,S11]",
+    "interpretation": "A supported-language list establishes intended coverage, not a score. Do not infer a Finnish requirement from the user's location or use ASR coverage as proof of TTS coverage."
+  },
+  "retrieval_and_memory_design": {
+    "scope": "Embeddings, reranking and document extraction are outside this voice item. The relevant boundary is whether audio, reference voices and transcripts become stored household data.",
+    "proposed_design": "Keep raw microphone audio ephemeral by default; make transcript saving explicit; apply the same user and shared-space permissions as text conversations. Do not use speaker similarity or diarization as authorization. Reference audio and cached voice embeddings need an owner, expiry and deletion path. These are proposed design requirements, not verified product behavior.",
+    "deletion_implications": "Deleting a chat should trigger a review of attached audio, temporary files, transcript indexes, voice references and backups. Kokoro-FastAPI documents temporary audio storage settings; retention is not automatically equivalent to deletion of all copies. [S08a]"
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "Speech-to-text: whisper.cpp is the best open pick.",
+      "verdict": "partially_supported",
+      "explanation": "It is a real deployable Whisper runtime. It is not a model, and the original report supplies no task-specific comparison proving best recognition quality. Choosing a runtime cannot replace choosing a checkpoint.",
+      "source_ids": ["S01", "S02"]
+    },
+    {
+      "original_claim": "Kokoro-82M runs on CPU or GPU and supports eight languages.",
+      "verdict": "confirmed",
+      "explanation": "The v1.0 card and voice list confirm the count, and the wrapper documents CPU/GPU execution. Quality is voice- and language-dependent; the statement does not include Finnish.",
+      "source_ids": ["S06", "S07", "S08"]
+    },
+    {
+      "original_claim": "Point STT at whisper.cpp, default :2022/v1.",
+      "verdict": "refuted",
+      "explanation": "As a claim about upstream whisper.cpp defaults, it conflicts with the inspected server code: 8080 and /inference. A separately packaged wrapper could choose 2022 and OpenAI routes, but the original Voice Mode documentation URL could not be fetched, so that wrapper-specific interpretation remains unverified.",
+      "source_ids": ["S03", "S17", "S20"]
+    },
+    {
+      "original_claim": "Point TTS at Kokoro-FastAPI, default :8880/v1.",
+      "verdict": "confirmed",
+      "explanation": "The wrapper examples and Open WebUI integration guide use this base URL; the actual speech route is /v1/audio/speech. Container routing and separate audio configuration still apply.",
+      "source_ids": ["S08", "S08b"]
+    },
+    {
+      "original_claim": "Serve each model with vLLM or SGLang; all expose OpenAI-compatible /v1 APIs.",
+      "verdict": "refuted",
+      "explanation": "The voice stack includes a C++ engine and a separate TTS wrapper. Neither universal vLLM/SGLang support nor universal audio-protocol equivalence follows from /v1. Qwen ASR chat-completion input and WebUI multipart transcription require different contracts.",
+      "source_ids": ["S03", "S08", "S09", "S12", "S17"]
+    },
+    {
+      "original_claim": "Use the STT to LLM to TTS pipeline instead of unverified speech-to-speech.",
+      "verdict": "partially_supported",
+      "explanation": "Modular components and integration routes exist and permit separate testing. This report did not establish comparative end-to-end speech-to-speech quality, and modular serving alone does not deliver interruption, echo control or semantic turn-taking.",
+      "source_ids": ["S04", "S08", "S16", "S17"]
+    },
+    {
+      "original_claim": "None of the licenses blocks personal use.",
+      "verdict": "partially_supported",
+      "explanation": "The reviewed Whisper and Kokoro components use permissive licenses compatible with ordinary local use, subject to notices. Voice files, third-party data and cloning permissions must be checked separately; this conclusion cannot be extended to every model in the original report.",
+      "source_ids": ["S01", "S02", "S06", "S08", "S13", "S14"]
+    }
+  ],
+  "benchmark_caveats": [
+    "Whisper's upstream model-size speeds are English/A100 reference figures; faster-whisper's benchmark varies runtime, precision and batching. Neither provides the household's end-to-end latency. [S01,S05]",
+    "Parakeet and Qwen comparisons are vendor-reported and may use different language subsets, normalization, punctuation treatment and audio domains. A multilingual mean cannot rank Finnish performance. [S09,S10]",
+    "TTS ASR-derived WER tests content consistency, not speaker likeness, prosody, naturalness, accent or safe identity handling. Blind human listening is still needed. [S11,S15]",
+    "Voxtral's configured transcription delay excludes the entire microphone-to-playback chain, and shorter delay trades accuracy. The inspected card contains conflicting minimum delay statements; [uncertain] exact supported settings depend on a pinned runtime. [S18]",
+    "[uncertain] No independent primary-source head-to-head study covering all shortlisted models, English/Finnish, identical hardware and identical audio was established. No local model quality test was run."
+  ],
+  "evaluation_plan": {
+    "status": "Proposal only; no tests below were executed. Numerical gates are suggested product targets, not established model scores or user-approved service guarantees.",
+    "reproducibility": "Freeze model and voice revisions, runtime/container digests, precision, decoding settings, VAD thresholds, audio sample rate, hardware, thread count and seed. Use the same held-out recordings across ASR candidates and unseen texts across TTS candidates. Keep a development set separate from the acceptance set.",
+    "asr": "For each required language, collect at least 100 consented utterances across willing household speakers, with clean, distant, noisy, overlapping and hesitation subsets. Report normalized and unnormalized WER/CER, exact commands, empty outputs, hallucinations on silence, proper-name/number accuracy and per-speaker errors. Proposed gate: >=95% exact action-slot recovery and zero invented actions from 100 silence/noise trials; otherwise require typed confirmation for consequential commands.",
+    "tts": "Blindly compare at least 50 unseen short/long texts per required language, including times, dates, names, currency, abbreviations and code-switching. Use human transcription plus naturalness ratings; do not use the generating model's own recognizer alone. Proposed gate: >=98% word intelligibility, no meaning-changing number/name error on the critical subset, and no truncation/repetition in the acceptance set.",
+    "interactive": "Measure p50/p95 speech-end to final transcript, first LLM token, first audible audio, total response and real-time factor. Separate cold and warm states; test one and two simultaneous sessions plus overlap with the main model. Suggested warm p95 target: <=1 second after speech end for transcript completion, <=3 seconds to first spoken response. Failure means lower model size, adjust chunking or revise the target, not claim compliance.",
+    "turn_handling": "Try 300/600/1000 ms pauses, self-corrections, background TV, speaker changes and interruptions. Test echo through the actual speaker/microphone. Proposed gate: zero duplicate executed turns, no lost accepted utterance, and playback cancellation within 300 ms of an accepted interrupt.",
+    "multi_user_and_privacy": "Use two accounts to verify transcripts and cloned-voice records cannot cross private-space boundaries; sign out, delete data and inspect remaining caches. Run with outbound network blocked after authorized artifacts are staged, and verify no fallback service receives audio. Pass only with zero cross-account leakage and no unintended outbound audio traffic.",
+    "finnish": "Run Finnish subsets only if it becomes a real requirement; use fluent listeners and include inflection, compound words and Finnish names. Do not infer success from English tests."
+  },
+  "privacy_and_license": {
+    "code_and_weights": [
+      {"component": "Whisper", "code": "MIT", "weights": "Upstream README expressly states code and weights are MIT.", "license_url": "https://github.com/openai/whisper/blob/main/LICENSE", "source_ids": ["S01"]},
+      {"component": "whisper.cpp and faster-whisper", "code": "MIT for each inspected license text", "weights": "Runtime license does not replace the checkpoint license.", "license_urls": ["https://github.com/ggml-org/whisper.cpp/blob/master/LICENSE", "https://github.com/SYSTRAN/faster-whisper/blob/master/LICENSE"], "source_ids": ["S02", "S05"]},
+      {"component": "Kokoro and Kokoro-FastAPI", "code": "Apache-2.0 licenses read for inference library and wrapper", "weights": "Kokoro card declares Apache-licensed weights; preserve notices and attribution. [uncertain] Custom or externally tuned voicepacks require their own provenance check.", "license_urls": ["https://github.com/hexgrad/kokoro/blob/main/LICENSE", "https://github.com/remsky/Kokoro-FastAPI/blob/master/LICENSE"], "source_ids": ["S06", "S08"]},
+      {"component": "Qwen3-ASR and Qwen3-TTS", "code": "Apache-2.0 license files read", "weights": "Official checkpoint cards declare Apache-2.0. No separate voicepack license was established for user-provided cloning references; those remain user-controlled material.", "license_urls": ["https://github.com/QwenLM/Qwen3-ASR/blob/main/LICENSE", "https://github.com/QwenLM/Qwen3-TTS/blob/main/LICENSE"], "source_ids": ["S09", "S11"]},
+      {"component": "Parakeet TDT 0.6B v3", "code": "Serving framework is separate; do not infer its license from the weights.", "weights": "CC BY 4.0 per governing model-card terms; preserve attribution and indicate modifications when required. [uncertain] Downstream output and distribution obligations require case-specific review.", "license_url": "https://creativecommons.org/licenses/by/4.0/legalcode.en", "source_ids": ["S10"]},
+      {"component": "Piper", "code": "GPL-3.0 text in current project's COPYING; not the historical Piper runtime's license.", "weights": "Per-voice terms control. Harri's card identifies CC0 for its dataset, which alone is not a complete independent legal opinion on every derived weight or inherited training component. [uncertain] Preserve and review that voice's full provenance before redistribution.", "license_url": "https://github.com/OHF-Voice/piper1-gpl/blob/main/COPYING", "source_ids": ["S13", "S14"]},
+      {"component": "Chatterbox", "code": "MIT text read", "weights": "Official model card declares MIT. The project includes PerTh watermarking. [uncertain] No technical speaker-consent verification gate was established in the inspected documentation.", "license_url": "https://github.com/resemble-ai/chatterbox/blob/master/LICENSE", "source_ids": ["S15"]},
+      {"component": "Voxtral Realtime", "code": "Serving runtime terms separate", "weights": "Official model card declares Apache-2.0 and explicitly preserves third-party rights; this is not a right to use arbitrary third-party recordings.", "source_ids": ["S18"]}
+    ],
+    "voice_cloning": "Model licenses do not grant the rights to impersonate a speaker or reuse arbitrary reference recordings. Proposed household policy: stock voices by default; optional cloning only with the speaker's informed permission, access controls and deletion. This is a design recommendation, not an assertion that Apache/MIT contain a technical consent gate. [uncertain] Jurisdiction-specific publicity, privacy and child-data obligations were not resolved.",
+    "egress_and_retention": "Local weights can keep inference local, but wrappers can download missing artifacts and accept remote reference-audio URLs. Kokoro-FastAPI documents DOWNLOAD_MODEL=true, broad default binding/CORS and temporary file retention. Stage approved artifacts, restrict exposure, and verify offline operation rather than equating self-hosted with no egress. [S08a,S09,S11]",
+    "scope": "No cloud account, paid API, voice cloning operation or family recording was used in this research."
+  },
+  "recommendation": {
+    "practical_default": "For an initial English-oriented local voice baseline, shortlist a named multilingual Whisper checkpoint through whisper.cpp or faster-whisper, plus preset-voice Kokoro. Use measured household quality and latency to choose size. For Open WebUI, its built-in local Whisper or a documented OpenAI-compatible adapter is easier to specify than the unsupported :2022/v1 assumption. [S01,S02,S05,S06,S08,S17]",
+    "stronger_options": "Compare Qwen3-ASR-1.7B and Parakeet v3 when recognition accuracy or Finnish becomes important; retain Qwen3-ASR-0.6B as the smaller candidate. For expressive English or supported-language synthesis, evaluate Qwen3-TTS against Kokoro; treat Base cloning as optional. Voxtral Realtime is a candidate when native English streaming matters more than Finnish coverage. These are conditional shortlists, not benchmark winners. [S09,S10,S11,S18]",
+    "conditional_finnish": "If Finnish synthesis becomes required, test Piper Harri as a modest preset-voice baseline and Chatterbox Multilingual as a richer cloning-capable candidate. [uncertain] Choose only after fluent listening and a dated, pinned checkpoint/license review; no quality superiority is established. [S13,S14,S15]",
+    "integration_choice": "Kokoro-FastAPI is a documented Kokoro/Open WebUI route; Speaches can consolidate compatible STT/TTS services. Qwen3-TTS has a documented vLLM-Omni audio API, but freeze the runtime and test streaming behavior because model-vendor documentation lags the runtime docs. [S08b,S12,S19]",
+    "what_changes_choice": "Required languages, available CPU/GPU/RAM, actual concurrent speakers, tolerance for turn delay, desire for cloning and willingness to maintain adapters. [uncertain] These deployment inputs remain unspecified, so hardware sizing and a single final winner would be premature."
+  },
+  "next_steps": [
+    "Record actual target hardware, required languages, simultaneous sessions and desired turn latency; do not assume Finnish from location.",
+    "Choose two ASR checkpoints and two TTS voices for a bounded future comparison, then pin source commits, model/voice artifact hashes, runtime versions and license notices.",
+    "Resolve the STT API mismatch on paper: identify an existing wrapper or specify a request/response adapter for /v1/audio/transcriptions. Confirm separate Open WebUI audio settings and backend network addresses.",
+    "Confirm current vLLM-Omni package/release support against its dated source before treating Qwen3-TTS as an integration default; resolve its stale upstream README.",
+    "Prepare consented held-out speech and text sets, plus silence, interruption and cross-account cases, then seek separate authorization before downloads or local model execution.",
+    "Select the smallest combination that passes the proposed functional, intelligibility, privacy and latency gates; document failures instead of promoting a benchmark label."
+  ],
+  "open_questions": [
+    {"question": "[uncertain] Which machine and languages must the household actually support?", "resolution": "User-provided deployment facts and explicit acceptance targets."},
+    {"question": "[uncertain] What produced the report's whisper.cpp :2022/v1 endpoint?", "resolution": "The original Voice Mode page was inaccessible; inspect its exact wrapper/version and OpenAPI contract before retaining the address."},
+    {"question": "[uncertain] What exact revisions were available at every moving-source access?", "resolution": "Pin dated Git/Hugging Face commits. Source dates not independently established are marked in the ledger; no exact latest-release ranking is claimed."},
+    {"question": "[uncertain] What is the first compatible released vLLM-Omni version for the required Qwen3-TTS streaming and voice-storage behavior?", "resolution": "Compare dated release notes and source tests; model README and runtime documentation currently differ."},
+    {"question": "[uncertain] Are Chatterbox V3-specific improvements established before the cutoff?", "resolution": "Find its dated release/commit; this result uses the multilingual language list without relying on V3 improvement claims."},
+    {"question": "[uncertain] Which Finnish recognizer and synthesizer are best for actual speakers?", "resolution": "A frozen common test set and fluent blind evaluation, including numbers/names and noise."},
+    {"question": "[uncertain] What are real peak memory, cold start, concurrency and turn times?", "resolution": "Future authorized measurements with the chosen ASR, main model and TTS running together."},
+    {"question": "[uncertain] Do all chosen voice artifacts and reference recordings have sufficient permissions for the intended use?", "resolution": "Per-artifact provenance, exact license text and speaker permission; dataset labels alone are insufficient for a blanket conclusion."}
+  ],
+  "sources": [
+    {"id": "S01", "title": "Whisper upstream model/runtime documentation, tokenizer and MIT license", "url": "https://github.com/openai/whisper", "additional_read_urls": ["https://raw.githubusercontent.com/openai/whisper/main/whisper/tokenizer.py", "https://raw.githubusercontent.com/openai/whisper/main/LICENSE"], "publisher": "OpenAI", "published_or_updated": "[uncertain] Moving main; model family predates cutoff; exact README revision date not established.", "accessed": "2026-10-26", "primary": true, "support_note": "Named checkpoint sizes, language variability, sliding 30-second transcription and code/weight MIT statement. Finnish identifier verified in tokenizer."},
+    {"id": "S02", "title": "whisper.cpp upstream README and MIT license", "url": "https://github.com/ggml-org/whisper.cpp", "additional_read_urls": ["https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/LICENSE"], "publisher": "ggml-org", "published_or_updated": "[uncertain] Moving master; exact revision date not pinned.", "accessed": "2026-10-26", "primary": true, "support_note": "Engine identity, native backends, memory guidance, quantization and separate VAD option."},
+    {"id": "S03", "title": "whisper-server source", "url": "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/examples/server/server.cpp", "publisher": "ggml-org", "published_or_updated": "[uncertain] Moving master; exact revision date not pinned.", "accessed": "2026-10-26", "primary": true, "support_note": "Server defaults inspected directly: hostname 127.0.0.1, port 8080, inference path /inference; /audio/transcriptions not found."},
+    {"id": "S04", "title": "whisper.cpp microphone streaming example", "url": "https://raw.githubusercontent.com/ggml-org/whisper.cpp/master/examples/stream/README.md", "publisher": "ggml-org", "published_or_updated": "[uncertain] Moving master; exact revision date not pinned.", "accessed": "2026-10-26", "primary": true, "support_note": "Periodic capture/retranscription, simple VAD mode and SDL2 dependency; distinguishes live windowing from causal streaming."},
+    {"id": "S05", "title": "faster-whisper documentation, benchmarks and MIT license", "url": "https://github.com/SYSTRAN/faster-whisper", "additional_read_urls": ["https://raw.githubusercontent.com/SYSTRAN/faster-whisper/master/LICENSE"], "publisher": "SYSTRAN and maintainers", "published_or_updated": "[uncertain] Moving master; benchmark publication date not established.", "accessed": "2026-10-26", "primary": true, "support_note": "CTranslate2 runtime, Python/CUDA requirements, precision/batch memory benchmark, Silero integration and wrapper references. Measurements are maintainer-provided."},
+    {"id": "S06", "title": "Kokoro-82M official model card and file listing", "url": "https://huggingface.co/hexgrad/Kokoro-82M", "additional_read_urls": ["https://huggingface.co/hexgrad/Kokoro-82M/tree/main", "https://raw.githubusercontent.com/hexgrad/kokoro/main/LICENSE"], "publisher": "hexgrad", "published_or_updated": "Model v1.0: 2025-01-27; [uncertain] exact current card revision date.", "accessed": "2026-10-26", "primary": true, "support_note": "82M parameters, eight languages and 54 voices, Apache weight declaration, usage and training-data attribution. Apache inference-library text also read."},
+    {"id": "S07", "title": "Kokoro v1.0 voice and language documentation", "url": "https://huggingface.co/hexgrad/Kokoro-82M/raw/main/VOICES.md", "publisher": "hexgrad", "published_or_updated": "[uncertain] File revision c3327e9 shown by the browser; exact date not established.", "accessed": "2026-10-26", "primary": true, "support_note": "Eight languages, accent distinction, uneven training coverage and short/long-utterance limitations; no Finnish."},
+    {"id": "S08", "title": "Kokoro-FastAPI wrapper README and Apache license", "url": "https://github.com/remsky/Kokoro-FastAPI/blob/master/README.md", "additional_read_urls": ["https://raw.githubusercontent.com/remsky/Kokoro-FastAPI/master/README.md", "https://raw.githubusercontent.com/remsky/Kokoro-FastAPI/master/LICENSE"], "publisher": "remsky and contributors", "published_or_updated": "[uncertain] Moving master; exact release not pinned.", "accessed": "2026-10-26", "primary": true, "support_note": "Separate wrapper, /v1/audio/speech, port 8880, CPU/GPU routes, chunked audio and optional external clone-tuning."},
+    {"id": "S08a", "title": "Kokoro-FastAPI configuration", "url": "https://raw.githubusercontent.com/remsky/Kokoro-FastAPI/master/docs/configuration.md", "publisher": "remsky and contributors", "published_or_updated": "2026-08-11 as stated in page", "accessed": "2026-10-26", "primary": true, "support_note": "Per-worker model loading, binding/CORS, downloads, chunking, temporary files and normalization settings."},
+    {"id": "S08b", "title": "Kokoro-FastAPI Open WebUI integration guide", "url": "https://raw.githubusercontent.com/remsky/Kokoro-FastAPI/master/docs/integrations/openwebui.md", "publisher": "remsky and contributors", "published_or_updated": "2025-02-02 as stated in page", "accessed": "2026-10-26", "primary": true, "support_note": "Port 8880 /v1 configuration, Docker Desktop host routing and model/voice configuration."},
+    {"id": "S09", "title": "Qwen3-ASR official toolkit, release news, checkpoint card and Apache license", "url": "https://github.com/QwenLM/Qwen3-ASR", "additional_read_urls": ["https://raw.githubusercontent.com/QwenLM/Qwen3-ASR/main/README.md", "https://huggingface.co/Qwen/Qwen3-ASR-0.6B/raw/main/README.md", "https://raw.githubusercontent.com/QwenLM/Qwen3-ASR/main/LICENSE"], "publisher": "Qwen team, Alibaba Cloud", "published_or_updated": "Release news: 2026-01-29; native Transformers news: 2026-06-26; [uncertain] exact moving README revision.", "accessed": "2026-10-26", "primary": true, "support_note": "0.6B/1.7B choices, Finnish/English coverage, Python recommendation, vLLM streaming restrictions and chat-completion integration."},
+    {"id": "S10", "title": "Parakeet TDT 0.6B v3 official model card and governing CC BY terms", "url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3", "additional_read_urls": ["https://creativecommons.org/licenses/by/4.0/legalcode.en"], "publisher": "NVIDIA; Creative Commons for linked governing license text", "published_or_updated": "Model release: 2025-08-14; [uncertain] current model-card revision date.", "accessed": "2026-10-26", "primary": true, "support_note": "25 languages, Finnish, parameters, timestamps, NeMo/Transformers routes and CC BY 4.0 governing terms. License text was read, not inferred solely from metadata."},
+    {"id": "S11", "title": "Qwen3-TTS official repository, 0.6B Base card and Apache license", "url": "https://github.com/QwenLM/Qwen3-TTS", "additional_read_urls": ["https://raw.githubusercontent.com/QwenLM/Qwen3-TTS/main/README.md", "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-0.6B-Base/raw/main/README.md", "https://raw.githubusercontent.com/QwenLM/Qwen3-TTS/main/LICENSE"], "publisher": "Qwen team, Alibaba Cloud", "published_or_updated": "Release news: 2026-01-22; [uncertain] exact moving README revision.", "accessed": "2026-10-26", "primary": true, "support_note": "Checkpoint task distinctions, ten languages, BF16 quickstart, cloning capability and stale offline-only runtime statement; no Finnish."},
+    {"id": "S12", "title": "vLLM-Omni stable Speech API and online TTS examples", "url": "https://docs.vllm.ai/projects/vllm-omni/en/stable/serving/speech_api/", "additional_read_urls": ["https://docs.vllm.ai/projects/vllm-omni/en/stable/user_guide/examples/online_serving/text_to_speech/"], "publisher": "vLLM-Omni maintainers", "published_or_updated": "[uncertain] Moving stable documentation; associated exact package release not established.", "accessed": "2026-10-26", "primary": true, "support_note": "Qwen3-TTS online audio endpoint and streaming/text-input distinctions. This contradicts the older model README's offline-only limitation."},
+    {"id": "S13", "title": "Current Piper repository, voice documentation, Python streaming API and GPL text", "url": "https://github.com/OHF-Voice/piper1-gpl", "additional_read_urls": ["https://raw.githubusercontent.com/OHF-Voice/piper1-gpl/main/docs/VOICES.md", "https://raw.githubusercontent.com/OHF-Voice/piper1-gpl/main/docs/API_PYTHON.md", "https://raw.githubusercontent.com/OHF-Voice/piper1-gpl/main/COPYING"], "publisher": "Open Home Foundation voice contributors", "published_or_updated": "[uncertain] Moving main; exact source revision date not pinned.", "accessed": "2026-10-26", "primary": true, "support_note": "Current GPL code, ONNX voice/config artifacts, Finnish list, per-voice licensing caution, streamed Python chunks and maintainer recruitment."},
+    {"id": "S14", "title": "Piper Finnish Harri medium voice model card", "url": "https://huggingface.co/rhasspy/piper-voices/raw/main/fi/fi_FI/harri/medium/MODEL_CARD", "publisher": "Rhasspy / Michael Hansen", "published_or_updated": "[uncertain] Associated card commit 2f8dbe0 shown; date not established.", "accessed": "2026-10-26", "primary": true, "support_note": "Finnish fi_FI, one speaker, medium quality, 22,050 Hz, dataset CC0 label and English Lessac fine-tuning provenance."},
+    {"id": "S15", "title": "Chatterbox official repository, model card and MIT license", "url": "https://github.com/resemble-ai/chatterbox", "additional_read_urls": ["https://huggingface.co/ResembleAI/chatterbox", "https://raw.githubusercontent.com/resemble-ai/chatterbox/master/LICENSE"], "publisher": "Resemble AI", "published_or_updated": "[uncertain] Current documentation includes V3 but no dated V3 release was established.", "accessed": "2026-10-26", "primary": true, "support_note": "English versus multilingual variants, Finnish language list, cloning, Python 3.11/Debian 11 development environment and watermarking. No V3 performance claim is adopted as established."},
+    {"id": "S16", "title": "Silero VAD upstream and MIT license", "url": "https://github.com/snakers4/silero-vad", "additional_read_urls": ["https://raw.githubusercontent.com/snakers4/silero-vad/master/LICENSE"], "publisher": "Silero team", "published_or_updated": "[uncertain] Moving master; exact revision not pinned.", "accessed": "2026-10-26", "primary": true, "support_note": "Speech activity detector, sample rates, ONNX/PyTorch portability and permissive terms; not semantic turn detection."},
+    {"id": "S17", "title": "Open WebUI self-hosted transcription guide", "url": "https://docs.openwebui.com/features/chat-conversations/audio/speech-to-text/self-hosted-stt/", "publisher": "Open WebUI documentation; page explicitly identifies community contribution", "published_or_updated": "[uncertain] Moving documentation; exact product version/date not established.", "accessed": "2026-10-26", "primary": true, "support_note": "Required OpenAI-compatible multipart /v1/audio/transcriptions contract, separate Audio settings and backend/container reachability. Guide disclaims team support for its example."},
+    {"id": "S18", "title": "Voxtral Mini 4B Realtime official card and release announcement", "url": "https://huggingface.co/mistralai/Voxtral-Mini-4B-Realtime-2602", "additional_read_urls": ["https://mistral.ai/news/voxtral-transcribe-2/"], "publisher": "Mistral AI", "published_or_updated": "Announcement: 2026-02-04; [uncertain] exact current card revision.", "accessed": "2026-10-26", "primary": true, "support_note": "Native causal streaming architecture, 13 languages excluding Finnish, BF16/Apache terms and vendor delay/accuracy tradeoff. Card contains stale or conflicting details flagged in findings."},
+    {"id": "S19", "title": "Speaches upstream repository", "url": "https://github.com/speaches-ai/speaches", "publisher": "Speaches maintainers", "published_or_updated": "[uncertain] Moving repository; exact release date not established.", "accessed": "2026-10-26", "primary": true, "support_note": "OpenAI-compatible STT/TTS wrapper with faster-whisper, Kokoro and Piper. Integration candidate, not a tested deployment."},
+    {"id": "S20", "title": "Original report's Voice Mode installation-tools reference", "url": "https://voice-mode.readthedocs.io/en/stable/installation-tools/", "publisher": "Voice Mode documentation", "published_or_updated": "[uncertain] Page inaccessible through browsing tool.", "accessed": "2026-10-26", "primary": true, "access_status": "inaccessible", "support_note": "Cannot support the original :2022/v1 claim. Kept only to document evidence gap, not treated as a verified source."}
+  ],
+  "uncertain": ["research_date", "verified_findings", "candidate_comparison", "deployment_requirements", "operating_profile", "language_evidence", "benchmark_caveats", "privacy_and_license", "recommendation", "open_questions", "sources"]
+}

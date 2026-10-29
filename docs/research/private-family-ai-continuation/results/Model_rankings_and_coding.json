@@ -1,0 +1,741 @@
+{
+  "item_name": "Model rankings and coding",
+  "research_date": "Cutoff and access date: 2026-10-26. No post-cutoff release claims included. Repository creation dates are metadata, not proven public release dates.",
+  "scope": "Continuation and audit of open-model-research-2026-10.md. Covers exact model identities, downloadable weights versus hosted features, reasoning/coding/tool evidence, licenses, smaller alternatives and proposed acceptance tests. Detailed hardware capacity planning belongs to item 06; no models were downloaded or run.",
+  "verified_findings": [
+    {
+      "claim": "The canonical released Xiaomi checkpoint is XiaomiMiMo/MiMo-V2.6-Pro-RL: the card documents 1.02T total/42B active parameters and 1M context. Artificial Analysis links its shorter MiMo-V2.6-Pro display name to this repository. [uncertain] Separate API and downloadable checkpoint equivalence is not established.",
+      "source_ids": [
+        "S01",
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for repository identity; limited for API parity",
+      "practical_implication": "Pin the RL repository and revision rather than selecting by display name."
+    },
+    {
+      "claim": "GLM-5.3 is downloadable and text-only. Its card attributes gains over GLM-5.2 to post-training. Its serving recipe documents native FP8 and a BF16 sibling. [uncertain] Recipe counts of approximately 743B/39B conflict with the 753B/40B aggregator description; exact counting conventions remain unresolved.",
+      "source_ids": [
+        "S02",
+        "S10",
+        "S14"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for availability; medium for parameter accounting",
+      "practical_implication": "Treat the exact artifact and precision as part of the candidate, and resolve counts before capacity estimates."
+    },
+    {
+      "claim": "DeepSeek-V4.1-Flash-1017 is a downloadable multimodal update, not an API-only label. The predecessor architecture documents a 552B backbone, 196B Engram component, and 8B prefill/16B decode activation. [uncertain] The 1017 page's 763B tensor count is not reconciled to those component counts.",
+      "source_ids": [
+        "S03",
+        "S13"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for identity and predecessor accounting; medium for transfer to 1017",
+      "practical_implication": "Neither 16B active nor 552B backbone is a sufficient storage requirement."
+    },
+    {
+      "claim": "Step 5 Preview has official weights under stepfun-ai/Step-5-Preview; it documents 600B total/27B active and up to 1M context. Its license is StepFun Model License 1.0, not plain Apache 2.0.",
+      "source_ids": [
+        "S04",
+        "S20"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Use the official repository rather than unrelated BF16 republishers found in search."
+    },
+    {
+      "claim": "Kimi K3's official repository remains accessible and describes 2.8T total/104B active, native multimodal input and 1048576 context. [uncertain] No official deprecation notice was found in the checked card; this does not establish hosted API lifecycle status.",
+      "source_ids": [
+        "S05"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for released weights; limited for deprecation claim",
+      "practical_implication": "Do not reject downloadable K3 because an aggregator says deprecated."
+    },
+    {
+      "claim": "Qwen/Qwen3.8-2.4T-A95B is the exact downloadable artifact, with 2.4T total/95B active, text input, and 262144 native context extensible to 1010000. The card explicitly distinguishes hosted Qwen3.8-Max, which adds vision, non-thinking support, built-in tools and default 1M context.",
+      "source_ids": [
+        "S06"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Do not transfer API vision or context defaults to the local weights."
+    },
+    {
+      "claim": "Artificial Analysis displays MiMo 46, DeepSeek Flash 1017 45 and GLM-5.3 45. Its v4.3.2 methodology has ten evaluations and is primarily text-based and English-language. These are independent evaluator results for specific served configurations, not a measurement of a family's local quantization.",
+      "source_ids": [
+        "S09",
+        "S11"
+      ],
+      "evidence_type": "independently-measured",
+      "confidence": "High for displayed scores; limited for local transfer",
+      "practical_implication": "Use the index as a shortlist with version and configuration recorded."
+    },
+    {
+      "claim": "BenchLM's open-weight page displays MiMo 73.6 and Estimated under BenchAlign v5.8. Its methodology permits inferred composite positions from incomplete evidence and explicitly says conditional ranges do not establish rank confidence.",
+      "source_ids": [
+        "S12",
+        "S15"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for what BenchLM publishes",
+      "practical_implication": "A leading point estimate is not verified superiority."
+    },
+    {
+      "claim": "Vendor coding tables do not use one common harness: GLM reports DeepSWE with mini-swe-agent and 400K context; DeepSeek 1017 uses Mini-SWE-V2 for DeepSWE and Claude Code for Terminal-Bench 4.0; Kimi mixes its own Kimi Code results with best published competitor harnesses.",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05"
+      ],
+      "evidence_type": "vendor-measured",
+      "confidence": "High for documented protocols",
+      "practical_implication": "Do not rank these vendor table columns as a controlled head-to-head experiment."
+    },
+    {
+      "claim": "Function-calling integration evidence exists: MiMo's commands select mimo parsers; GLM's independent runtime recipe selects glm47; DeepSeek supplies encoding and protocol parsing with tool-call tests; Qwen3-Coder documents a dedicated function-call format. [uncertain] These are not proof of schema correctness or identical JSON-schema support across all candidates.",
+      "source_ids": [
+        "S01",
+        "S10",
+        "S03",
+        "S08"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High for documented integration; unmeasured correctness",
+      "practical_implication": "Test tool semantics, schemas, streaming and tool-result continuation on the selected runtime."
+    },
+    {
+      "claim": "BFCL V4 evaluates function calling and agentic behavior, including web search, memory and format sensitivity. Its checked leaderboard reports 2026-04-12 and a reproducibility commit/package. RULER evaluates 13 synthetic tasks across four categories with configurable length and complexity, beyond simple recall.",
+      "source_ids": [
+        "S16",
+        "S17",
+        "S18"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Use these protocols to test exact releases; do not substitute advertised maximum context for measured effective context."
+    },
+    {
+      "claim": "Two smaller official candidates are Qwen3.6-35B-A3B, a 35B/3B-active vision-language model with thinking preservation, and Qwen3-Coder-30B-A3B-Instruct, a 30.5B/3.3B-active text coding model that supports only non-thinking mode.",
+      "source_ids": [
+        "S07",
+        "S08"
+      ],
+      "evidence_type": "primary",
+      "confidence": "High",
+      "practical_implication": "Evaluate a smaller model first when local capacity or interactive response time is constrained."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "model_id": "XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "revision": "b61f21852680ee02a29e946e18cf8697f4844061",
+      "release_status": "Official ungated weights; repository created 2026-09-21; last modified 2026-10-09.",
+      "capabilities": "Omnimodal reasoning and agent candidate; 1.02T/42B; 1M advertised context.",
+      "constraints": "[uncertain] MIT metadata exists but no standalone license file appears in repository metadata; exact API parity and effective context need verification.",
+      "source_ids": [
+        "S01",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "zai-org/GLM-5.3",
+      "revision": "ba32f8c19c8738e2c57c71798c601d477a7bf844",
+      "release_status": "Official ungated FP8 weights; created 2026-08-25; modified 2026-10-14. BF16 sibling: zai-org/GLM-5.3-BF16.",
+      "capabilities": "Text reasoning, coding and tool use; 1048576 configured context.",
+      "constraints": "[uncertain] Approximately 743-753B total/39-40B active across checked sources; 128K maximum output was not verified. Custom license.",
+      "source_ids": [
+        "S02",
+        "S10",
+        "S14",
+        "S19",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "revision": "1bae0e1088993b9b82de08f59de5be5a34e42170",
+      "release_status": "Official ungated weights; created and modified 2026-10-17.",
+      "capabilities": "Text/image coding and agents; 1M advertised context; reference encoder and protocol toolkit.",
+      "constraints": "[uncertain] Component versus total tensor accounting unresolved; requires exact mixed-precision/runtime support, not generic FP8 assumptions.",
+      "source_ids": [
+        "S03",
+        "S13",
+        "S21",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "stepfun-ai/Step-5-Preview",
+      "revision": "364b3b03fed2477aa0953fe855a2c4c8c48ee3cc",
+      "release_status": "Official ungated FP8 checkpoint; created 2026-09-20; modified 2026-10-15.",
+      "capabilities": "600B/27B MoE; text/image input and agentic coding; up to 1M context/output documented.",
+      "constraints": "Preview release, specialized runtime builds and custom commercial-license conditions.",
+      "source_ids": [
+        "S04",
+        "S20",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "moonshotai/Kimi-K3",
+      "revision": "f831ab66814297da540d832a5235f8e904f29d06",
+      "release_status": "Official ungated weights; repository created 2026-06-13, modified 2026-09-02; creation does not prove public launch.",
+      "capabilities": "2.8T/104B; text/image/video understanding; MXFP4 weights/MXFP8 activations with quantization-aware training.",
+      "constraints": "Custom license and large artifact; [uncertain] API deprecation not established.",
+      "source_ids": [
+        "S05",
+        "S22",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.8-2.4T-A95B",
+      "revision": "207bd685a7e3696cfaff12ded7c6a7ea0f88c996",
+      "release_status": "Official ungated weights; created 2026-08-08; modified 2026-08-12.",
+      "capabilities": "Text reasoning/coding; 2.4T/95B; 262144 native context with extension.",
+      "constraints": "Hosted qwen3.8-max adds features; benchmark columns labelled Max do not automatically measure the downloadable artifact. Custom license.",
+      "source_ids": [
+        "S06",
+        "S23",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "release_status": "Official ungated weights; created 2026-04-15; modified 2026-04-24.",
+      "capabilities": "35B/3B vision-language general and coding candidate; 262144 native context, extension documented.",
+      "constraints": "[uncertain] Local quantization quality, language coverage and tool success unmeasured.",
+      "source_ids": [
+        "S07",
+        "S25",
+        "S24"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3-Coder-30B-A3B-Instruct",
+      "revision": "b2cff646eb4bb1d68355c01b18ae02e7cf42d120",
+      "release_status": "Official ungated weights; created 2025-07-31; modified 2025-12-03.",
+      "capabilities": "30.5B/3.3B text coding, function-call format; 262144 native context, YaRN extension documented.",
+      "constraints": "Non-thinking only; [uncertain] not proven the best current small model.",
+      "source_ids": [
+        "S08",
+        "S26",
+        "S24"
+      ]
+    }
+  ],
+  "deployment_requirements": {
+    "documented": "MiMo documents a specialized vLLM image and mimo parsers, or distributed SGLang configuration. Step documents model-supporting builds and vllm/vllm-openai:step-5-preview, with example FP8 deployments on four B300 or eight H200 GPUs. GLM recipe uses glm47 parsers and native FP8; its configuration records Transformers 5.15.0. DeepSeek's encoding/toolkit does not itself execute tools or host HTTP. These are integration evidence, not tested deployments.",
+    "version_limits": "[uncertain] GLM recipe header says vLLM 0.29.0+ while prerequisites/install show 0.28.0; resolve against a pinned runtime before use. Qwen3-Coder warns Transformers below 4.51.0 lacks qwen3_moe. Windows-local serving support for these exact giant configurations was not verified.",
+    "memory_rule": "All weights, auxiliary modules, cache, runtime buffers and concurrency matter. Active MoE parameters describe conditional computation; they do not mean only active weights must fit in memory.",
+    "source_ids": [
+      "S01",
+      "S04",
+      "S10",
+      "S14",
+      "S08",
+      "S03"
+    ]
+  },
+  "operating_profile": {
+    "status": "[uncertain] No local latency, cold-start, throughput, maximum concurrent users or effective-context measurements were performed. Provider tokens/second on rankings cannot be transferred to local quantizations.",
+    "estimates": "Derived ideal weight-only arithmetic: 30.5B parameters at two bytes/parameter is 61GB decimal; at four bits is 15.25GB. For 35B: 70GB or 17.5GB. Quantization metadata, retained higher-precision tensors, KV cache, multimodal encoders and runtime allocations add memory. These are not fit guarantees.",
+    "context": "Start acceptance tests at 8K and 32K with one user; expand context and concurrency only after measurements. Canonical artifact revisions are recorded in candidate_comparison.",
+    "source_ids": [
+      "S07",
+      "S08"
+    ]
+  },
+  "language_evidence": {
+    "English": "AA describes its suite as primarily English; its ranking is meaningful evidence for those evaluated tasks, with configuration caveats.",
+    "Finnish": "[uncertain] No Finnish quality measurement for these exact pinned checkpoints was verified. Finnish is an optional evaluation example, not an assumed family requirement.",
+    "other_languages": "GLM card declares English and Chinese; a language tag or multilingual coding benchmark does not establish conversational quality across every language. Evaluate the actual household languages.",
+    "source_ids": [
+      "S02",
+      "S11"
+    ]
+  },
+  "retrieval_and_memory_design": {
+    "status": "Detailed extraction, embeddings, rerankers and memory access control belong to the deployment/retrieval item. Model identity alone cannot establish them.",
+    "implications": "Proposed design: keep authorization and deletion in the application/storage layer, inject only the authorized user's records, and cite retrieved source spans. Long context is a capacity ceiling, not persistent memory. Test isolation with synthetic cross-user canaries; never rely on a system prompt to enforce access.",
+    "source_ids": [
+      "S16",
+      "S17"
+    ]
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "MiMo-V2.6-Pro is the strongest open-weight reasoning model right now.",
+      "verdict": "partially_supported",
+      "explanation": "AA displays it at 46 and BenchLM at 73.6, but the latter is estimated and exact local/API equivalence remains [uncertain]. These are specific composite rankings, not universal proof.",
+      "source_ids": [
+        "S01",
+        "S09",
+        "S11",
+        "S12",
+        "S15"
+      ]
+    },
+    {
+      "original_claim": "MiMo has 1.02T/42B, 1M context, MIT license and September 21-22 weights.",
+      "verdict": "partially_supported",
+      "explanation": "Official RL card supports architecture/context and MIT metadata; repository creation is September 21. [uncertain] Public launch date and a standalone license text were not established.",
+      "source_ids": [
+        "S01",
+        "S24"
+      ]
+    },
+    {
+      "original_claim": "MiMo Humanity's Last Exam is 49.4%; Kimi K3 is 46.9%.",
+      "verdict": "unverified",
+      "explanation": "[uncertain] The checked MiMo card did not report HLE. Kimi's official HLE-Full no-tools figure is 43.5 with a different with-tools figure, so the quoted 46.9 needs the precise subset, provider and evaluation protocol.",
+      "source_ids": [
+        "S01",
+        "S05"
+      ]
+    },
+    {
+      "original_claim": "GLM-5.3 is the best agentic coding/tools model.",
+      "verdict": "unverified",
+      "explanation": "Vendor claims strong coding, but differing harnesses and task versions prevent this absolute conclusion. DeepSeek 1017 vendor results are also strong, not a controlled replacement ranking.",
+      "source_ids": [
+        "S02",
+        "S03",
+        "S05"
+      ]
+    },
+    {
+      "original_claim": "GLM-5.3 is 753B/40B, 1M context, 128K output, text-only.",
+      "verdict": "partially_supported",
+      "explanation": "Text-only and configured 1M context are supported; [uncertain] recipe parameter counts differ and 128K output was not verified.",
+      "source_ids": [
+        "S02",
+        "S10",
+        "S14"
+      ]
+    },
+    {
+      "original_claim": "GLM-5.2 achieved 62.1% SWE-bench Pro.",
+      "verdict": "unverified",
+      "explanation": "[uncertain] Not established by the checked GLM-5.3 primary table; preserve only with the original exact vendor evaluation citation, task revision and harness.",
+      "source_ids": [
+        "S02"
+      ]
+    },
+    {
+      "original_claim": "Kimi K3 is deprecated and its license disputed.",
+      "verdict": "unverified",
+      "explanation": "Weights remain accessible and exact custom license text is available. [uncertain] No checked official notice established deprecation or a license dispute; API retirement and released-weight availability are separate.",
+      "source_ids": [
+        "S05",
+        "S22",
+        "S24"
+      ]
+    },
+    {
+      "original_claim": "Qwen3.8 Max is 2.4T-A95B, text-only, custom license.",
+      "verdict": "partially_supported",
+      "explanation": "Correct for downloadable Qwen3.8-2.4T-A95B; the hosted Max product adds vision and other capabilities. The original conflates the artifact and service names.",
+      "source_ids": [
+        "S06",
+        "S23"
+      ]
+    },
+    {
+      "original_claim": "They all expose OpenAI-compatible /v1 APIs through vLLM or SGLang.",
+      "verdict": "partially_supported",
+      "explanation": "Model-specific recipes support serving integrations, but parser/build/precision support must be pinned. Compatibility does not guarantee all tool, schema or multimodal features; DeepSeek's reference recipe leaves HTTP and execution to callers.",
+      "source_ids": [
+        "S01",
+        "S03",
+        "S04",
+        "S10"
+      ]
+    },
+    {
+      "original_claim": "Nearly every named model released July-October 2026.",
+      "verdict": "unverified",
+      "explanation": "[uncertain] Public launch dates were not reconstructed comprehensively. Repository metadata shows Kimi created in June and Qwen3.6 in April; creation is not public release proof.",
+      "source_ids": [
+        "S24"
+      ]
+    },
+    {
+      "original_claim": "None of the licenses blocks personal use.",
+      "verdict": "partially_supported",
+      "explanation": "Checked grants broadly permit use, but custom terms impose specific commercial and distribution conditions. [uncertain] MiMo's standalone license was not available; avoid a blanket legal assurance.",
+      "source_ids": [
+        "S19",
+        "S20",
+        "S21",
+        "S22",
+        "S23",
+        "S25",
+        "S26",
+        "S01"
+      ]
+    }
+  ],
+  "benchmark_caveats": [
+    "Vendor tables are labelled vendor-measured here even when they include competitor scores. Public benchmark names do not make the vendor run independent.",
+    "Terminal-Bench 2.1, 3.0 and 4.0 are different tasks/protocols. HLE full, text-only, with tools and no-tools are distinct. A maximum reasoning-effort run can spend substantially more output tokens than another configuration.",
+    "AA v4.3.2 and BenchAlign v5.8 are different composites. BenchLM's estimated intervals do not prove rank confidence. Both can mix provider-served configurations with different runtime behavior.",
+    "[uncertain] No exact six-model BFCL or RULER comparison was verified. The checked BFCL snapshot predates several candidates. It supports methodology, not new release rankings.",
+    "Quantization, context length, prompt format, parser choice, harness retries, tool access, wall-clock budget and hidden benchmark contamination can change results. Advertised 1M context does not establish successful retrieval or reasoning at 1M."
+  ],
+  "evaluation_plan": [
+    "Proposal only: freeze repository SHA, license, runtime commit/image digest, precision, parser, prompt template and decoding settings. Compare equal task/tool and wall-clock budgets, recording reasoning tokens and total tokens; use three seeds where stochastic.",
+    "Run 30 held-out coding fixes with executable tests and regression checks in a disposable sandbox. Proposed gate: at least 24 correct, zero claimed test passes without execution evidence, and no writes outside the sandbox.",
+    "Run 100 synthetic tool cases covering nested JSON schema, enums, nullable fields, parallel and sequential calls, irrelevant tools, invalid arguments, tool failure, streaming and continuation. Proposed gate: 100% parseable/schema-valid outputs and at least 95% correct action/arguments; zero unauthorized tool execution.",
+    "Use a pinned BFCL subset and report all categories separately. Use RULER at 8K/32K/64K/128K and higher only if capacity allows, plus real document multi-hop questions with evidence spans. Proposed effective-context gate: at least 90% at each required length and no more than 5 percentage-point drop from 8K; report failure length, not just maximum configured length.",
+    "Evaluate 30 household tasks per required language with bilingual review. If Finnish is required, add inflection, names, mixed English/Finnish code requests and evidence-grounded document answers; proposed gate: at least 90% adequate/correct and zero invented citations.",
+    "Test three synthetic user accounts for document/chat/tool access, cross-user canary leakage and deletion. Proposed gate: zero unauthorized disclosures; ensure deletion removes subsequent retrieval access. These system gates do not measure model weights alone.",
+    "Measure cold load, time to first token, time to complete successful tasks, p50/p95 latency, memory and failure rate at concurrency one and three. Set the acceptable latency threshold with the household before choosing a winner."
+  ],
+  "privacy_and_license": {
+    "weights_and_bundled_code": [
+      "MiMo: MIT is declared in card metadata; [uncertain] repository file listing has no standalone license file, so preserve that limitation and obtain official text before redistribution.",
+      "DeepSeek 1017: card explicitly applies MIT to repository and weights; actual MIT text requires preserving notice.",
+      "GLM-5.3: custom grant covers weights and inference/training code; notice retention and law compliance, plus security review for qualifying MaaS businesses above US$10B aggregate revenue over 12 months.",
+      "Kimi K3: custom grant covers weights and bundled code. Qualifying MaaS above US$20M aggregate annual revenue needs agreement; high-scale commercial UI attribution conditions also exist, with stated internal-use and certified-channel exceptions.",
+      "Qwen3.8-Max license: covers open weights/config/inference code; separate license for qualifying MaaS/AI Work Assistant businesses above US$50M aggregate annual revenue, with an internal-use exception; high-scale commercial attribution conditions also exist.",
+      "StepFun Model License 1.0: covers weights and model-specific code; notice, modification and redistribution conditions; separate license for specified commercial hardware-device embedding and qualifying MaaS above US$20M annual aggregate revenue. It explicitly includes substantial output-trained models in derivative scope.",
+      "Qwen3.6 and Qwen3-Coder: checked LICENSE files are Apache 2.0. Runtime, UI and third-party dependency licenses must be checked separately."
+    ],
+    "privacy": "Local weights permit inference without sending prompts to the vendor as a design option; they do not themselves guarantee private operation. Hosted APIs, web tools and remote coding tools can transmit family data. Proposed deployment should make any egress explicit and enforce per-user authorization outside the model.",
+    "legal_limit": "Conservative reading for research, not a blanket guarantee about every family/commercial configuration. [uncertain] API privacy/retention terms were not audited in this item.",
+    "source_ids": [
+      "S01",
+      "S19",
+      "S20",
+      "S21",
+      "S22",
+      "S23",
+      "S25",
+      "S26"
+    ]
+  },
+  "recommendation": {
+    "practical_default": "Conditionally evaluate Qwen3.6-35B-A3B for the general assistant and Qwen3-Coder-30B-A3B-Instruct as a coding baseline. Their official artifacts and clear Apache licenses make useful initial evaluation candidates; no household hardware or response speed is assumed.",
+    "stronger_option": "If the hardware item establishes capacity, compare pinned MiMo-V2.6-Pro-RL, GLM-5.3 and DeepSeek-V4.1-Flash-1017 under one harness. MiMo is a defensible ranking-led candidate; GLM and DeepSeek are coding/tool candidates. The research does not identify a universal winner.",
+    "other_candidates": "Retain Step and Kimi when their task strengths justify the operating and license constraints. Treat local Qwen3.8 and hosted Max as distinct options; use API benchmark results only after verifying checkpoint equivalence.",
+    "decision_changes": "Choose the smallest model that passes household task, language, tool, privacy and latency gates. A larger model's controlled success advantage, resolved license/runtime gaps, or hardware measurements could change that choice.",
+    "source_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S05",
+      "S06",
+      "S07",
+      "S08",
+      "S09",
+      "S11",
+      "S12"
+    ]
+  },
+  "next_steps": [
+    "Resolve MiMo license text, API/checkpoint mapping and required modalities; obtain a vendor statement rather than infer from shortened names.",
+    "Resolve GLM counting/version inconsistencies and DeepSeek full parameter/storage accounting with the hardware researcher.",
+    "Confirm household hardware, simultaneous users, task mix, language needs and response-time targets before implementation.",
+    "Design the held-out evaluation pack and choose exact runtime/parser combinations; do not install or download during this research phase.",
+    "Compare one smaller baseline first, then escalate to giant candidates only if the measured success gap justifies capacity.",
+    "Record an evidence snapshot for every future ranking: date, evaluator version, exact model/reasoning effort, provider and artifact mapping."
+  ],
+  "open_questions": [
+    "[uncertain] Does Xiaomi publish full MIT text or an official statement explicitly covering this RL artifact? Its metadata tag alone is weaker than a license file.",
+    "[uncertain] Are MiMo API, AA evaluation endpoint and RL weights functionally identical? A checkpoint mapping or reproducible endpoint-to-artifact evaluation is needed.",
+    "[uncertain] What explains GLM's 743B/39B versus 753B/40B counts, and which minimum vLLM build is correct?",
+    "[uncertain] What is DeepSeek 1017's complete parameter and stored-tensor accounting including Engram, draft heads and vision? Do not erase the discrepancy with arithmetic alone.",
+    "[uncertain] What exact protocols produce the original MiMo 49.4/Kimi 46.9 HLE claims? Need source rows and subset/tool settings.",
+    "[uncertain] Is any Kimi hosted endpoint deprecated? Need a vendor lifecycle notice; accessible weights do not answer API status.",
+    "[uncertain] Exact Finnish quality, BFCL scores, effective long context and quantized local performance remain unmeasured for these revisions.",
+    "[uncertain] Most live pages do not expose a reliable publication date. Repository metadata anchors updates; it does not reconstruct historical availability or guarantee every page reflected its present content throughout the cutoff date."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "MiMo-V2.6-Pro-RL official model card",
+      "url": "https://huggingface.co/XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "publisher": "Xiaomi MiMo",
+      "published_or_updated": "2026-10-09 repository last modification; page publication [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read full card and deployment section; identity, architecture, modalities, parsers and MIT metadata. Separate no-RL path returned 401; standalone LICENSE paths inaccessible."
+    },
+    {
+      "id": "S02",
+      "title": "GLM-5.3 official model card",
+      "url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/README.md",
+      "publisher": "Z.ai",
+      "published_or_updated": "2026-10-14 repository last modification",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Coding claims are vendor-measured; read table, footnotes and runtime references."
+    },
+    {
+      "id": "S03",
+      "title": "DeepSeek-V4.1-Flash-1017 official model card",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+      "publisher": "DeepSeek",
+      "published_or_updated": "2026-10-17 repository metadata",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read benchmark harness notes, reference encoding, context, license declaration and displayed tensor count."
+    },
+    {
+      "id": "S04",
+      "title": "Step 5 Preview official model card",
+      "url": "https://huggingface.co/stepfun-ai/Step-5-Preview",
+      "publisher": "StepFun",
+      "published_or_updated": "2026-10-15 repository modification; card references 2026-09-20 AA results",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Specifications, vendor evaluation notes, deployment examples and custom license link."
+    },
+    {
+      "id": "S05",
+      "title": "Kimi K3 official model card",
+      "url": "https://huggingface.co/moonshotai/Kimi-K3",
+      "publisher": "Moonshot AI",
+      "published_or_updated": "2026-09-02 repository last modification; launch date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Architecture, quantization, modalities and vendor benchmark footnotes; no deprecation found in checked card."
+    },
+    {
+      "id": "S06",
+      "title": "Qwen3.8-2.4T-A95B official model card",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/README.md",
+      "publisher": "Qwen",
+      "published_or_updated": "2026-08-12 repository last modification",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Explicit local-weight/API feature distinction, native/extended context and parameters."
+    },
+    {
+      "id": "S07",
+      "title": "Qwen3.6-35B-A3B official model card",
+      "url": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/raw/main/README.md",
+      "publisher": "Qwen",
+      "published_or_updated": "2026-04-24 repository last modification",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Smaller multimodal candidate, active versus total counts, native/extended context and thinking preservation."
+    },
+    {
+      "id": "S08",
+      "title": "Qwen3-Coder-30B-A3B-Instruct official model card",
+      "url": "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/raw/main/README.md",
+      "publisher": "Qwen",
+      "published_or_updated": "2025-12-03 repository last modification",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Non-thinking text coder, native context, tool format and Transformers version warning."
+    },
+    {
+      "id": "S09",
+      "title": "Artificial Analysis open model comparison",
+      "url": "https://artificialanalysis.ai/models/open-source",
+      "publisher": "Artificial Analysis",
+      "published_or_updated": "[uncertain] Live page with no stable publication timestamp",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary for evaluator's own scores and MiMo weights-link mapping; not primary for vendor architecture or licenses."
+    },
+    {
+      "id": "S10",
+      "title": "GLM-5.3 vLLM serving recipe",
+      "url": "https://recipes.vllm.ai/zai-org/GLM-5.3",
+      "publisher": "vLLM project",
+      "published_or_updated": "[uncertain] No reliable page update date exposed",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Independent runtime source, exact parsers, precision and examples; contains internal count/version inconsistencies."
+    },
+    {
+      "id": "S11",
+      "title": "Artificial Analysis Intelligence Benchmarking Methodology",
+      "url": "https://artificialanalysis.ai/methodology/intelligence-benchmarking",
+      "publisher": "Artificial Analysis",
+      "published_or_updated": "v4.3.2 September 2026; exact update day [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Ten tests, primarily English/text emphasis and index version changes."
+    },
+    {
+      "id": "S12",
+      "title": "BenchLM methodology",
+      "url": "https://benchlm.ai/methodology",
+      "publisher": "BenchLM",
+      "published_or_updated": "Source refresh 2026-10-25",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary for its own BenchAlign v5.8 estimator and evidence labels, not independent proof of model superiority."
+    },
+    {
+      "id": "S13",
+      "title": "DeepSeek V4.1 Flash predecessor architecture card",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash/raw/main/README.md",
+      "publisher": "DeepSeek",
+      "published_or_updated": "[uncertain] Publication date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "552B backbone plus 196B Engram; 8B prefill/16B decode; architecture evidence for predecessor must not silently become exact 1017 storage."
+    },
+    {
+      "id": "S14",
+      "title": "GLM-5.3 exact configuration",
+      "url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/config.json",
+      "publisher": "Z.ai",
+      "published_or_updated": "2026-10-14 repository modification; individual file date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "1048576 max positions, FP8 configuration, architecture and Transformers 5.15.0."
+    },
+    {
+      "id": "S15",
+      "title": "BenchLM open-weight leaderboard",
+      "url": "https://benchlm.ai/best/open-source",
+      "publisher": "BenchLM",
+      "published_or_updated": "Data as of 2026-10-25",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read MiMo row: 73.6 Estimated, conditional range 63.90-83.34. Reasoning-page fetch timed out; no conclusion drawn from it."
+    },
+    {
+      "id": "S16",
+      "title": "Berkeley Function Calling Leaderboard V4",
+      "url": "https://gorilla.cs.berkeley.edu/leaderboard.html",
+      "publisher": "UC Berkeley Gorilla team",
+      "published_or_updated": "2026-04-12",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Evaluation scope, FC versus prompt and reproducibility commit f7cf735/package bfcl-eval==2025.12.17; not current exact-release scores."
+    },
+    {
+      "id": "S17",
+      "title": "BFCL V4 web search methodology",
+      "url": "https://gorilla.cs.berkeley.edu/blogs/15_bfcl_v4_web_search.html",
+      "publisher": "UC Berkeley Gorilla team",
+      "published_or_updated": "[uncertain] Publication date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "V4 web search, memory and format sensitivity categories."
+    },
+    {
+      "id": "S18",
+      "title": "RULER original benchmark repository",
+      "url": "https://github.com/NVIDIA/RULER",
+      "publisher": "NVIDIA researchers",
+      "published_or_updated": "[uncertain] Live repository; exact revision not pinned in this review",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Original 13-task/four-category configurable synthetic long-context protocol; historical results do not measure new candidates."
+    },
+    {
+      "id": "S19",
+      "title": "GLM-5.3 license text",
+      "url": "https://huggingface.co/zai-org/GLM-5.3/raw/main/LICENSE",
+      "publisher": "Z.ai",
+      "published_or_updated": "Copyright 2026; exact file date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read grant, scope, MaaS security review threshold and notices."
+    },
+    {
+      "id": "S20",
+      "title": "StepFun Model License 1.0",
+      "url": "https://huggingface.co/stepfun-ai/Step-5-Preview/raw/main/LICENSE.txt",
+      "publisher": "StepFun",
+      "published_or_updated": "Copyright 2026; exact file date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read redistribution, attribution, commercial hardware/MaaS and derivative-work clauses."
+    },
+    {
+      "id": "S21",
+      "title": "DeepSeek 1017 MIT license",
+      "url": "https://huggingface.co/deepseek-ai/DeepSeek-V4.1-Flash-1017/raw/main/LICENSE",
+      "publisher": "DeepSeek",
+      "published_or_updated": "Copyright 2023; repository 2026-10-17",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual MIT text; card explicitly extends it to repository and weights."
+    },
+    {
+      "id": "S22",
+      "title": "Kimi K3 license text",
+      "url": "https://huggingface.co/moonshotai/Kimi-K3/raw/main/LICENSE",
+      "publisher": "Moonshot AI",
+      "published_or_updated": "Copyright 2026; exact file date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read grant, revenue thresholds, attribution and exceptions; no claim of legal dispute inferred."
+    },
+    {
+      "id": "S23",
+      "title": "Qwen3.8-Max license for downloadable artifact",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B/raw/main/LICENSE",
+      "publisher": "Qwen",
+      "published_or_updated": "Copyright 2026; repository 2026-08-12",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Use main-branch license, not search result from a proposed PR; custom business and attribution conditions."
+    },
+    {
+      "id": "S24",
+      "title": "Hugging Face model metadata endpoints",
+      "url": "https://huggingface.co/api/models/XiaomiMiMo/MiMo-V2.6-Pro-RL",
+      "additional_urls": [
+        "https://huggingface.co/api/models/zai-org/GLM-5.3",
+        "https://huggingface.co/api/models/deepseek-ai/DeepSeek-V4.1-Flash-1017",
+        "https://huggingface.co/api/models/stepfun-ai/Step-5-Preview",
+        "https://huggingface.co/api/models/moonshotai/Kimi-K3",
+        "https://huggingface.co/api/models/Qwen/Qwen3.8-2.4T-A95B",
+        "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B",
+        "https://huggingface.co/api/models/Qwen/Qwen3-Coder-30B-A3B-Instruct"
+      ],
+      "publisher": "Hugging Face repository metadata",
+      "published_or_updated": "Live metadata fetched 2026-10-26",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read with PowerShell Invoke-RestMethod: exact SHA, createdAt, lastModified, gated=false and license filenames. No model binary downloads."
+    },
+    {
+      "id": "S25",
+      "title": "Qwen3.6 Apache 2.0 license",
+      "url": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/blob/main/LICENSE",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] Exact file date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual license file opened; Apache 2.0 rather than Max's custom license."
+    },
+    {
+      "id": "S26",
+      "title": "Qwen3-Coder Apache 2.0 license",
+      "url": "https://huggingface.co/Qwen/Qwen3-Coder-30B-A3B-Instruct/blob/main/LICENSE",
+      "publisher": "Qwen",
+      "published_or_updated": "[uncertain] Exact file date not established",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Actual license file opened; code/weight repository grant, separate dependencies still require review."
+    }
+  ],
+  "uncertain": [
+    "verified_findings",
+    "candidate_comparison",
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "original_claim_audit",
+    "benchmark_caveats",
+    "privacy_and_license",
+    "open_questions",
+    "sources"
+  ]
+}

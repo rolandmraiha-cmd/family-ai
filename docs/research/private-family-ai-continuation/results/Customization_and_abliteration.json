@@ -1,0 +1,579 @@
+{
+  "item_name": "Customization and abliteration",
+  "research_date": "Research cutoff and source access date: 2026-10-26. Only material dated on or before this cutoff is used; undated repository/documentation revisions are identified explicitly.",
+  "scope": "Audit the adaptation claims in open-model-research-2026-10.md; compare instruction prompting, external retrieval, LoRA, full fine-tuning, teacher distillation and reinforcement learning for a private family assistant. Assess refusal removal only at the level of empirical evidence and evaluation limitations. No bypass instructions, implementation, model downloads, training, deployment, GPU work or paid calls were performed.",
+  "verified_findings": [
+    {
+      "id": "F1",
+      "claim": "The original four LoRA numbers are authentic but narrowly scoped: Llama-2-7B, 20B StarCoder-Python continued-pretraining tokens, rank 256 LoRA. Tables S1/S2 report HumanEval pass@1 0.224 versus full fine-tuning 0.263 and source-task averages 0.617 versus 0.545. The latter are raw benchmark averages, not fractions of all original ability retained. Code instruction tuning in the same paper can close the target-task gap at high rank.",
+      "source_ids": [
+        "S01"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for transcription and scope; limited external validity",
+      "practical_implication": "Do not label these universal retention or learning rates, or treat a long code-training run as evidence that family facts belong in weights."
+    },
+    {
+      "id": "F2",
+      "claim": "Yue et al.'s cited v3 and later v5 distinguish improved pass@1 from worse high-k solvable-problem coverage under their tested RLVR methods. Their distillation comparison expands coverage. Finite sampling does not establish every possible base-model capability or a universal impossibility theorem about RL.",
+      "source_ids": [
+        "S02"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for the reported result; conditional interpretation",
+      "practical_implication": "A claim that the paper was simply refuted is unsupported. Evaluate useful single-attempt reliability separately from broad sampling coverage."
+    },
+    {
+      "id": "F3",
+      "claim": "DeepSeek-R1 reports distilling reasoning into Qwen/Llama students by supervised training on approximately 800k teacher-curated examples; these distilled students did not receive an additional RL stage. This is positive evidence for teacher-to-student transfer, not guaranteed transfer to every model or task.",
+      "source_ids": [
+        "S03"
+      ],
+      "evidence_type": "vendor-measured",
+      "confidence": "high for method; vendor-reported outcomes",
+      "practical_implication": "Teacher quality, training distribution and a held-out task suite matter more than the word distillation."
+    },
+    {
+      "id": "F4",
+      "claim": "An independent RL study finds better generalization than its SFT comparison on GeneralPoints rule changes and V-IRL textual/visual shifts, using an SFT-initialized backbone and verifier feedback. These environments and metrics differ from Yue et al.'s large-k mathematical/code coverage tests.",
+      "source_ids": [
+        "S04"
+      ],
+      "evidence_type": "independently-measured",
+      "confidence": "high within the experimental environments",
+      "practical_implication": "RL can yield useful task generalization without resolving whether every measured gain reflects a novel reasoning strategy; no universal SFT-versus-RL ordering follows."
+    },
+    {
+      "id": "F5",
+      "claim": "The 2024 refusal-direction study examined 13 chat models up to 72B. General benchmark changes were often small, but TruthfulQA decreased consistently; the claim of unchanged capability is too strong. Its evaluation omitted chat templates to match the contemporary harness and did not establish a 2026 MoE reasoning-loss rate.",
+      "source_ids": [
+        "S05"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for evaluated models; low for extrapolation",
+      "practical_implication": "Measure truthfulness, task correctness and refusal separately; a small benchmark delta does not establish an unchanged assistant."
+    },
+    {
+      "id": "F6",
+      "claim": "A September 2026 institutional abstract reports an abliteration audit on Qwen-2.5-7B, Mistral-7B-v0.3 and Gemma-2-9B. Capability effects depended on audit conditions; one Qwen condition reached a 1.47-fold perplexity ratio. Full paper access was not available in the retrieved institutional record.",
+      "source_ids": [
+        "S06"
+      ],
+      "evidence_type": "primary",
+      "confidence": "moderate: primary abstract, not a full-method verification",
+      "practical_implication": "Refusal rate alone can confuse behavioral changes with degraded language competence. Perplexity ratios cannot be converted into a universal reasoning-loss percentage."
+    },
+    {
+      "id": "F7",
+      "claim": "A July 2026 preprint compared BF16 base and community-modified MoE pairs for Gemma-4-26B-A4B-it and Qwen3-30B-A3B-Instruct-2507 on 21,600 Polish equity-decision probes. It reports optimism increases of 12.2 and 7.4 percentage points, respectively, while confidence changed in opposite directions. Instruction-format controls were preserved. This is one author, one intervention provider, one task, persona and language; its intervention's exact procedure is not fully public.",
+      "source_ids": [
+        "S07"
+      ],
+      "evidence_type": "independently-measured",
+      "confidence": "moderate; controlled primary preprint, narrow and not independently replicated here",
+      "practical_implication": "MoE evidence exists, but neither zero side effects nor a fixed reasoning penalty generalizes to the original report's flagship models."
+    },
+    {
+      "id": "F8",
+      "claim": "Retrieval uses external non-parametric information supplied to a generator. The original RAG research also fine-tuned components: RAG and training can be combined, but indexing family documents or retrieving them during inference does not itself change generator weights.",
+      "source_ids": [
+        "S08"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Keep the document store, retrieval process and any separate training pipeline conceptually and operationally distinct."
+    },
+    {
+      "id": "F9",
+      "claim": "Lost in the Middle found answer accuracy sensitive to evidence position in long contexts on multi-document QA and key-value retrieval. This older-model result supplies a failure mode to test, not a quantified forecast for newer long-context models.",
+      "source_ids": [
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for historical findings; newer-model behavior unmeasured",
+      "practical_implication": "Retrieval success and long advertised context length do not guarantee the generator uses the relevant evidence."
+    },
+    {
+      "id": "F10",
+      "claim": "Training-data extraction was demonstrated on GPT-2, including memorized personal information from public training data. The study establishes a real memorization hazard, not the probability that a specific local LoRA adapter will leak family records.",
+      "source_ids": [
+        "S10"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for demonstrated risk; model-specific leakage remains unknown",
+      "practical_implication": "Treat adapters, checkpoints and training logs as sensitive assets; removing source documents cannot by itself prove deletion from trained weights."
+    },
+    {
+      "id": "F11",
+      "claim": "Benchmark contamination can sometimes be detected statistically through canonical example ordering, but absence of detection is not proof of clean training data. The paper's own audit found little evidence of pervasive contamination in its tested models.",
+      "source_ids": [
+        "S11"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for the method's stated scope",
+      "practical_implication": "Use original held-out family-like tasks and provenance checks rather than relying on public benchmark gains or accusing a model of contamination without evidence."
+    },
+    {
+      "id": "F12",
+      "claim": "Indirect prompt injection has been demonstrated through retrieved external content in LLM-integrated applications, with impacts depending on connected tools and privileges.",
+      "source_ids": [
+        "S12"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high for demonstrated attack class; no current-stack vulnerability claimed",
+      "practical_implication": "Application authorization and data access controls must hold independently of model compliance."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "approach": "Instruction prompting and examples in context",
+      "artifact": "No weight artifact; version the application's prompt and examples.",
+      "persona": "Practical first experiment for tone, verbosity and response conventions.",
+      "private_facts": "Can supply a small amount of explicitly authorized current context; does not provide durable storage or user isolation.",
+      "reasoning": "Can elicit existing skills and specify verifiable workflows; no promise of universal improvement.",
+      "constraints": "Prompt authority is not an access-control boundary. Model-specific prompt compatibility matters.",
+      "source_ids": [
+        "S12",
+        "S14"
+      ]
+    },
+    {
+      "approach": "RAG and structured memory",
+      "artifact": "External source documents, extracted text, index and retrieval configuration; no universal embedding or reranker selected in this item.",
+      "persona": "Store explicit preferences with provenance and expiry.",
+      "private_facts": "Recommended default for editable, attributable records with per-user and shared permissions.",
+      "reasoning": "Supplies evidence rather than automatically creating reasoning ability.",
+      "constraints": "Extraction, retrieval, context use and answer grounding can each fail; retrieval must occur within authorized data.",
+      "source_ids": [
+        "S08",
+        "S09",
+        "S12"
+      ]
+    },
+    {
+      "approach": "LoRA supervised adaptation",
+      "artifact": "huggingface/peft v0.17.0 is a verified example toolchain, not a claim about the newest release.",
+      "persona": "Candidate for recurring style or format failures after prompting is measured.",
+      "private_facts": "Possible memorization is not a database or reliable deletion mechanism.",
+      "reasoning": "Depends on task, rank, data and base capability; see F1.",
+      "constraints": "Requires exact base revision/tokenizer compatibility, curated data and regression evaluation; reduced trainable parameters do not eliminate base-weight storage.",
+      "source_ids": [
+        "S13",
+        "S10"
+      ]
+    },
+    {
+      "approach": "Full fine-tuning / continued pretraining",
+      "artifact": "New full checkpoint; the original quantitative evidence used Llama-2-7B.",
+      "persona": "Usually a disproportionate first experiment for a family assistant.",
+      "private_facts": "Adds harder-to-audit memorization and deletion obligations.",
+      "reasoning": "Can support larger task adaptation, with forgetting risks; no guaranteed gain.",
+      "constraints": "More trainable state and checkpoint management; reserve for a specific measured capability gap.",
+      "source_ids": [
+        "S01",
+        "S10"
+      ]
+    },
+    {
+      "approach": "Teacher distillation",
+      "artifact": "Verified smaller examples: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B, deepseek-ai/DeepSeek-R1-Distill-Qwen-7B, deepseek-ai/DeepSeek-R1-Distill-Qwen-14B and deepseek-ai/DeepSeek-R1-Distill-Qwen-32B. These are historical demonstrators, not asserted current best models.",
+      "persona": "Can transfer teacher response patterns, including unwanted ones.",
+      "private_facts": "Teacher-generated examples require data rights and a privacy boundary; local teacher inference avoids provider disclosure only if the entire pipeline stays local.",
+      "reasoning": "Positive evidence for transfer of reasoning performance; see F3.",
+      "constraints": "Student remains capacity-limited; teacher errors, licenses and evaluation contamination require review.",
+      "source_ids": [
+        "S03",
+        "S14"
+      ]
+    },
+    {
+      "approach": "RL / preference optimization / RLVR",
+      "artifact": "A training method rather than a deployment artifact; scope here is verifier-based RL and the cited task studies.",
+      "persona": "Preference signals may tune behavior, but reward design is additional engineering.",
+      "private_facts": "Not a record store and not a deletion mechanism.",
+      "reasoning": "Can improve rewarded task success; theoretical interpretation and generalization depend on task and protocol.",
+      "constraints": "Needs reliable rewards, rollouts, compute accounting and tests for reward exploitation. Human preference RL and exact-answer RLVR are not interchangeable evidence.",
+      "source_ids": [
+        "S02",
+        "S04"
+      ]
+    },
+    {
+      "approach": "Refusal-removal checkpoints",
+      "artifact": "Evidence examples in S07; no modified checkpoint is recommended as the family default.",
+      "persona": "Changing refusal behavior can also shift disposition.",
+      "private_facts": "Does not add privacy protection or ownership rights.",
+      "reasoning": "No credible universal percentage loss is established for current MoE models.",
+      "constraints": "Require separately verified provenance, licensing and a broad paired evaluation; this report supplies no modification recipes.",
+      "source_ids": [
+        "S05",
+        "S06",
+        "S07"
+      ]
+    }
+  ],
+  "deployment_requirements": {
+    "status": "Research only. No deployment or training was attempted.",
+    "software": "S13 documents PEFT v0.17.0, commit 48f6493, including support for targeting nn.Parameter in some MoE implementations. This does not certify every model architecture, training backend, quantization path or serving combination. S14 documents vLLM/SGLang examples for R1 distills without establishing a minimum runtime version.",
+    "hardware": "No exact training GPU requirement can be responsibly assigned without the chosen base, adapter targets, precision, optimizer, sequence length, batch size and sharding/offload design. Training must budget base weights, activations, gradients and optimizer state; LoRA chiefly reduces the latter trainable state.",
+    "moe": "For a sparse model, active parameters describe per-token compute, not complete resident weight storage. Adapter selection also depends on architecture and expert representation. Exact supported 2026 flagship combinations are [uncertain].",
+    "platform": "Windows-native or WSL training/serving support for a selected complete stack is [uncertain]; this research did not install or test it.",
+    "source_ids": [
+      "S13",
+      "S14"
+    ]
+  },
+  "operating_profile": {
+    "memory_estimate": "Arithmetic illustration only: exactly 7 billion scalar weights require 14 GB decimal at 2 bytes/weight, or 3.5 GB at ideal 4 bits/weight. Both omit scales, metadata, activations, KV cache, workspace and all training state. This is not a measured requirement for any named checkpoint.",
+    "latency": "[uncertain] No local latency, cold start, throughput or multi-user concurrency measurements exist from this task. Retrieval adds extraction/index/storage work and query-time retrieval/reranking; prompted/retrieved tokens increase prefill work.",
+    "context": "Evaluate practical input and output limits with the selected runtime. A 32,768-token generation limit in the historical R1 benchmark setup is not a universal family-serving recommendation.",
+    "artifacts": "Keep immutable base ID/revision, tokenizer/chat-template hash, adapter revision, precision and runtime configuration for each comparison; exact selected artifacts are [uncertain].",
+    "source_ids": [
+      "S14"
+    ]
+  },
+  "language_evidence": {
+    "english": "The historical reasoning and capability evidence includes English-language QA, code and mathematical tasks; these establish task results rather than a complete English conversational-quality measurement.",
+    "finnish": "[uncertain] No Finnish adaptation or abliteration measurement was found in the examined primary evidence. Finnish is only a conditional evaluation example, not a stated user requirement.",
+    "other_languages": "S07 supplies Polish decision-task evidence only. It cannot establish Finnish behavior or broad multilingual preservation. Teacher output language and language mixing need explicit evaluation.",
+    "source_ids": [
+      "S01",
+      "S03",
+      "S05",
+      "S07"
+    ]
+  },
+  "retrieval_and_memory_design": {
+    "proposed_architecture": "Proposal: maintain separate per-person and explicitly shared stores. Preserve source ownership, access lists, original document hash, extraction version, timestamps, correction history and retention policy; authorize before candidate retrieval and again before returning content.",
+    "extraction_and_search": "Proposal: test text and scanned documents separately, including OCR, tables, page order and source offsets. Measure relevant-passage recall before choosing chunking, embeddings, lexical/hybrid search or reranking; no particular embedding/reranker is certified by this item.",
+    "grounding": "Proposal: return source/page links tied to actual evidence, require abstention when evidence is absent, and distinguish quoted source facts from inference. Test stale or conflicting records, irrelevant matches, evidence buried in context, and unsupported citations.",
+    "memory_and_deletion": "Proposal: store editable facts and preferences outside weights, with explicit personal/shared ownership. Deletion should remove raw documents, extracted copies, vectors, summaries, caches and queued jobs, and define backup retention. A trained checkpoint needs separate handling; source deletion is not weight unlearning.",
+    "failure_modes": "Missing OCR text, poor chunk boundaries, cross-language retrieval misses, stale indexes, unauthorized retrieval, ranking errors, context-position loss, fabricated citations and hostile document instructions are distinct failure modes. These are test categories, not claims of defects in the user's future stack.",
+    "source_ids": [
+      "S08",
+      "S09",
+      "S10",
+      "S12"
+    ]
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "LoRA forgets less general ability, with 0.617 versus 0.545 retention, and learns less, with HumanEval 0.224 versus 0.263.",
+      "verdict": "partially_supported",
+      "explanation": "F1 verifies the values and their specific experimental setting. Calling the raw source-task average retention and generalizing across adaptation regimes is misleading.",
+      "source_ids": [
+        "S01"
+      ]
+    },
+    {
+      "original_claim": "LoRA is the safe choice for persona, style and family-specific knowledge.",
+      "verdict": "partially_supported",
+      "explanation": "Parameter-efficient style adaptation is a plausible candidate, but the cited code/math study is not a family-persona or privacy trial. Family records require update, access and deletion controls; safety is not guaranteed by adapter rank.",
+      "source_ids": [
+        "S01",
+        "S10",
+        "S13"
+      ]
+    },
+    {
+      "original_claim": "Distillation from a stronger teacher can widen a smaller model's reasoning.",
+      "verdict": "confirmed",
+      "explanation": "Supported as an existential, conditional claim by teacher-student training results and the coverage comparison in F2/F3; not a guarantee of improvement on every task or model.",
+      "source_ids": [
+        "S02",
+        "S03"
+      ]
+    },
+    {
+      "original_claim": "The RL-does-not-expand-reasoning claims were refuted in verification.",
+      "verdict": "unverified",
+      "explanation": "No reproducible refutation protocol is supplied in the report. The cited study maintains its scoped empirical conclusion in v5. F4 offers different positive generalization evidence, not a direct overturning of the same experiment.",
+      "source_ids": [
+        "S02",
+        "S04"
+      ]
+    },
+    {
+      "original_claim": "Prompts, RAG and tools usually beat fine-tuning the flagship.",
+      "verdict": "unverified",
+      "explanation": "A reasonable low-cost project sequence is not a measured universal ranking. No matched flagship/family-workload comparison supports the word usually in the supplied report.",
+      "source_ids": [
+        "S08",
+        "S09"
+      ]
+    },
+    {
+      "original_claim": "How much reasoning quality abliteration costs on 2026 MoE models is not verified.",
+      "verdict": "partially_supported",
+      "explanation": "A universal reasoning-loss estimate remains unavailable. F7 adds relevant dated MoE behavioral evidence, but not the named flagship models or a general reasoning benchmark.",
+      "source_ids": [
+        "S05",
+        "S06",
+        "S07"
+      ]
+    },
+    {
+      "original_claim": "No model license blocks personal use.",
+      "verdict": "unverified",
+      "explanation": "The blanket claim is not established by this adaptation audit. Code, base weights, derivatives, source data and teacher outputs require separate checks; a permissive tool license does not grant rights in private records.",
+      "source_ids": [
+        "S13",
+        "S14"
+      ]
+    }
+  ],
+  "benchmark_caveats": [
+    "F1's HumanEval protocol was 164 Python problems, 50 generations per problem, zero-shot, temperature 0.2 and top-p 0.95. It is neither agentic coding nor a contemporary general-intelligence score. Its source-task average covers HellaSwag, WinoGrande and ARC-Challenge. [S01]",
+    "Yue et al. use high-k pass coverage, including a finite k=256 proxy; DeepSeek and Chu et al. emphasize other outcomes. Compare within each controlled setup and preserve sampling budgets; conflicting metrics can both improve or worsen without logical contradiction. [S02,S03,S04]",
+    "The 2024 refusal paper measures conventional capability tasks, not all realistic assistant behavior. The 2026 MoE disposition study is single-language and single-domain, with a partially undocumented third-party intervention; it is not a general intelligence or financial-skill result. [S05,S07]",
+    "S06 was read as an institutional abstract only. Its reported ratio is not independently replicated here; methodology details beyond the abstract remain [uncertain].",
+    "Hold quantization, tokenizer, chat template, prompt bytes, decoding and tool privileges fixed in paired comparisons. S07 identified quantizer/template provenance artifacts, so community model labels alone are insufficient evidence.",
+    "Contamination of training or evaluation can inflate apparent gains, but a suspicion is not evidence of contamination. Freeze an unseen evaluation set and separate benchmark, retrieval and training corpora. [S11]"
+  ],
+  "evaluation_plan": {
+    "status": "Proposal only; no test/model runs occurred.",
+    "comparison": "Freeze base revision, prompt, document set, retrieval configuration, quantization, runtime, seeds, token budget and tool access. Compare prompting alone, prompting plus retrieval, and only then any approved adapter. Repeat stochastic tasks and report confidence intervals and absolute differences.",
+    "acceptance_tests": [
+      {
+        "test": "Private facts and citations",
+        "design": "Use at least 100 synthetic or consented questions spanning two personal stores plus a shared store, including corrections, conflicts and absent answers.",
+        "proposed_pass": "At least 95% supported fact accuracy; every factual citation resolves to supporting accessible text; at least 95% abstention on absent evidence."
+      },
+      {
+        "test": "User isolation and deletion",
+        "design": "Cross-user retrieval requests, shared-to-private changes, removed records, caches and background indexing.",
+        "proposed_pass": "Zero unauthorized source snippets, answers, IDs or citations; no removed item is retrievable after the documented deletion cycle. Separately verify backup policy."
+      },
+      {
+        "test": "Retrieval and document robustness",
+        "design": "Known answer passages in scanned pages, tables, long documents and multiple context positions; stale and irrelevant distractors.",
+        "proposed_pass": "At least 95% answer-passage recall at the selected retrieval budget, separately reported from generator answer accuracy; fail on any authorization bypass."
+      },
+      {
+        "test": "Persona and capability regression",
+        "design": "At least 100 blinded paired family-assistant tasks plus untouched code, math, factuality and uncertainty tasks; predeclare scoring rubric.",
+        "proposed_pass": "At least 90% requested-style compliance; no more than two percentage points absolute correctness regression, with intervals reported and unresolved uncertainty preventing a pass."
+      },
+      {
+        "test": "Reasoning and refusal-related behavior",
+        "design": "If considering a modified checkpoint, compare legal benign requests that previously over-refuse, correctness, truthfulness, uncertainty calibration and safe handling of age-appropriate sensitive requests; use high-level evaluation only.",
+        "proposed_pass": "Improved benign completion without correctness/calibration regression or loss of required family boundaries; lower refusal alone never qualifies."
+      },
+      {
+        "test": "Conditional multilingual test",
+        "design": "Run separate suites for each actual family language; include Finnish only if requested and have fluent review of code-switching, meaning and privacy behavior.",
+        "proposed_pass": "Meet the same privacy and citation gates in every required language; publish per-language quality results instead of averaging away failures."
+      },
+      {
+        "test": "Performance and reproducibility",
+        "design": "Measure time to first token, total response time, peak memory, cold start and concurrent-family sessions with and without retrieval.",
+        "proposed_pass": "Must meet user-defined latency/memory limits, which are [uncertain] until hardware and concurrency needs are supplied."
+      }
+    ],
+    "source_ids": [
+      "S09",
+      "S11",
+      "S12"
+    ]
+  },
+  "privacy_and_license": {
+    "code": "huggingface/peft v0.17.0 code carries Apache-2.0; preserve applicable notices and redistribution conditions. This says nothing by itself about base weights or family data. [S13]",
+    "weights": "DeepSeek-R1's repository states MIT for its code and weights and allows derivatives/distillation. Its Qwen-derived distills also identify Apache-2.0 ancestry, while Llama-derived distills identify Llama-specific licenses. Exact repository LICENSE files for R1 and the Qwen-7B distill were read; retain license provenance rather than treating a derivative label as erasing upstream conditions. [S14]",
+    "data_and_ownership": "Proposal: each adult chooses which records can be stored, shared or used for training; establish appropriate guardian controls and permissions for children's records. Keep private conversations out of shared training by default. Access to a document does not by itself establish a right to train or redistribute it. Legal ownership and applicable duties for particular records remain [uncertain].",
+    "cloud_egress": "A local model does not prove an entirely local pipeline. Check embedding/reranking, OCR, telemetry, backups, remote teachers and observability services. Uploading family prompts to an external teacher exposes those prompts to that service; provider-specific retention and contractual terms are [uncertain] until a service is selected.",
+    "privacy_risk": "Use data minimization and per-user authorization, not model refusal, as privacy controls. Model weights and logs can retain sensitive material; indirect prompt injection can exploit privileged application integrations. [S10,S12]",
+    "access_restrictions": "No account-gating or download test was performed. The report does not certify the original flagship licenses or the terms of the community-modified MoE artifacts."
+  },
+  "recommendation": {
+    "practical_default": "Use a suitably evaluated unmodified model with explicit instructions plus access-controlled external family records. This is a project recommendation based on editability, provenance and isolation needs, not a claim that RAG wins every benchmark. [S08,S10,S12]",
+    "stronger_option": "For a repeatable style or structured-output gap, consider a small, reversible LoRA experiment using non-sensitive, consented examples and the regression gates above. For reasoning, evaluate an already published distilled smaller model before proposing a family-specific training project. [S13,S03]",
+    "reasoning_training": "Distillation and RL are research options only after a measurable gap, licensed data, compute allowance and reliable held-out evaluation exist. Do not infer that home tuning will improve a flagship from the historical papers. [S02,S04]",
+    "abliteration": "Do not make refusal removal the default customization layer for a shared family assistant. Evidence supports model- and task-dependent changes beyond refusal; a measured benign over-refusal problem should be addressed and evaluated explicitly. No general 2026 MoE quality guarantee is supported. [S05,S06,S07]",
+    "choice_changers": "Actual hardware, concurrency, supported languages, required family boundaries, deletion obligations and private benchmark results are [uncertain]. These may change the model size, storage design and whether any adaptation is justified."
+  },
+  "next_steps": [
+    "Agree on personal versus shared records, consent, deletion expectations, real family languages and acceptable assistant boundaries.",
+    "Select exact base/model revision and verify code, weight, source-data and teacher-output licenses before any adaptation proposal.",
+    "Prepare a synthetic/consented benchmark and provenance manifest without exposing held-out answers to training or retrieval.",
+    "Plan a baseline prompt-plus-retrieval comparison with separate retrieval recall, grounding, privacy and performance measurements.",
+    "Only if a remaining style/capability gap justifies it, draft an adapter or distillation experiment with compute limits and rollback criteria; obtain separate authorization before implementation or spending.",
+    "For any refusal-modified candidate, request exact provenance and a matched paired capability/disposition report on the actual model; absent evidence, retain the unmodified candidate."
+  ],
+  "open_questions": [
+    "[uncertain] How much reasoning quality changes after refusal removal on MiMo-V2.6-Pro, GLM-5.3, DeepSeek V4.1 or the original report's other 2026 flagships: no matched primary study of those exact artifacts was verified. Resolve with controlled artifact-specific evidence.",
+    "[uncertain] Whether S07's Polish disposition shifts replicate across intervention authors, non-financial tasks, languages and decoding configurations. Resolve with independent matched experiments; it is one primary preprint, not a general law.",
+    "[uncertain] Full methods and reproducibility of S06 beyond the institutional abstract; retrieve the proceedings paper before using its numerical ratio for a deployment decision.",
+    "[uncertain] Practical training/serving versions, Windows support, memory, latency and concurrent-user behavior for the eventual stack. Resolve after exact artifacts and hardware are chosen.",
+    "[uncertain] Whether a proposed family dataset is owned, licensed and consented for all intended uses, and whether any cloud teacher/service can meet privacy requirements.",
+    "[uncertain] Exact update dates of the live DeepSeek repository and historical versioned PEFT documentation page were not exposed reliably. Stable paper/tag dates anchor conclusions; do not treat undated live recommendations as a verified 2026 release.",
+    "[uncertain] The surveyed evidence does not settle a universal claim that RL cannot learn new reasoning, or that it always does. Definitions, base strength, exploration, verifier quality and evaluation budget remain decisive."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "LoRA Learns Less and Forgets Less",
+      "url": "https://arxiv.org/html/2405.09673v2",
+      "publisher": "Biderman et al.; TMLR/arXiv",
+      "published_or_updated": "2024-09-20 (v2; first submitted 2024-05-15)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Full HTML read, especially experiment protocol and Tables S1/S2; exact original numerical audit."
+    },
+    {
+      "id": "S02",
+      "title": "Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?",
+      "url": "https://arxiv.org/html/2504.13837v5",
+      "related_urls": [
+        "https://arxiv.org/html/2504.13837v3"
+      ],
+      "publisher": "Yue et al.; arXiv / NeurIPS 2025",
+      "published_or_updated": "2025-11-24 (v5); original report cites 2025-10-13 v3",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read v3 and v5; scoped pass@k and distillation claims remain, with limitations on universal interpretation."
+    },
+    {
+      "id": "S03",
+      "title": "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning",
+      "url": "https://arxiv.org/html/2501.12948v1",
+      "publisher": "DeepSeek-AI; arXiv",
+      "published_or_updated": "2025-01-22 (v1)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Vendor primary technical report; distillation data, student backbones, SFT-only student procedure and reasoning evaluation."
+    },
+    {
+      "id": "S04",
+      "title": "SFT Memorizes, RL Generalizes: A Comparative Study of Foundation Model Post-training",
+      "url": "https://arxiv.org/html/2501.17161v2",
+      "publisher": "Chu et al.; arXiv",
+      "published_or_updated": "2025-05-26 (v2; first submitted 2025-01-28)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Full HTML and authors' repository read; independent task-specific generalization evidence, not a same-protocol refutation of S02."
+    },
+    {
+      "id": "S05",
+      "title": "Refusal in Language Models Is Mediated by a Single Direction",
+      "url": "https://arxiv.org/html/2406.11717v3",
+      "publisher": "Arditi et al.; arXiv",
+      "published_or_updated": "2024-10-30 (v3; first submitted 2024-06-17)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Read capability section and tables: small changes on several benchmarks but consistent TruthfulQA loss; historical scope."
+    },
+    {
+      "id": "S06",
+      "title": "Auditing Abliteration: Normalization Placement, Edit Budget, and Transfer in Single-Direction Refusal Removal",
+      "url": "https://scholarship.miami.edu/esploro/outputs/conferencePaper/Auditing-Abliteration-Normalization-Placement-Edit-Budget/991033194041902976",
+      "related_urls": [
+        "https://doi.org/10.1109/ORSS71174.2026.11684276"
+      ],
+      "publisher": "Leon and Tucker; University of Miami institutional record / IEEE ORSS",
+      "published_or_updated": "2026-09-16",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary institutional abstract read. Full proceedings paper was not accessible through this record; numerical finding receives moderate confidence."
+    },
+    {
+      "id": "S07",
+      "title": "Abliteration Is Not a Scalpel: Off-Target Effects of Refusal Removal on Decision Disposition Across Model Families",
+      "url": "https://arxiv.org/html/2607.17427v1",
+      "publisher": "Aleksander Fafuła; arXiv",
+      "published_or_updated": "2026-07-19 (v1)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Full HTML read, including exact paired repositories, provenance, disposition endpoints and explicit one-method/task/language limitations."
+    },
+    {
+      "id": "S08",
+      "title": "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks",
+      "url": "https://arxiv.org/abs/2005.11401",
+      "publisher": "Lewis et al.; NeurIPS 2020/arXiv",
+      "published_or_updated": "2021-04-12 (v4; first submitted 2020-05-22)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary abstract read; parametric/non-parametric distinction and the original combined training/retrieval formulation."
+    },
+    {
+      "id": "S09",
+      "title": "Lost in the Middle: How Language Models Use Long Contexts",
+      "url": "https://arxiv.org/abs/2307.03172",
+      "publisher": "Liu et al.; TACL/arXiv",
+      "published_or_updated": "2023-11-20 (v3)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary abstract read; positional context-use failures in multi-document QA and key-value retrieval."
+    },
+    {
+      "id": "S10",
+      "title": "Extracting Training Data from Large Language Models",
+      "url": "https://arxiv.org/abs/2012.07805",
+      "publisher": "Carlini et al.; arXiv",
+      "published_or_updated": "2021-06-15 (v2)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary abstract read; demonstrated GPT-2 training-data extraction, not an adapter-specific leakage estimate."
+    },
+    {
+      "id": "S11",
+      "title": "Proving Test Set Contamination in Black Box Language Models",
+      "url": "https://arxiv.org/abs/2310.17623",
+      "publisher": "Oren et al.; arXiv",
+      "published_or_updated": "2023-11-24 (v2)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary abstract read; conditional contamination detection and limits of ungrounded contamination assertions."
+    },
+    {
+      "id": "S12",
+      "title": "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection",
+      "url": "https://arxiv.org/abs/2302.12173",
+      "publisher": "Greshake et al.; AISec/arXiv",
+      "published_or_updated": "2023-05-05 (v2)",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Primary abstract and source record read; retrieved data can carry hostile instructions and exploit integrated privileges."
+    },
+    {
+      "id": "S13",
+      "title": "Hugging Face PEFT v0.17.0 release, documentation and license",
+      "url": "https://github.com/huggingface/peft/releases/tag/v0.17.0",
+      "related_urls": [
+        "https://huggingface.co/docs/peft/v0.17.0/en/index",
+        "https://raw.githubusercontent.com/huggingface/peft/v0.17.0/LICENSE"
+      ],
+      "publisher": "Hugging Face",
+      "published_or_updated": "Tag v0.17.0, commit 48f6493; release page shows 01 Aug, exact year [uncertain] in fetched rendering; documentation update [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Versioned release and documentation plus actual Apache-2.0 license read. General PEFT support and MoE parameter support do not certify every model/runtime."
+    },
+    {
+      "id": "S14",
+      "title": "DeepSeek-R1 official model repository and actual license texts",
+      "url": "https://github.com/deepseek-ai/DeepSeek-R1",
+      "related_urls": [
+        "https://raw.githubusercontent.com/deepseek-ai/DeepSeek-R1/main/LICENSE",
+        "https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B/raw/main/LICENSE",
+        "https://deepseek.com/en/news/deepseek-r1/"
+      ],
+      "publisher": "DeepSeek-AI",
+      "published_or_updated": "Initial R1 release 2025-01-20; live repository revision/update date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "README, primary release announcement and MIT texts read; distill IDs, upstream license distinctions and documented serving examples. No deployment or downloads tested."
+    }
+  ],
+  "uncertain": [
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "benchmark_caveats",
+    "evaluation_plan",
+    "privacy_and_license",
+    "recommendation",
+    "open_questions",
+    "sources"
+  ]
+}

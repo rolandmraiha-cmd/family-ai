@@ -1,0 +1,647 @@
+{
+  "item_name": "Vision and documents",
+  "research_date": {
+    "cutoff": "2026-10-26",
+    "accessed": "2026-10-26",
+    "method": "Primary model cards, repository metadata/configuration and licenses, original paper, library documentation and serving recipes. No model execution or hardware measurement was performed. Repository creation dates are not assumed to equal public release dates."
+  },
+  "scope": "Audit the original report's Qwen3.8-27B / Qwen3.6 vision recommendations and single-GPU fit claim. Compare general visual understanding with document extraction; cover OCR, layout, charts, screenshots, multi-image and video, multilingual evidence and realistic 24/48 GB planning. Evaluate confirmed GLM-5.3-Flash and smaller alternatives. Embedding/reranker architecture belongs to the deployment item. Findings do not establish a universal best model.",
+  "verified_findings": [
+    {
+      "claim": "Qwen/Qwen3.8-27B is an official native image/video model, with a 27B language backbone and vision encoder. It documents 262,144 native context and extension to 1,000,000. Hugging Face tensor metadata reports 27,781,427,952 BF16 parameters, including components beyond the rounded backbone label.",
+      "source_ids": [
+        "S01",
+        "S10"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "The model is real and relevant to the original shortlist; context capacity and the rounded name do not establish usable local workload size."
+    },
+    {
+      "claim": "Both Qwen3.6 repositories exist. Qwen3.6-27B is dense; Qwen3.6-35B-A3B is MoE with 35B total and 3B activated backbone parameters. Both document a vision encoder and 262,144 native context, extendable to 1,010,000. Tensor totals are about 27.781B and 35.952B respectively.",
+      "source_ids": [
+        "S02",
+        "S03"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "The A3B suffix concerns per-token active computation, not storage of all experts; it cannot be budgeted as a 3B model."
+    },
+    {
+      "claim": "GLM-5.3-Flash is officially released as a multimodal MoE, with 320B total / 18B active advertised parameters. Its default repository contains mixed FP8/BF16 tensors; its configuration declares 1,048,576 context. The vLLM maintainer recipe documents image/video content and corroborates approximately 306 GiB default weight memory.",
+      "source_ids": [
+        "S05",
+        "S11"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "A confirmed alternative for server-scale evaluation, not a fully GPU-resident 24/48 GB substitute. Vendor claims of outperforming other systems are not independently established here."
+    },
+    {
+      "claim": "Qwen3.5-4B provides a smaller native visual model. The card advertises 201 languages/dialects and native 262,144 context; metadata counts about 4.660B stored parameters rather than exactly 4B.",
+      "source_ids": [
+        "S04"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "A practical small-model candidate for evaluation when memory and responsiveness matter. A language coverage claim does not prove Finnish OCR or visual reasoning quality."
+    },
+    {
+      "claim": "SmolVLM2-2.2B-Instruct documents image, video and interleaved multi-image input. The author card claims 5.2 GB video-inference GPU RAM, without a complete workload configuration for generalization. Its configuration has 8,192 positions; repository tensors are F32, while the example explicitly casts to BF16.",
+      "source_ids": [
+        "S06"
+      ],
+      "evidence_type": "vendor-measured",
+      "confidence": "medium",
+      "practical_implication": "A lightweight baseline with explicit multi-image examples; avoid treating 5.2 GB as a maximum across arbitrary videos, resolutions or concurrency."
+    },
+    {
+      "claim": "Granite-Docling is a 258M document-conversion component that emits DocTags and integrates with DoclingDocument. The card explicitly excludes general image understanding. Its vLLM example uses the separate 'untied' revision and one image per prompt.",
+      "source_ids": [
+        "S07"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Useful for page conversion and grounded retrieval plumbing, not a substitute for a photo/screenshot assistant. Pin the correct runtime-specific revision."
+    },
+    {
+      "claim": "PaddleOCR-VL-1.6 was announced on 2026-05-28 and uses the same approximately 0.9B architecture as 1.5. Its official pipeline performs page parsing; the bare Transformers example supports element recognition and text spotting only. Document tasks include text, tables, charts, formulas and seals. The 1.5 paper separately documents robustness testing for scanning, skew, warping, screen photographs and illumination.",
+      "source_ids": [
+        "S08"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Compare the complete document pipeline, including layout model and preprocessing, rather than comparing only the VLM against a full parser."
+    },
+    {
+      "claim": "Docling supplies a structured document representation, reading-order/layout and table processing, OCR, and Markdown/lossless JSON export. It supports local execution and has integrations for retrieval workflows. Its code license is separate from every selected model's license.",
+      "source_ids": [
+        "S09"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Retain structured provenance for citations and use general vision only for unresolved visual questions."
+    },
+    {
+      "claim": "Visual token consumption depends on resized spatial dimensions, image count and sampled video frames. Qwen3.8 configuration uses 16-pixel patches, spatial merge 2 and temporal patch size 2. Its Qwen3VLProcessor exposes image/video grids; video sampling offers frame count or FPS. The card's hour-scale video advice raises preprocessing limits substantially.",
+      "source_ids": [
+        "S01",
+        "S12"
+      ],
+      "evidence_type": "derived",
+      "confidence": "high",
+      "practical_implication": "Illustrative arithmetic after resizing: a 1024×1024 still image contributes about 1,024 merged visual tokens; 2048×2048 contributes about 4,096. Twenty such larger pages contribute about 81,920 visual tokens before text/output. Actual processor output, padding, timestamp and special tokens must be counted."
+    },
+    {
+      "claim": "The vLLM Qwen3.8 recipe explicitly says its verified serving coverage is text. It documents quantized variants, version-sensitive kernels and configurations; its measured text memory or throughput cannot prove multimodal service fit.",
+      "source_ids": [
+        "S10"
+      ],
+      "evidence_type": "primary",
+      "confidence": "high",
+      "practical_implication": "Require image/video smoke tests and peak memory measurements on the chosen artifact before recommending a specific 24/48 GB deployment."
+    }
+  ],
+  "candidate_comparison": [
+    {
+      "model_id": "Qwen/Qwen3.8-27B",
+      "revision": "1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+      "capabilities": "General images/video; documents and visual reasoning; chart evidence includes vendor CharXiv evaluation.",
+      "constraints": "Largest dense model on this local shortlist; quantify image preprocessing and use a verified multimodal quantization. [uncertain] No universal-best conclusion or local latency result.",
+      "role": "Higher-capability candidate for 48 GB quantized evaluation; conditional 24 GB experiment.",
+      "source_ids": [
+        "S01",
+        "S10"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.6-27B",
+      "revision": "6a9e13bd6fc8f0983b9b99948120bc37f49c13e9",
+      "capabilities": "Dense general vision-language model; vendor vision table covers document/OCR, perception and video categories.",
+      "constraints": "Similar raw parameter memory to Qwen3.8-27B. [uncertain] Older generation need not lose on every individual OCR task.",
+      "role": "Regression and compatibility baseline, especially if already packaged in an established runtime.",
+      "source_ids": [
+        "S02"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.6-35B-A3B",
+      "revision": "995ad96eacd98c81ed38be0c5b274b04031597b0",
+      "capabilities": "Visual MoE with fewer active parameters; image/video input examples.",
+      "constraints": "35.952B stored tensors; larger weight footprint than the 27B dense alternative. [uncertain] Active parameters do not establish lower end-to-end latency for visual prefill.",
+      "role": "Compare only where MoE runtime support and memory capacity justify it.",
+      "source_ids": [
+        "S03"
+      ]
+    },
+    {
+      "model_id": "Qwen/Qwen3.5-4B",
+      "revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+      "capabilities": "Small general multimodal model with long context.",
+      "constraints": "[uncertain] Visual accuracy on household documents and Finnish has not been measured in this research.",
+      "role": "First general-vision evaluation candidate for 24 GB or constrained shared hardware.",
+      "source_ids": [
+        "S04"
+      ]
+    },
+    {
+      "model_id": "HuggingFaceTB/SmolVLM2-2.2B-Instruct",
+      "revision": "482adb537c021c86670beed01cd58990d01e72e4",
+      "capabilities": "Explicit video and multi-image examples; lightweight BF16 inference.",
+      "constraints": "English card, 8,192-position configuration; F32 repository tensors require deliberate inference dtype selection.",
+      "role": "Small baseline for photo comparison and short video tasks; no presumption of strong fine-print extraction.",
+      "source_ids": [
+        "S06"
+      ]
+    },
+    {
+      "model_id": "ibm-granite/granite-docling-258M",
+      "revision": "982fe3b40f2fa73c365bdb1bcacf6c81b7184bfe; vLLM example instead selects 'untied'",
+      "capabilities": "Structured page conversion, DocTags, layout, OCR, formulas, tables and charts.",
+      "constraints": "Not intended for general image understanding; English primary, Japanese/Arabic/Chinese experimental. Resolve and pin 'untied' separately if used.",
+      "role": "Small structured extraction component within Docling.",
+      "source_ids": [
+        "S07",
+        "S09"
+      ]
+    },
+    {
+      "model_id": "PaddlePaddle/PaddleOCR-VL-1.6",
+      "revision": "c5630abae1d940eafe0697512a0325494b02ab42",
+      "capabilities": "Full document pipeline plus element OCR, text spotting, tables/formulas/charts/seals.",
+      "constraints": "The VLM is only part of pipeline memory and behavior. Current card contains a 1.5/1.6 wording inconsistency in its Transformers section.",
+      "role": "Document-heavy comparison against Docling/Granite; include PaddleOCR-VL-1.5 as a reproducibility baseline if needed.",
+      "source_ids": [
+        "S08"
+      ]
+    },
+    {
+      "model_id": "zai-org/GLM-5.3-Flash",
+      "revision": "46a050bec13002ad29ee795c16e61cf4fa3c4a9c",
+      "capabilities": "Native multimodal server-scale MoE with image/video runtime interface.",
+      "constraints": "Hundreds of GB weight memory and architecture-specific kernels; [uncertain] no household-task advantage measured here.",
+      "role": "Optional server-scale research candidate, outside fully resident 24/48 GB scenarios.",
+      "source_ids": [
+        "S05",
+        "S11"
+      ]
+    },
+    {
+      "model_id": "docling-project/docling",
+      "revision": "[uncertain] No immutable code revision pinned in this research; live main documentation accessed at cutoff.",
+      "capabilities": "PDF/Office/image ingestion into a structured document model; OCR and export interfaces.",
+      "constraints": "Parser framework, not a single model; optional model and OCR-engine licenses/dependencies must be recorded.",
+      "role": "Extraction and provenance foundation rather than general vision inference.",
+      "source_ids": [
+        "S09"
+      ]
+    }
+  ],
+  "deployment_requirements": {
+    "qwen": "S01-S04 model cards document Transformers and dedicated servers. For Qwen3.8, S10 lists Transformers >=5.8.0 and vLLM 0.17.0+ but also uses later builds for particular GPU fixes; these are documented examples rather than one universally sufficient minimum. Config's transformers_version is serialization provenance, not an inferred minimum. [uncertain] Exact known-good image/video build for the intended machine is unresolved.",
+    "glm": "S11 lists vLLM 0.29.0+, recommends the supplied Docker integration path, and requires FlashInfer >=0.6.17 in prerequisites but >=0.6.18 in troubleshooting. Treat >=0.6.18 as the conservative recipe condition and pin the actual build. Supported NVIDIA path is Hopper or newer; the recipe separately describes AMD gfx950 and Ascend 950PR. These are not ordinary consumer 24/48 GB GPU instructions.",
+    "document_tools": "PaddleOCR-VL-1.6 card documents PaddlePaddle >=3.2.1 and paddleocr[doc-parser]>=3.6.0; its bare Transformers example requests >=5.0.0 and is element-level only. Its safetensors special-version note is not fully resolved [uncertain]. Docling current README requires Python >=3.10 and lists Windows/macOS/Linux, x86_64/arm64. Granite card documents Transformers, vLLM, ONNX and MLX routes; its vLLM example selects 'untied'.",
+    "platform": "Paddle documentation says vLLM/SGLang/FastDeploy do not run natively on Windows and directs users to Docker. Treat Windows host support separately from Linux container/WSL2 GPU support and chosen OCR-engine availability. [uncertain] No local OS/GPU combination was tested.",
+    "resource_policy": "All scenarios below assume inference only, one model loaded at a time, one active request initially, modest image/page count, and no simultaneous flagship text model consuming the same GPU. Increase concurrency only after recording peak memory. This report authorizes no deployment."
+  },
+  "operating_profile": {
+    "basis": "Arithmetic estimates use stored tensor counts and bytes per element. GB is decimal; GiB is 2^30 bytes. These are weight-only estimates excluding quantization scales, metadata, allocator, activation/vision workspace, recurrent state, KV cache and concurrency. Ideal 4-bit arithmetic is not an actual quantized file size.",
+    "weight_estimates": [
+      {
+        "artifact": "Qwen3.8-27B and Qwen3.6-27B",
+        "bf16": "55.56 GB / 51.75 GiB",
+        "ideal_8bit": "27.78 GB / 25.87 GiB",
+        "ideal_4bit": "13.89 GB / 12.94 GiB",
+        "source_ids": [
+          "S01",
+          "S02"
+        ]
+      },
+      {
+        "artifact": "Qwen3.6-35B-A3B",
+        "bf16": "71.90 GB / 66.97 GiB",
+        "ideal_8bit": "35.95 GB / 33.48 GiB",
+        "ideal_4bit": "17.98 GB / 16.74 GiB",
+        "source_ids": [
+          "S03"
+        ]
+      },
+      {
+        "artifact": "Qwen3.5-4B",
+        "bf16": "9.32 GB / 8.68 GiB",
+        "source_ids": [
+          "S04"
+        ]
+      },
+      {
+        "artifact": "SmolVLM2-2.2B-Instruct",
+        "stored_fp32": "8.99 GB / 8.37 GiB",
+        "cast_bf16": "4.49 GB / 4.19 GiB",
+        "vendor_claim": "5.2 GB GPU RAM for video inference; [uncertain] incomplete workload specification.",
+        "source_ids": [
+          "S06"
+        ]
+      },
+      {
+        "artifact": "Granite-Docling-258M",
+        "bf16": "0.515 GB / 0.480 GiB",
+        "note": "Component only; document pipeline and image workspace are additional.",
+        "source_ids": [
+          "S07"
+        ]
+      },
+      {
+        "artifact": "PaddleOCR-VL-1.6",
+        "bf16": "1.917 GB / 1.786 GiB",
+        "note": "958,588,736 BF16 parameters; layout/preprocessing and generation additional.",
+        "source_ids": [
+          "S08"
+        ]
+      },
+      {
+        "artifact": "GLM-5.3-Flash default mixed precision",
+        "stored_tensor_arithmetic": "328.25 GB / 305.71 GiB before additional serialization/scales and runtime; corroborates recipe's approximately 306 GiB.",
+        "source_ids": [
+          "S05",
+          "S11"
+        ]
+      }
+    ],
+    "scenarios": [
+      {
+        "hardware": "One 24 GB GPU",
+        "assessment": "[uncertain] Qwen3.5-4B BF16 and small document components leave much more weight-memory headroom and are the reasonable first evaluation. A 27B model needs a suitable low-bit artifact and a constrained context/page budget; no fit is claimed. A 35B MoE 4-bit ideal footprint leaves less headroom. Neither 27B BF16 nor ideal 8-bit fully fits by weight arithmetic."
+      },
+      {
+        "hardware": "One 48 GB GPU",
+        "assessment": "[uncertain] 27B BF16 remains larger than capacity. Compatible FP8/INT8 or 4-bit variants are plausible candidates with remaining space for visual work; 35B MoE 8-bit is tighter. Real vision memory and runtime kernels still determine fit."
+      },
+      {
+        "hardware": "GLM-5.3-Flash on 24/48 GB",
+        "assessment": "Default weights cannot be fully GPU-resident. [uncertain] Large host-memory/offload schemes could change feasibility but no speed or suitable configuration is established here."
+      }
+    ],
+    "latency_and_cold_start": "[uncertain] No local TTFT, tokens/s, page/s, video throughput or cold-start measurements. Download size, disk bandwidth, CPU preprocessing, image count and server graph compilation affect startup and request latency. Text-only recipe measurements are not reused as vision measurements.",
+    "context_control": "Proposed initial comparison: 8K or 16K total context, one request, one page or photo, explicit output ceiling, then 4/16-page and two-user stress tests. These are evaluation conditions, not model limits."
+  },
+  "language_evidence": {
+    "english": "Most directly documented baseline: SmolVLM2 and Granite cards explicitly identify English; Qwen and Paddle publish mixed visual/document evaluations. No scores in this report are interpreted as household reliability.",
+    "finnish": "[uncertain] No Finnish-specific OCR, page-layout, chart, screenshot or video evaluation was established for any candidate. Finnish is a conditional test language only, not an inferred family requirement. If relevant, test ä/ö, dates, amounts, long compounds and mixed Finnish/English pages separately.",
+    "other_languages": "Qwen3.5 advertises 201 languages/dialects, not per-language visual accuracy. Granite labels Japanese/Arabic/Chinese experimental. GLM card tags English/Chinese. Paddle1.5 documentation discusses multilingual tables and Tibetan/Bengali coverage extensions; 1.6 emphasizes improvements to Chinese documents and rare characters. Do not transfer these claims to measured Finnish quality.",
+    "source_ids": [
+      "S04",
+      "S05",
+      "S06",
+      "S07",
+      "S08"
+    ]
+  },
+  "retrieval_and_memory_design": {
+    "proposal": "Use native PDF text where valid and structured local parsing for scans; preserve the original page image for verifying extraction. Store document ID/version, page number, bounding box or polygon, text/table cell, reading-order relationship, extractor/model revision, preprocessing settings and access scope. The answer should link to a page or crop that actually supports it. This is a proposed design, not a tested integration.",
+    "interfaces": "Granite output can be parsed through DocTagsDocument and DoclingDocument, then exported; Docling provides lossless JSON as well as Markdown. PaddleOCRVL.predict outputs save_to_json/save_to_markdown; complete page parsing uses its pipeline rather than the bare VLM example. A general VLM's prose or JSON-shaped answer is not itself verified OCR or provenance.",
+    "task_distinctions": "OCR reproduces text; layout preserves reading order, headings, cells and coordinates; chart understanding interprets axes/legends/units; screenshots include visual UI state; multi-image tasks compare separate inputs; video needs frame/timestamp sampling and temporal questions. Use distinct acceptance sets for each.",
+    "privacy_and_deletion": "Proposed boundary: keep personal and shared documents separately permissioned before extraction and retrieval. Propagate deletion to OCR text, crops, derived chunks, cached visual features and backups according to policy; preserve a deletion audit without retaining private content. Image/file content is untrusted data and should not gain tool authority. Embedding/reranker selection is deferred to deployment.",
+    "source_ids": [
+      "S07",
+      "S08",
+      "S09"
+    ]
+  },
+  "original_claim_audit": [
+    {
+      "original_claim": "Vision / documents: Qwen3.8 27B (Apache 2.0), runners-up Qwen3.6 27B and Qwen3.6 35B-A3B.",
+      "verdict": "partially_supported",
+      "explanation": "All three official visual repositories and Apache licenses are verified. [uncertain] The universal ordering is not established by independent, task-matched primary evidence; photos, extraction and chart reasoning should be ranked separately.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ]
+    },
+    {
+      "original_claim": "The 27B vision model fits on a single 24–48GB GPU.",
+      "verdict": "refuted",
+      "explanation": "As an unconditional statement it is wrong: the official BF16 tensors alone need about 55.56 GB / 51.75 GiB. Quantized deployment may be possible under bounded workload assumptions, but was not tested. The vLLM recipe's text-only coverage cannot establish visual fit.",
+      "source_ids": [
+        "S01",
+        "S10"
+      ]
+    },
+    {
+      "original_claim": "Eyes: Qwen3.8 27B for photos, screenshots and documents.",
+      "verdict": "partially_supported",
+      "explanation": "General image/video capability is documented. A structured parser is a useful separate component for reliable document retrieval; no single-model acceptance test validates all three household tasks.",
+      "source_ids": [
+        "S01",
+        "S07",
+        "S08",
+        "S09"
+      ]
+    },
+    {
+      "original_claim": "Serve each model with vLLM (or SGLang). They all expose OpenAI-compatible /v1 APIs.",
+      "verdict": "partially_supported",
+      "explanation": "Relevant Qwen cards and GLM recipe provide compatible server interfaces. Software version, processor, precision and architecture support differ. Document tools also have pipeline-specific interfaces; generic API compatibility does not guarantee page conversion or multimodal correctness.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S08",
+        "S11"
+      ]
+    },
+    {
+      "original_claim": "Nearly every model above was released July–October 2026.",
+      "verdict": "unverified",
+      "explanation": "[uncertain] Qwen3.6 repository metadata dates to April 2026, while Qwen3.8 metadata dates to August. Repository creation does not establish when weights became public, and this vision subset cannot establish the release distribution of the entire original shortlist. Public release announcements or historical public artifact evidence are needed to confirm or refute the original statement.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03"
+      ]
+    },
+    {
+      "original_claim": "Vision is the biggest gap: the best open model ranks #23 of 63 on Roboflow's benchmark.",
+      "verdict": "unverified",
+      "explanation": "[uncertain] No primary, immutable Roboflow evaluation artifact with exact model IDs, date, prompts and leaderboard snapshot was established in this item. Failure to verify does not prove the ranking false; it cannot determine overall vision quality.",
+      "source_ids": []
+    },
+    {
+      "original_claim": "None blocks personal use.",
+      "verdict": "partially_supported",
+      "explanation": "The reviewed Qwen and Paddle weight repositories contain Apache-2.0 text; GLM contains MIT text. That supports permissive personal deployment for these exact artifacts under their terms. It does not prove a blanket statement about every model, dependency or hosted service.",
+      "source_ids": [
+        "S01",
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S08"
+      ]
+    }
+  ],
+  "benchmark_caveats": [
+    "Qwen3.8 vendor visual results include separate code-interpreter and no-code-interpreter settings, and the card reports manually corrected annotations for some MathVision/CharXiv items. Preserve these conditions; they are not interchangeable with untouched public benchmark scores or image-only inference. S01.",
+    "PaddleOCR-VL-1.6 reports 96.33% on OmniDocBench v1.6; 1.5 paper reports 94.5% on OmniDocBench v1.5. They are different versions, so subtracting them is not a valid improvement estimate. Both are author-reported; Real5 is also author-constructed. S08.",
+    "SmolVLM2's 5.2 GB claim and video benchmark table are author evidence, not a controlled comparison with newer Qwen models. S06.",
+    "Quantization, image resizing, crop strategy, page segmentation, frame sampling, reasoning budget and output length can change both accuracy and memory. Report all settings and compare full extraction pipelines separately from bare models.",
+    "[uncertain] No independent primary-source head-to-head establishes the best model for this family's languages, files, hardware and concurrency."
+  ],
+  "evaluation_plan": {
+    "status": "Proposal only; no acceptance tests or model runs occurred.",
+    "reproducibility": "Freeze exact model revision, quantization provenance/hash, processor, serving commit/container, GPU/driver, dtype, image resizing, frame count/FPS, context/output limits and prompts. Compare deterministic extraction separately from reasoning-enabled Q&A. Use the same images and permitted tools for each candidate.",
+    "test_sets": [
+      {
+        "task": "OCR and layout",
+        "proposal": "At least 40 consented or synthetic pages: clean/scanned PDF, photos, skew, two-column text, receipts, forms and tables. Include unreadable regions.",
+        "pass_fail": "Proposed gate: >=99% character accuracy on clean machine text; >=97% on ordinary scans; >=98% exact dates/amounts and correct cell associations. Mark unreadable values; never silently invent them. Report every subgroup and permit a reviewed exception set."
+      },
+      {
+        "task": "Charts and screenshots",
+        "proposal": "At least 20 charts and 20 screenshots with labels, units, legends, small text and deliberately ambiguous states.",
+        "pass_fail": "Proposed gate: >=95% exact requested chart values within declared reading tolerance; >=90% grounded screenshot answers; zero invented UI controls on the held-out set. Keep tool-enabled chart results separate."
+      },
+      {
+        "task": "Multi-image and video",
+        "proposal": "Pairs of near-identical images, contradictory pages and short clips with temporal questions; log sampled timestamps.",
+        "pass_fail": "Proposed gate: >=90% correct comparisons and event ordering; include a missed-frame test that must produce an uncertainty response. Do not claim understanding of unsampled events."
+      },
+      {
+        "task": "Language",
+        "proposal": "English plus actual requested languages; add Finnish only if relevant. Use bilingual ground truth and separate OCR from translation/reasoning.",
+        "pass_fail": "Apply the same numerical-field gate by language; report character error rate and answer grounding separately. No language is promoted from a coverage list alone."
+      },
+      {
+        "task": "Serving and privacy",
+        "proposal": "Measure cold and warm startup, peak VRAM/RAM, TTFT, complete latency and failures for one/two concurrent users at 1/4/16 pages. Add personal/shared document isolation and deletion probes.",
+        "pass_fail": "No OOM or request corruption within the declared workload; >=15% measured GPU-memory headroom as a proposed operational margin; 100% citation-to-page traceability and zero cross-user leakage/deleted-document retrieval. Agree acceptable latency with users before pass/fail."
+      }
+    ]
+  },
+  "privacy_and_license": {
+    "weights": "Verified repository LICENSE text: Qwen3.8-27B, Qwen3.6-27B, Qwen3.6-35B-A3B, Qwen3.5-4B and PaddleOCR-VL-1.5/1.6 use Apache-2.0; GLM-5.3-Flash uses MIT. These are permissive grants with notice/license conditions and warranty limitations. They do not require sending household data to the publisher.",
+    "cards_without_bundled_license": "SmolVLM2 and Granite-Docling cards declare Apache-2.0, but their current repository sibling lists did not expose a standalone LICENSE file [uncertain]. Confirm and archive the applicable license text when selecting artifacts. SmolVLM2 also states out-of-scope/prohibited uses in its model card; do not assume the card's intended-use statements are identical to Apache license conditions.",
+    "code": "Docling code is MIT and explicitly directs users to separate model licenses. PaddleOCR code is Apache-2.0. The model repository license does not automatically settle all OCR engines, dependencies, quantizers or hosted services. [uncertain] No exhaustive dependency-license review was performed.",
+    "data_exposure": "Proposed private deployment should pass local files or local media bytes, avoid externally hosted media URLs containing private information, disable unapproved hosted fallback, and review logging, temporary crops and remote OCR/vision enrichment. 'Local model' alone does not prove zero egress. No private files were uploaded in this research.",
+    "source_ids": [
+      "S01",
+      "S02",
+      "S03",
+      "S04",
+      "S05",
+      "S06",
+      "S07",
+      "S08",
+      "S09"
+    ]
+  },
+  "recommendation": {
+    "practical_default": "For a private family evaluation on unspecified hardware, shortlist Qwen3.5-4B for general visual chat plus a structured parser path using Docling/Granite-Docling or PaddleOCR-VL-1.6 for document-heavy workloads. This separates affordable visual assistance from extraction/provenance. [uncertain] The parser winner must be chosen on representative documents. Sources S04, S07-S09.",
+    "stronger_option": "For a 48 GB scenario, compare a compatible quantized Qwen3.8-27B against the small baseline on charts, screenshots and difficult pages. On 24 GB, keep it an explicitly constrained experiment until multimodal peak memory is measured. Do not promise BF16 fit. Sources S01, S10.",
+    "alternatives": "Retain Qwen3.6-27B as an established comparison and Qwen3.6-35B-A3B only when MoE runtime behavior justifies its larger weight footprint. SmolVLM2 is useful as a small video/multi-image baseline. GLM-5.3-Flash is a separate server-scale option with a large operational footprint. Sources S02, S03, S05, S06, S11.",
+    "decision_changes": "Actual GPU/RAM, household languages, page volume, need for handwriting/video, acceptable latency, offline requirement and concurrent users could change these choices. No purchase, download or implementation is recommended until those constraints and evaluation results are known."
+  },
+  "next_steps": [
+    "Confirm actual hardware, operating system, household languages, privacy boundary, concurrent users and dominant visual tasks.",
+    "Choose a small representative, consented/synthetic document and media set with independently checked ground truth; do not use private hosted demos.",
+    "Resolve exact runtime and model/quantization revisions and standalone license evidence; validate the 1.6 documentation inconsistencies before adopting its commands.",
+    "Run the proposed small-model/parser comparison first under a separately authorized local evaluation; record all settings and peak resources.",
+    "Evaluate quantized Qwen3.8 only if the small baseline misses important tasks and hardware headroom permits; include identical image/video stress tests.",
+    "Hand extraction metadata and access/deletion requirements to the deployment item; choose embedding and reranker architecture there."
+  ],
+  "open_questions": [
+    "[uncertain] Best model per household task: requires controlled local, language-matched evaluation; vendor benchmark tables are insufficient.",
+    "[uncertain] Exact 24/48 GB multimodal capacity and latency: requires the selected quantization, runtime, images, context and concurrency measurements.",
+    "[uncertain] Finnish quality: no relevant per-language measurement established; resolve with bilingual OCR and grounded-answer ground truth if Finnish is requested.",
+    "[uncertain] Generic current documentation publication dates: some live library and Docling pages provide no immutable date/revision. Pin versions before implementation; do not claim unproven historical runtime availability from a live page.",
+    "[uncertain] PaddleOCR1.6 card mentions special safetensors but does not resolve an exact requirement in the reviewed passage; its Transformers introduction still says 1.5 in one sentence. Resolve against tagged installation docs or source.",
+    "[uncertain] Standalone license files for Granite-Docling and SmolVLM2 were absent from current sibling lists; cards declare Apache-2.0 but selected artifact license evidence should be archived.",
+    "[uncertain] Exact public release dates for some model repositories differ from creation/upload metadata; a signed/tagged release announcement would resolve them.",
+    "[uncertain] No immutable Roboflow ranking snapshot was established and no independent primary benchmark confirms a global open-vision ranking."
+  ],
+  "sources": [
+    {
+      "id": "S01",
+      "title": "Qwen3.8-27B official repository, model card, config, preprocessing, LICENSE and Hub metadata",
+      "url": "https://huggingface.co/Qwen/Qwen3.8-27B",
+      "publisher": "Qwen / Hugging Face",
+      "published_or_updated": "Repository created 2026-08-05; lastModified 2026-08-14; revision 1d4bf0f2ff6012fd82039f2fa52739d0dd7c60c0",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Native image/video, context, tensor totals, preprocessing and Apache text. Read raw README and JSON, not only autogenerated inference examples.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/Qwen/Qwen3.8-27B",
+        "https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/config.json",
+        "https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/preprocessor_config.json",
+        "https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/video_preprocessor_config.json",
+        "https://huggingface.co/Qwen/Qwen3.8-27B/raw/main/LICENSE"
+      ]
+    },
+    {
+      "id": "S02",
+      "title": "Qwen3.6-27B official model artifacts",
+      "url": "https://huggingface.co/Qwen/Qwen3.6-27B",
+      "publisher": "Qwen / Hugging Face",
+      "published_or_updated": "Repository created 2026-04-21; lastModified 2026-04-24",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Dense vision model, context, tensor metadata and Apache text.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/Qwen/Qwen3.6-27B",
+        "https://huggingface.co/Qwen/Qwen3.6-27B/raw/main/config.json",
+        "https://huggingface.co/Qwen/Qwen3.6-27B/raw/main/LICENSE"
+      ]
+    },
+    {
+      "id": "S03",
+      "title": "Qwen3.6-35B-A3B official model artifacts",
+      "url": "https://huggingface.co/Qwen/Qwen3.6-35B-A3B",
+      "publisher": "Qwen / Hugging Face",
+      "published_or_updated": "Repository created 2026-04-15; lastModified 2026-04-24",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Total/active MoE distinction, vision, context, tensor count and Apache text.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/Qwen/Qwen3.6-35B-A3B",
+        "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/raw/main/config.json",
+        "https://huggingface.co/Qwen/Qwen3.6-35B-A3B/raw/main/LICENSE"
+      ]
+    },
+    {
+      "id": "S04",
+      "title": "Qwen3.5-4B official model artifacts",
+      "url": "https://huggingface.co/Qwen/Qwen3.5-4B",
+      "publisher": "Qwen / Hugging Face",
+      "published_or_updated": "Repository created 2026-02-27; lastModified 2026-03-02",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Small visual alternative, declared multilingual coverage, actual tensor count, context and Apache text.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/Qwen/Qwen3.5-4B",
+        "https://huggingface.co/Qwen/Qwen3.5-4B/raw/main/config.json",
+        "https://huggingface.co/Qwen/Qwen3.5-4B/raw/main/LICENSE"
+      ]
+    },
+    {
+      "id": "S05",
+      "title": "GLM-5.3-Flash official model artifacts",
+      "url": "https://huggingface.co/zai-org/GLM-5.3-Flash",
+      "publisher": "Z.ai / Hugging Face",
+      "published_or_updated": "Repository created 2026-08-25; lastModified 2026-10-15",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Multimodal 320B/18B MoE, mixed tensor precision and context, MIT text. Linked blog rendered no content and was not used as evidence.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/zai-org/GLM-5.3-Flash",
+        "https://huggingface.co/zai-org/GLM-5.3-Flash/raw/main/config.json",
+        "https://huggingface.co/zai-org/GLM-5.3-Flash/raw/main/LICENSE"
+      ]
+    },
+    {
+      "id": "S06",
+      "title": "SmolVLM2-2.2B-Instruct official model artifacts",
+      "url": "https://huggingface.co/HuggingFaceTB/SmolVLM2-2.2B-Instruct",
+      "publisher": "Hugging Face Smol Models Research",
+      "published_or_updated": "Repository created 2025-02-08; lastModified 2025-04-08",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Image/video/multi-image examples, vendor RAM claim, English, intended use, Apache declaration and F32 metadata.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/HuggingFaceTB/SmolVLM2-2.2B-Instruct",
+        "https://huggingface.co/HuggingFaceTB/SmolVLM2-2.2B-Instruct/raw/main/config.json"
+      ]
+    },
+    {
+      "id": "S07",
+      "title": "Granite-Docling-258M official model artifacts",
+      "url": "https://huggingface.co/ibm-granite/granite-docling-258M",
+      "publisher": "IBM Granite / Hugging Face",
+      "published_or_updated": "Repository created 2025-05-19; lastModified 2025-09-23",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "DocTags interfaces, model scope, language limitations, untied vLLM example, tensor metadata and Apache declaration.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/ibm-granite/granite-docling-258M",
+        "https://huggingface.co/ibm-granite/granite-docling-258M/raw/main/config.json"
+      ]
+    },
+    {
+      "id": "S08",
+      "title": "PaddleOCR-VL-1.6 official repository and predecessor paper/documentation",
+      "url": "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6",
+      "publisher": "PaddlePaddle / Hugging Face / arXiv",
+      "published_or_updated": "1.6 release announcement 2026-05-28; repository lastModified 2026-08-08; 1.5 paper v2 dated 2026-04-03; live usage documentation date [uncertain]",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Complete pipeline versus element-only VLM, versions, task prompts, multilingual limitations, author benchmark claims, weights and code licenses. 1.5 source documents distortion robustness.",
+      "supporting_urls": [
+        "https://huggingface.co/api/models/PaddlePaddle/PaddleOCR-VL-1.6",
+        "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.6/raw/main/LICENSE",
+        "https://huggingface.co/PaddlePaddle/PaddleOCR-VL-1.5",
+        "https://arxiv.org/abs/2601.21957",
+        "https://www.paddleocr.ai/latest/en/version3.x/algorithm/PaddleOCR-VL/PaddleOCR-VL-1.5.html",
+        "https://www.paddleocr.ai/latest/en/version3.x/pipeline_usage/PaddleOCR-VL.html",
+        "https://github.com/PaddlePaddle/PaddleOCR/blob/main/LICENSE"
+      ]
+    },
+    {
+      "id": "S09",
+      "title": "Docling official repository and LICENSE",
+      "url": "https://github.com/docling-project/docling",
+      "publisher": "Docling project / LF AI & Data",
+      "published_or_updated": "[uncertain] Live main README; no immutable revision pinned.",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Structured conversion, export and local execution, Python/platform support, MIT code versus separate model licenses.",
+      "supporting_urls": [
+        "https://github.com/docling-project/docling/blob/main/LICENSE",
+        "https://raw.githubusercontent.com/docling-project/docling/main/README.md"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "Qwen3.8-27B vLLM maintainer serving recipe",
+      "url": "https://recipes.vllm.ai/Qwen/Qwen3.8-27B",
+      "publisher": "vLLM project",
+      "published_or_updated": "2026-10-15",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Independent primary implementation source corroborates architecture and versions; explicitly limits verified scope to text serving. Hardware recipe measurements are not multimodal proof."
+    },
+    {
+      "id": "S11",
+      "title": "GLM-5.3-Flash vLLM maintainer serving recipe",
+      "url": "https://recipes.vllm.ai/zai-org/GLM-5.3-Flash",
+      "publisher": "vLLM project",
+      "published_or_updated": "2026-10-08",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Independent implementation corroborates multimodal interfaces, memory magnitude, architecture, hardware/version limitations and differing FlashInfer notes."
+    },
+    {
+      "id": "S12",
+      "title": "Transformers Qwen3-VL processor and Qwen3.5 architecture documentation",
+      "url": "https://huggingface.co/docs/transformers/main/en/model_doc/qwen3_vl",
+      "publisher": "Hugging Face Transformers",
+      "published_or_updated": "[uncertain] Live main documentation; Qwen3.5 page records contribution date 2026-02-09, not a complete page revision date.",
+      "accessed": "2026-10-26",
+      "primary": true,
+      "support_note": "Processor grids, image/video interfaces and sampling; independent library documentation distinguishes Qwen3.6 architecture classes and hybrid attention. Exact live-doc historical reproducibility remains unresolved.",
+      "supporting_urls": [
+        "https://huggingface.co/docs/transformers/main/en/model_doc/qwen3_5"
+      ]
+    }
+  ],
+  "uncertain": [
+    "candidate_comparison",
+    "deployment_requirements",
+    "operating_profile",
+    "language_evidence",
+    "original_claim_audit",
+    "benchmark_caveats",
+    "privacy_and_license",
+    "recommendation",
+    "open_questions",
+    "sources"
+  ]
+}
