@@ -28,11 +28,17 @@
 - Faster Gemma start, at no extra cost:
   - Turned off video/audio warmup and torch.compile (`LIMIT_MM_PER_PROMPT`, `COMPILATION_CONFIG`).
   - Container start → ready went from 218 s to 134 s.
-  - Warm generation is about 6% slower. Not yet applied to Qwen.
+  - Warm generation is about 6% slower.
 - Found that the extra "initializing" workers are not billed.
+
+## 2026-10-29 (evening): Qwen faster start and price research
+- Applied the same settings to Qwen. Container start → ready went from 228 s to 202 s; reply speed is unchanged (500 tokens in 26 s), and tool calls work.
+  - The gain is smaller than Gemma's: about 80 s now goes to profiling and warming Qwen's GDN/Mamba Triton kernels, which are rebuilt on every cold start.
+- Decided against network storage: it would cost about $5/month for about 0 s gained (loading from it is about as slow as downloading), and EU-SE-1 doesn't support it.
+- Research on cheaper hosting: `docs/research/cheaper-hosting-2026-10.md`. The always-on Open WebUI pod (about $58/month) is the biggest cost.
 
 ## Open items
 - Backups: a free sync of the volume to the owner's PC through RunPod's S3 API (EUR-IS-1). It needs an S3 key that the owner creates.
 - Family accounts.
-- The faster-start settings for Qwen.
+- Decide on cheaper hosting (see `docs/research/cheaper-hosting-2026-10.md`).
 - A better Finnish voice.

@@ -37,6 +37,8 @@
     "ENABLE_PREFIX_CACHING": "true",
     "ENABLE_AUTO_TOOL_CHOICE": "true",
     "TOOL_CALL_PARSER": "qwen3_coder",
-    "REASONING_PARSER": "qwen3"
+    "REASONING_PARSER": "qwen3",
+    "LIMIT_MM_PER_PROMPT": "{\"image\":4,\"video\":0}",
+    "COMPILATION_CONFIG": "{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\"}"
   }
 }
