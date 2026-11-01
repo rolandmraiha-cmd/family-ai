@@ -1,5 +1,15 @@
 # History
 
+## 2026-11-01: Owner approved upload and small GPU creation
+- Uploaded the router implementation to branch `codex/gpu-router`, draft PR #1.
+- Created one Qwen3.5-9B serverless endpoint: `52cjk52hgbwag1`, min=0/max=1,
+  24GB GPU pool, 60-second idle timeout. The first request queued for 212.711s;
+  Swedish/Finnish short warm jobs completed in 2.133s/2.453s. The initial longer
+  Finnish response had errors and exceeded its length instruction. A forced tool
+  call streamed correct arguments; live UI tool execution remains unverified.
+- Existing CPU pod remains running; checked $0.08/hour cost and one utilization snapshot.
+- Added CPU savings/migration guidance. No new CPU hosting was purchased and no data was moved.
+
 ## 2026-11-01: Routing implementation prepared (not deployed)
 - Reused the existing Family AI repository and read the three live Runpod endpoint configurations.
 - Added an Open WebUI routing Pipe with Auto/Pro/language choices and an optional Fast model.

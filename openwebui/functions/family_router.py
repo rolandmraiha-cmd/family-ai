@@ -146,6 +146,9 @@ class Pipe:
             raise RouterError("max_tokens must be positive.")
         if mode == "fast":
             payload["chat_template_kwargs"] = {"enable_thinking": False}
+            payload.setdefault("temperature", 0.7)
+            payload.setdefault("top_p", 0.8)
+            payload.setdefault("presence_penalty", 1.5)
         return payload
 
     async def _request(self, session, method, path, payload=None):

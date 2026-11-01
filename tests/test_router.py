@@ -47,6 +47,8 @@ class RoutingTests(unittest.TestCase):
         self.assertEqual(result["messages"], body["messages"])
         self.assertEqual(result["max_tokens"], 2048)
         self.assertFalse(result["chat_template_kwargs"]["enable_thinking"])
+        self.assertEqual(result["top_p"], 0.8)
+        self.assertEqual(result["presence_penalty"], 1.5)
         self.assertNotIn("metadata", result)
         self.assertNotIn("chat_template_kwargs", body)
 

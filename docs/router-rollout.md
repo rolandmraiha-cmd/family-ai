@@ -1,7 +1,10 @@
 # GPU routing: first implementation
 
 Status: code and mocked transport tests complete. **Not installed in the live app.**
-No new endpoint has been created. Existing endpoints and Open WebUI data are unchanged.
+The owner approved creation on 2026-11-01. The small endpoint is now
+`52cjk52hgbwag1`; its configuration is recorded in `runpod/fast-endpoint.json`.
+Initial live smoke tests completed; see results below. Do not create another endpoint from the proposal.
+The original three endpoints and Open WebUI data are unchanged.
 
 ## What this adds
 
@@ -49,9 +52,10 @@ models; configure those to use the cheapest tested model and measure their cost.
 No context truncation is performed: an overlong conversation gets the worker's
 error rather than silently dropping earlier instructions or tool results.
 
-## Proposed small worker — requires approval before creation
+## Small worker — creation approved and completed
 
-`runpod/fast-endpoint.proposed.json` is an **unapplied proposal**:
+`runpod/fast-endpoint.proposed.json` is the original proposal;
+`runpod/fast-endpoint.json` records the created endpoint with its returned ID:
 
 - Official `Qwen/Qwen3.5-9B` weights, using the same vLLM worker version as Pro.
 - One 24GB GPU, zero minimum / one maximum worker.
@@ -67,9 +71,9 @@ third-party quantization before a baseline is measured. The vLLM recipe identifi
 If the worker runs out of memory, stop it and evaluate a supported FP8 checkpoint
 before changing hardware. Do not create a second endpoint to fix the first.
 
-The project's AGENTS.md requires a price and approval before creating a paid
-resource, and limits changes to the resources already recorded in README.md.
-Approval must include adding this fourth endpoint to the resource inventory.
+The owner approved both the private repository upload and this paid endpoint
+after the price was stated. The endpoint is listed in README.md. No new CPU host
+or higher-priced GPU was approved or provisioned.
 
 ## Install after review
 
@@ -84,8 +88,7 @@ Approval must include adding this fourth endpoint to the resource inventory.
 5. Test existing endpoints first: Swedish/Finnish/English replies, web search,
    an image attachment, tool-call continuation, and chat reopening. A queued/cold
    job should show progress and deliver output without resubmitting.
-6. After cost/resource approval, create the proposed small endpoint once. Record
-   its returned ID in README and a deployed config snapshot. Measure cold/warm
+6. Reuse the created endpoint `52cjk52hgbwag1`. Measure cold/warm
    times, peak VRAM, output quality and billed runtime. Do not assume it is faster.
 7. Enter that ID in `FAST_ENDPOINT_ID`; run the acceptance prompts below. Only
    choose Auto as the default after these pass. Existing direct models remain
@@ -107,6 +110,30 @@ These prompts are human-written smoke checks, not training data.
 | Cancel | Stop a response while its GPU job is queued. | Cancellation appears in Requests, with no replacement job. |
 
 ## Local verification
+
+### Live endpoint checks on 2026-11-01
+
+Hardware assigned by Runpod: RTX PRO 6000 Blackwell Server Edition MIG 24GB.
+Model loaded in BF16 with 17.57GiB model memory reported by vLLM; the worker
+reported 2.13GiB available KV cache memory. These logs establish that this
+configuration started on this SKU, not on every GPU in the selected pool.
+
+| Test | Queue delay | Worker execution | Result |
+| --- | --- | --- | --- |
+| Initial Finnish request, 180-token limit | 212.711s | 8.660s | Responded, but language errors and length instruction failure; cut off at token cap |
+| Swedish one-sentence GPU explanation | 0.056s | 2.133s | Completed, coherent Swedish |
+| Finnish one-sentence heat-pump explanation, explicit system instruction | 0.056s | 2.453s | Completed, coherent Finnish |
+| Forced `get_weather` function call | Not measured here | Not measured here | Stream delivered function name, arguments `{"city": "Helsinki"}` and `[DONE]` |
+
+The forced-call stream ended with finish_reason `stop`, not `tool_calls`; Open
+WebUI's actual native tool execution therefore still needs an end-to-end check.
+No real weather tool was executed. The shorter language checks used recommended
+non-thinking sampling defaults and a clear system instruction. One good answer
+does not establish general Finnish quality; keep the Gemma language option.
+The first small-model cold start was not faster than the previously recorded Pro
+startup. Optimize startup or warm retention only after measuring actual usage.
+
+### Local transport checks
 
 `python -m unittest discover -s tests -v`
 

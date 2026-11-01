@@ -12,6 +12,7 @@ A private AI assistant for the family that speaks Swedish, Finnish and English. 
 | Storage | Network volume `vevppjlc9a` (10 GB) at `/app/backend/data` | EUR-IS-1 | $0.70/month |
 | **Family AI** (default) | Gemma 4 31B FP8, serverless endpoint `936leprwfzb9gr`, model id `family-gemma` | EU-SE-1 / EUR-IS-2, A40 48 GB | $1.22/h while running |
 | **Family AI Pro** | Qwen3.8 27B FP8, serverless endpoint `c3lm36gdhpctl2`, model id `family-brain` | EU-SE-1 / EUR-IS-2 | $1.22/h while running |
+| **Family AI Fast** (testing; not connected to UI) | Qwen3.5-9B, serverless endpoint `52cjk52hgbwag1`, model id `family-fast` | EU-SE-1 / EUR-IS-2, 24GB GPU class | Listed $0.75/h while running |
 | Voice | Speaches (Whisper STT + Piper TTS), load balancer endpoint `b8yk3ju5yc5kqx` | EU data centers | $0.58–0.69/h while running |
 | Pictures / video | RunPod public endpoints: FLUX schnell/dev, Wan 2.2 I2V | RunPod | $0.003 per quick image, about $0.02 per high-quality image, $0.30 per 5 s video |
 
@@ -26,10 +27,19 @@ It adds Auto, Pro and Finnish/Swedish model choices to the existing Open WebUI.
 Fast appears only after a tested small GPU endpoint is configured. It uses queued
 Runpod requests to wait through cold starts and preserves native tool-call streams.
 
-**Not deployed.** No fourth endpoint or new CPU server has been created.
-The proposed Qwen3.5-9B worker is in `runpod/fast-endpoint.proposed.json`:
-one 24GB GPU, min=0/max=1, currently listed at $0.75 per running hour plus storage/tax.
-See [rollout and verification](docs/router-rollout.md) before installation or paid creation.
+**Router not installed in the live UI.** The owner approved the new Fast endpoint
+on 2026-11-01, and it has been created as `52cjk52hgbwag1`. Its deployed configuration
+is in `runpod/fast-endpoint.json`: one 24GB GPU, min=0/max=1, 60-second idle timeout,
+currently listed at $0.75 per billed hour plus storage/tax. Initial live smoke checks
+completed: Swedish/Finnish short answers and streamed function-call arguments.
+First queue/start delay was 212.7s; short warm jobs took 2.1–2.5s. These are
+individual measurements, not latency guarantees or a language-quality benchmark.
+The `.proposed.json` file is the original proposal; do not use it to create a duplicate.
+See [rollout and verification](docs/router-rollout.md) before installing the router.
+
+CPU cost: the current $0.08/hour is $57.60 per 30-day month before storage/tax.
+See [the CPU savings and migration plan](docs/cpu-cost-plan.md) for reusing an
+existing VPS or moving to a cheaper small CPU host. No CPU migration has occurred.
 
 ## Repo layout
 
