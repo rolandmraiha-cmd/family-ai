@@ -1,0 +1,62 @@
+name: family-ai
+
+services:
+  webui:
+    image: ghcr.io/open-webui/open-webui:v0.12.4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:8080"
+    environment:
+      WEBUI_NAME: Family AI
+      WEBUI_AUTH: "true"
+      ENABLE_SIGNUP: "false"
+      DEFAULT_USER_ROLE: pending
+      ENABLE_OLLAMA_API: "false"
+      DATA_DIR: /app/backend/data
+      WEBUI_SECRET_KEY_FILE: /app/backend/data/.webui_secret_key
+      WEBUI_URL: https://${FAMILY_AI_HOST:-37-60-226-214.sslip.io}
+    volumes:
+      - webui-data:/app/backend/data
+    mem_limit: 3g
+    cpus: 2
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: [public]
+    restart: unless-stopped
+    depends_on:
+      webui:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      FAMILY_AI_HOST: ${FAMILY_AI_HOST:-37-60-226-214.sslip.io}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    mem_limit: 256m
+    cpus: 0.5
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  webui-data:
+  caddy-data:
+  caddy-config:

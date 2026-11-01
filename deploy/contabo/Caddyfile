@@ -1,0 +1,6 @@
+{$FAMILY_AI_HOST} {
+    encode zstd gzip
+    reverse_proxy webui:8080 {
+        flush_interval -1
+    }
+}

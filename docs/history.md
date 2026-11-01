@@ -1,5 +1,14 @@
 # History
 
+## 2026-11-01: Contabo fresh-start authorized; access blocked
+- Owner explicitly selected the existing Contabo VPS and requested deleting its old contents.
+- Recorded target is `37.60.226.214` / `vmi3634750.contaboserver.net`; its current
+  identity still needs verification in an authenticated session before erasure.
+- Prepared private-bootstrap Open WebUI/Caddy Compose files and fresh-host instructions.
+- Bash syntax and YAML/private-binding checks passed; Docker runtime checks unavailable locally.
+- Cloud browser returned "Site Unavailable" for both documented Contabo panels;
+  there is no connected SSH credential. No remote wipe, installation or CPU cutover occurred.
+
 ## 2026-11-01: Owner approved upload and small GPU creation
 - Uploaded the router implementation to branch `codex/gpu-router`, draft PR #1.
 - Created one Qwen3.5-9B serverless endpoint: `52cjk52hgbwag1`, min=0/max=1,

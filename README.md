@@ -41,6 +41,10 @@ CPU cost: the current $0.08/hour is $57.60 per 30-day month before storage/tax.
 See [the CPU savings and migration plan](docs/cpu-cost-plan.md) for reusing an
 existing VPS or moving to a cheaper small CPU host. No CPU migration has occurred.
 
+The owner has now selected the existing Contabo server `37.60.226.214` and
+authorized erasing its old setup. [Fresh deployment files](deploy/contabo/README.md)
+are prepared. Execution is blocked on server access; no wipe or migration has occurred.
+
 ## Repo layout
 
 ```
