@@ -1,5 +1,13 @@
 # History
 
+## 2026-11-01: Routing implementation prepared (not deployed)
+- Reused the existing Family AI repository and read the three live Runpod endpoint configurations.
+- Added an Open WebUI routing Pipe with Auto/Pro/language choices and an optional Fast model.
+- Queued job polling handles cold starts without one blocking OpenAI-proxy request; native SSE/tool calls are preserved.
+- Added local HTTP transport tests, cancellation, bounded runtime/output and no automatic submission retries.
+- Added an unapplied official Qwen3.5-9B/24GB GPU proposal and rollout checklist.
+- No new paid endpoint, CPU migration, live UI installation or live language test was performed.
+
 ## 2026-10-26 to 10-27: Research and first setup
 - Researched open models: see `docs/research/`.
 - Chose "everything on RunPod":
@@ -42,3 +50,4 @@
 - Family accounts.
 - Decide on cheaper hosting (see `docs/research/cheaper-hosting-2026-10.md`).
 - A better Finnish voice.
+
