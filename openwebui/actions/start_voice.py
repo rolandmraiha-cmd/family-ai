@@ -38,7 +38,7 @@ class Action:
                 async with session.get(VOICE_URL) as response:
                     if response.status == 200:
                         await response.read()
-                        await status("Voice is ready. Select Family AI Auto and open voice mode or the microphone.")
+                        await status("Voice is ready. Select Family AI Auto and use Standard call mode or the microphone.")
                     elif response.status in {502, 503, 504}:
                         await status("Voice startup requested. It may take a few minutes; press Start voice again to check.")
                     else:

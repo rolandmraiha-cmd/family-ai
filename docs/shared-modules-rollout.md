@@ -37,7 +37,9 @@ No cloud computer, CPU migration, new paid endpoint or volume was provisioned.
 7. Keep the existing speech configuration:
    STT `Systran/faster-whisper-large-v3` and language-selecting Piper TTS,
    both at `https://b8yk3ju5yc5kqx.api.runpod.ai/v1`.
-8. Choose Auto in the chat before opening voice mode or the microphone. Press
+8. Choose Auto in the chat before opening **Standard call mode** or the microphone.
+   Standard mode uses the configured Whisper/Piper service and selected chat model.
+   Do not choose a separate Realtime voice provider for this setup. Press
    Start voice to warm it manually first if desired. The action sends one
    authenticated GET to `/v1/models`; it never raises minimum workers. A cold
    timeout is reported as unconfirmed startup, not a ready voice session.
@@ -97,7 +99,7 @@ After the owner approves the additional endpoint and it passes a real request:
 Local command: `python -m unittest discover -s tests -v`.
 32 tests passed under Python 3.12, aiohttp 3.14.4 and pydantic 2.14.1.
 CI pins the checked Open WebUI v0.12.4 dependency versions (aiohttp 3.14.5,
-pydantic 2.13.4); that exact CI environment must also pass before merging.
+pydantic 2.13.4); the GitHub workflow passed for the initial PR #2 commit.
 Open WebUI storage and FastAPI HTML responses are test doubles; local tests
 verify real module/HTTP transport without generating billed media.
 
@@ -148,5 +150,6 @@ the **same** endpoint if desired. Never create a duplicate from a rollback file.
 - [vLLM v0.32.0 Gemma tool template](https://github.com/vllm-project/vllm/blob/v0.32.0/examples/tool_chat_template_gemma4.jinja)
 - [Open WebUI v0.12.4 action runtime](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/utils/actions.py)
 - [Open WebUI v0.12.4 native tool runtime](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/utils/middleware.py)
+- [Open WebUI v0.12.4 selected-model call/audio routing](https://github.com/open-webui/open-webui/blob/v0.12.4/src/lib/components/chat/Chat.svelte)
 - [DeepSeek R1 model instructions](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B)
 - [vLLM v0.32.0 reasoning output support](https://docs.vllm.ai/en/v0.32.0/features/reasoning_outputs/)
