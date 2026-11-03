@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from aiohttp import web
 from aiohttp.test_utils import TestServer
+from control_support import isolate_controls
 
 ROOT = Path(__file__).parents[1]
 
@@ -40,6 +41,7 @@ voice = load_file("start_voice", "openwebui/actions/start_voice.py")
 
 class ModuleTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        isolate_controls(self)
         self.tools = modules.Tools()
         self.tools.valves.RUNPOD_API_KEY = "local-test-only"
         self.calls = []
@@ -138,7 +140,7 @@ class ModuleTests(unittest.IsolatedAsyncioTestCase):
     async def test_client_cancellation_cancels_specialist_job(self):
         self.queue = True
         async with aiohttp.ClientSession() as session:
-            task = asyncio.create_task(self.tools._run(session, "specialist", {}, AsyncMock(), "Thinking", 60))
+            task = asyncio.create_task(self.tools._run(session, "c3lm36gdhpctl2", {}, AsyncMock(), "Thinking", 60))
             await asyncio.wait_for(self.pending.wait(), 2)
             task.cancel()
             with self.assertRaises(asyncio.CancelledError):
@@ -148,7 +150,7 @@ class ModuleTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_media_tools_share_the_same_transport_and_save_results(self):
         self.tools._save = AsyncMock(return_value={"url": "/files/test", "id": "file1"})
-        self.outputs = [{"image_url": "https://example.test/image.jpg", "cost": 0.003}]
+        self.outputs = [{"image_url": "https://test-bucket.s3.amazonaws.com/image.jpg", "cost": 0.003}]
         result = await self.tools.generate_image("A house", __event_emitter__=self.emit)
         self.assertIn("shown to the user", result)
         self.assertEqual(self.calls[0][0], "black-forest-labs-flux-1-schnell")
@@ -157,12 +159,14 @@ class ModuleTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_video_chains_start_image_then_wan_and_caps_duration(self):
         self.tools._save = AsyncMock(return_value={"url": "/files/video", "id": "file2"})
-        self.outputs = [{"image_url": "https://example.test/image.jpg"}, {"video_url": "https://example.test/video.mp4"}]
+        self.outputs = [{"image_url": "https://test-bucket.s3.amazonaws.com/image.jpg"}, {"video_url": "https://test-bucket.s3.amazonaws.com/video.mp4"}]
         result = await self.tools.generate_video("A moving house", __event_emitter__=self.emit)
         submitted = [(name, data) for name, op, data in self.calls if op == "run"]
         self.assertEqual([name for name, _ in submitted], ["black-forest-labs-flux-1-schnell", "wan-2-2-i2v-720"])
         self.assertEqual(submitted[1][1]["input"]["duration"], 5)
-        self.assertIn("video is playing", result[1])
+        self.assertIn("ready to play", result[1])
+        self.assertIn('/files/video', result[0]["content"])
+        self.assertNotIn('test-bucket.s3.amazonaws.com/video', result[0]["content"])
 
     async def test_voice_starts_only_on_manual_action_and_does_not_change_history(self):
         action = voice.Action()
@@ -185,3 +189,4 @@ class ModuleTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

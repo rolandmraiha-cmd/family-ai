@@ -15,3 +15,11 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install -r tests/requirements.txt
       - run: python -m unittest discover -s tests -v
+      - run: python scripts/build_openwebui_bundle.py
+      - run: python -m compileall -q family_backend openwebui voice scripts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: family-ai-openwebui-imports
+          path: dist/openwebui/
+          retention-days: 7
+

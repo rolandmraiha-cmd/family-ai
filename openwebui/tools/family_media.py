@@ -1,12 +1,15 @@
 """
 title: Family Modules (reasoning, images and video)
 description: Shared specialist tools for typed chat and voice conversations.
-version: 1.2.0
+version: 1.3.0
 requirements:
 """
 
 import asyncio
 import re
+import html
+import ipaddress
+from urllib.parse import urlsplit
 from typing import Literal
 
 import aiohttp
@@ -17,7 +20,27 @@ from open_webui.routers.images import upload_image
 from open_webui.utils.chat_id import is_saved_chat_id
 from pydantic import BaseModel, Field
 
+from family_backend.control import ControlError, Operation, CURRENT_CONTEXT, CURRENT_JOB, controlled_tool, default_ledger
+
 RUNPOD = "https://api.runpod.ai/v2"
+
+
+def public_media_url(url):
+    """Only provider object-storage results; no redirects or arbitrary URLs."""
+    if not isinstance(url, str) or len(url) > 8192:
+        raise RuntimeError("The module did not return a valid media URL.")
+    parsed = urlsplit(url)
+    hostname = parsed.hostname or ""
+    suffixes = (".amazonaws.com", ".runpod.net", ".runpod.io", ".runpod.ai", ".r2.cloudflarestorage.com")
+    if (parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in (None, 443)
+            or not any(hostname.endswith(suffix) for suffix in suffixes)):
+        raise RuntimeError("Media URL is outside the approved provider storage domains.")
+    try:
+        if not ipaddress.ip_address(hostname).is_global:
+            raise RuntimeError("Private media addresses are not allowed.")
+    except ValueError:
+        pass
+    return url
 
 
 class Tools:
@@ -26,7 +49,8 @@ class Tools:
         IMAGE_MODEL_FAST: str = Field(default="black-forest-labs-flux-1-schnell")
         IMAGE_MODEL_QUALITY: str = Field(default="black-forest-labs-flux-1-dev")
         VIDEO_MODEL: str = Field(default="wan-2-2-i2v-720")
-        MAX_VIDEO_SECONDS: int = Field(default=5, description="Hard cap on video length (cost: $0.30 per 5 s)")
+        MAX_VIDEO_SECONDS: int = Field(default=5, ge=1, le=5, description="Hard cap on video length (cost: $0.30 per 5 s)")
+        MAX_MEDIA_BYTES: int = Field(default=64 * 1024 * 1024, ge=1048576, le=134217728)
         REASONING_ENDPOINT_ID: str = "c3lm36gdhpctl2"
         REASONING_MODEL: str = "family-brain"
         REASONING_ENABLE_THINKING: bool = True
@@ -46,22 +70,32 @@ class Tools:
             raise RuntimeError("Invalid module endpoint ID")
         if self._inflight >= self.valves.MAX_INFLIGHT:
             raise RuntimeError("Specialist modules are busy; wait for the current task")
+        operation = Operation(model, payload, timeout=timeout_s, duration=payload.get("duration", 5))
+        CURRENT_JOB.set(operation.id)
+        replay = operation.replay()
+        if replay is not None:
+            return replay
         self._inflight += 1
         job_id, finished = None, False
         try:
             async with asyncio.timeout(timeout_s):
                 # Never retry this POST: a lost response can still mean a billed job.
+                operation.submitting()
+                await emit(f"{label}: reserving estimated ${operation.row['reserved'] / 1_000_000:.3f}; job {operation.id}")
                 async with session.post(f"{RUNPOD}/{model}/run", headers=self._headers(), json={
                     "input": payload,
                     "policy": {"executionTimeout": timeout_s * 1000, "ttl": timeout_s * 1000},
                 }) as r:
                     if r.status >= 400:
+                        if r.status in {400, 401, 402, 403, 404, 413, 422, 429}:
+                            operation.rejected()
                         raise RuntimeError(f"RunPod submission failed (HTTP {r.status}); no retry was made")
                     job = await r.json()
                 job_id = job.get("id")
                 if not isinstance(job_id, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", job_id):
                     job_id = None
                     raise RuntimeError("RunPod did not return a valid job ID")
+                operation.accepted(job_id)
                 waited = 0
                 while True:
                     async with session.get(f"{RUNPOD}/{model}/status/{job_id}", headers=self._headers()) as r:
@@ -69,12 +103,19 @@ class Tools:
                             raise RuntimeError(f"RunPod polling failed (HTTP {r.status})")
                         st = await r.json()
                     status = st.get("status")
+                    operation.progress(status)
                     if status == "COMPLETED":
                         finished = True
-                        return st.get("output") or {}
+                        output = st.get("output") or {}
+                        operation.complete(output, output.get("cost") if isinstance(output, dict) else None)
+                        return output
                     if status in ("FAILED", "CANCELLED", "TIMED_OUT"):
                         finished = True
+                        operation.terminal(status)
                         raise RuntimeError(f"Module ended with {status}; inspect RunPod Requests")
+                    operation.event("job.progress", {"status": status, "elapsed_seconds": waited,
+                        "active_endpoint": model, "specialist": operation.row["capability"],
+                        "gpu_state": "starting" if status == "IN_QUEUE" else "running"})
                     await emit(f"{label}… {waited}s")
                     await asyncio.sleep(4)
                     waited += 4
@@ -86,14 +127,18 @@ class Tools:
             try:
                 if job_id and not finished:
                     async with session.post(f"{RUNPOD}/{model}/cancel/{job_id}", headers=self._headers()) as r:
-                        await r.read()
-            except (aiohttp.ClientError, asyncio.TimeoutError):
+                        if r.status == 200 and (await r.json()).get("status") == "CANCELLED":
+                            operation.terminal("CANCELLED")
+            except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
                 pass
             finally:
                 self._inflight -= 1
+                operation.unresolved()
 
+    @controlled_tool
     async def ask_deep_reasoning(
         self, question: str, context: str = "", language: str = "English", __event_emitter__=None,
+        __user__=None, __chat_id__=None, __message_id__=None, __request__=None,
     ) -> str:
         """Ask the larger GPU specialist for difficult reasoning, maths, planning or code.
         Call when a task needs more analysis than the lightweight coordinator can provide.
@@ -155,11 +200,40 @@ class Tools:
 
     async def _save(self, session, url: str, content_type: str, request, user: dict, chat_id, message_id) -> dict:
         """Copies a RunPod result into Open WebUI storage (RunPod links expire after 7 days)."""
-        async with session.get(url) as r:
-            data = await r.read()
+        context = CURRENT_CONTEXT.get()
+        if context and CURRENT_JOB.get():
+            saved = default_ledger().asset_for_job(context.owner, CURRENT_JOB.get())
+            if saved:
+                return saved  # A transport replay must not create another large file.
+        public_media_url(url)
+        async with session.get(url, allow_redirects=False) as r:
+            if r.status != 200:
+                raise RuntimeError("The generated media could not be downloaded; the GPU job will not be repeated.")
+            chunks, total = [], 0
+            async for chunk in r.content.iter_chunked(65536):
+                total += len(chunk)
+                if total > self.valves.MAX_MEDIA_BYTES:
+                    raise RuntimeError("Generated media exceeds the configured file-size limit.")
+                chunks.append(chunk)
+            data = b"".join(chunks)
+        if not data:
+            raise RuntimeError("The generated media was empty.")
+        if content_type == "image/jpeg" and not data.startswith(b"\xff\xd8\xff"):
+            raise RuntimeError("The image response was not a JPEG file.")
+        if content_type == "video/mp4" and b"ftyp" not in data[:32]:
+            raise RuntimeError("The video response was not an MP4 file.")
         meta = {"chat_id": chat_id, "message_id": message_id} if is_saved_chat_id(chat_id) and message_id else {}
         _, info = await upload_image(request, data, content_type, meta, UserModel(**user))
+        if context and CURRENT_JOB.get():
+            default_ledger().remember_asset(context.owner, CURRENT_JOB.get(), info, url)
         return info
+
+    async def _verify_chat(self, user, chat_id):
+        # Defense in depth before paid work or storage writes. Never rely on
+        # a model-supplied identifier to authorize another user's conversation.
+        if is_saved_chat_id(chat_id):
+            if not user or not await Chats.get_chat_by_id_and_user_id(chat_id, user.get("id")):
+                raise ControlError("not_found", "Conversation not found.")
 
     async def _attach(self, emitter, chat_id, message_id, files: list) -> None:
         if is_saved_chat_id(chat_id) and message_id:
@@ -173,6 +247,7 @@ class Tools:
         payload["num_inference_steps"] = 28 if quality else 4
         return await self._run(session, model, payload, emit, "Drawing the picture", 180)
 
+    @controlled_tool
     async def generate_image(
         self,
         prompt: str,
@@ -200,20 +275,29 @@ class Tools:
             return "The image tool is not set up yet: the admin must enter the RunPod API key in the tool settings."
         w, h = (1344, 768) if landscape else (1024, 1024)
         try:
+            if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 4000:
+                raise RuntimeError("Provide a media prompt of 1–4000 characters.")
+            await self._verify_chat(__user__, __chat_id__)
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=300)) as session:
                 out = await self._image(session, prompt, high_quality, w, h, emit)
                 url = out.get("image_url") or out.get("result")
                 info = await self._save(session, url, "image/jpeg", __request__, __user__, __chat_id__, __message_id__)
             await self._attach(__event_emitter__, __chat_id__, __message_id__, [{"type": "image", **info}])
-        except Exception as e:
+        except ControlError as error:
+            await emit(str(error), True)
+            return f"Image request blocked: {error}"
+        except Exception:
             await emit("Image failed", True)
-            return f"Image generation failed: {e}"
-        await emit(f"Picture ready (cost ${float(out.get('cost', 0) or 0):.4f})", True)
+            return "Image generation or saving failed. Inspect the existing job before retrying; no automatic resubmission was made."
+        cost_label = (f"provider-reported cost ${float(out['cost']):.4f}" if out.get('cost') is not None
+                      else "cost not reported; estimated reservation retained")
+        await emit(f"Picture ready ({cost_label})", True)
         return (
             "The picture has been shown to the user. Do not repeat it or include any image link. "
-            f"Briefly describe what you made, in the user's language. Source link for an animation (valid 7 days): {url}"
+            f"Briefly describe what you made, in the user's language. Asset reference for an animation: {info['id']}"
         )
 
+    @controlled_tool
     async def generate_video(
         self,
         prompt: str,
@@ -226,10 +310,11 @@ class Tools:
     ):
         """
         Create a short 5-second video. Use this when the user asks for a video, animation or moving picture.
-        If the user wants to animate a picture made earlier in this chat, pass its source link as image_url. Otherwise leave image_url empty and a starting picture is made from the prompt first.
+        To animate an earlier generated picture, pass its asset reference as image_url.
+        Otherwise leave it empty and a starting picture is made first.
         Write the prompt in English: describe the scene and the motion.
         :param prompt: English description of the scene and the movement.
-        :param image_url: Optional https link of the picture to animate.
+        :param image_url: Optional saved asset reference, or approved provider storage URL.
         """
 
         async def emit(msg, done=False):
@@ -239,12 +324,23 @@ class Tools:
         if not self.valves.RUNPOD_API_KEY:
             return "The video tool is not set up yet: the admin must enter the RunPod API key in the tool settings."
         cost = 0.0
+        cost_reported = True
         try:
+            if not isinstance(prompt, str) or not prompt.strip() or len(prompt) > 4000:
+                raise RuntimeError("Provide a media prompt of 1–4000 characters.")
+            await self._verify_chat(__user__, __chat_id__)
+            quote = default_ledger().preflight_video(CURRENT_CONTEXT.get(), self.valves.VIDEO_MODEL, 840,
+                min(5, self.valves.MAX_VIDEO_SECONDS), not bool(image_url))
+            await emit(f"Estimated video workflow cost ${quote['estimated_usd']:.3f}; maximum {self.valves.MAX_VIDEO_SECONDS}s")
             async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=900)) as session:
-                if not image_url.startswith("http"):
+                if image_url and not image_url.startswith("https://"):
+                    image_url = default_ledger().asset_source(CURRENT_CONTEXT.get().owner, image_url)
+                if not image_url:
                     img = await self._image(session, prompt, False, 1280, 704, emit)
                     image_url = img.get("image_url") or img.get("result")
                     cost += float(img.get("cost", 0) or 0)
+                    cost_reported = cost_reported and img.get("cost") is not None
+                public_media_url(image_url)
                 payload = {
                     "prompt": prompt,
                     "image": image_url,
@@ -259,23 +355,30 @@ class Tools:
                 }
                 out = await self._run(session, self.valves.VIDEO_MODEL, payload, emit, "Making the video (1–3 min)", 840)
                 cost += float(out.get("cost", 0) or 0)
+                cost_reported = cost_reported and out.get("cost") is not None
                 video = out.get("result") or out.get("video_url")
                 info = await self._save(session, video, "video/mp4", __request__, __user__, __chat_id__, __message_id__)
             await self._attach(__event_emitter__, __chat_id__, __message_id__, [{"type": "file", **info, "name": "video.mp4"}])
-        except Exception as e:
+        except ControlError as error:
+            await emit(str(error), True)
+            return f"Video request blocked: {error}"
+        except Exception:
             await emit("Video failed", True)
-            return f"Video generation failed: {e}"
-        await emit(f"Video ready (cost ${cost:.2f})", True)
+            return "Video generation or saving failed. Inspect the existing job before retrying; no automatic resubmission was made."
+        cost_label = (f"provider-reported workflow cost ${cost:.3f}" if cost_reported
+                      else f"workflow estimate ${quote['estimated_usd']:.3f}; provider cost incomplete")
+        await emit(f"Video ready ({cost_label})", True)
         # The embed iframe starts 150px tall; report the real height so the whole player shows
         player = (
-            f'<body style="margin:0"><video id="v" src="{video}" controls playsinline '
+            f'<body style="margin:0"><video id="v" src="{html.escape(str(info["url"]), quote=True)}" controls playsinline '
             'style="display:block;width:100%;max-width:720px;aspect-ratio:16/9;border-radius:12px;background:#000"></video>'
             "<script>const s=()=>parent.postMessage({type:'iframe:height',height:Math.ceil(v.getBoundingClientRect().height)+8},'*');"
             "v.addEventListener('loadedmetadata',s);addEventListener('resize',s);s();</script></body>"
         )
         return (
             HTMLResponse(content=player, headers={"Content-Disposition": "inline"}),
-            "The video is playing in the chat and is saved as a file below the answer. Do not include any link. "
+            "The video is generated and saved as a file below the answer, ready to play. Do not include any link. "
             "Briefly say it is ready, in the user's language.",
         )
+
 

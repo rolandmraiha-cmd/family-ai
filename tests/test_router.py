@@ -6,6 +6,7 @@ import unittest
 
 from aiohttp import web
 from aiohttp.test_utils import TestServer
+from control_support import isolate_controls
 
 spec = importlib.util.spec_from_file_location(
     "family_router", Path(__file__).parents[1] / "openwebui/functions/family_router.py"
@@ -44,15 +45,20 @@ class RoutingTests(unittest.TestCase):
         body.update(tools=[{"type": "function", "function": {"name": "generate_image"}}],
                     tool_choice="auto", metadata={"private": "not-for-inference"}, max_tokens=9000)
         body["messages"][0]["content"] = [{"type": "image_url", "image_url": {"url": "data:image/png;base64,AA=="}}]
-        result = self.pipe.payload(body, "small", "fast")
+        result = self.pipe.payload(body, "large-gemma", "language")
         self.assertEqual(result["tools"], body["tools"])
         self.assertEqual(result["messages"][1:], body["messages"])
         self.assertEqual(result["max_tokens"], 2048)
         self.assertFalse(result["chat_template_kwargs"]["enable_thinking"])
-        self.assertEqual(result["top_p"], 0.8)
         self.assertNotIn("presence_penalty", result)
         self.assertNotIn("metadata", result)
         self.assertNotIn("chat_template_kwargs", body)
+
+    def test_manual_fast_rejects_image_context_before_gpu_start(self):
+        body = request()
+        body["messages"][0]["content"] = [{"type": "image_url", "image_url": {"url": "data:image/png;base64,AA=="}}]
+        with self.assertRaisesRegex(router.RouterError, "text only"):
+            self.pipe.payload(body, "family-fast", "fast")
 
     def test_image_attachment_uses_large_gemma(self):
         body = request()
@@ -137,6 +143,7 @@ class RoutingTests(unittest.TestCase):
 
 class TransportTests(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
+        isolate_controls(self)
         self.pipe = router.Pipe()
         self.pipe.valves.RUNPOD_API_KEY = "unit-test-only"
         self.pipe.valves.POLL_SECONDS = 0.001
@@ -248,4 +255,5 @@ class TransportTests(unittest.IsolatedAsyncioTestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
 
