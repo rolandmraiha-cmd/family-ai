@@ -110,8 +110,7 @@ After the owner approves the additional endpoint and it passes a real request:
 Local command: `python -m unittest discover -s tests -v`.
 33 tests passed under Python 3.12, aiohttp 3.14.4 and pydantic 2.14.1.
 CI pins the checked Open WebUI v0.12.4 dependency versions (aiohttp 3.14.5,
-pydantic 2.13.4); GitHub CI passed for the earlier 32-test commits; the credential-reuse change
-adds a 33rd local check and is included in the final review commit.
+pydantic 2.13.4); GitHub CI passed all 33 tests for commit `b439a85bed2705ce93379cd83a817b826a78a004`.
 Open WebUI storage and FastAPI HTML responses are test doubles; local tests
 verify real module/HTTP transport without generating billed media.
 
@@ -176,3 +175,24 @@ the **same** endpoint if desired. Never create a duplicate from a rollback file.
 - Submitted one Finnish RAM question in saved test chat
   `388accb9-c041-45c7-9e96-405866374fcd`; queue progress observed, final answer unverified.
 - The existing public default and direct models remain unchanged.
+
+## Verification after balance top-up
+
+The owner reported that RunPod credit had been depleted and added funds.
+New requests were submitted once; no abandoned app request was retried blindly.
+
+| Live check | Queue/start delay | Execution | Result |
+| --- | --- | --- | --- |
+| Fast Finnish RAM explanation | 87.163s | 7.045s | Correct short Finnish explanation |
+| Larger Qwen reasoning specialist | 171.084s | 11.782s | Correct rectangle sides 3 cm / 7 cm, perimeter and area checked |
+| Specialist result → Fast coordinator | 0.059s | 2.153s | Correct two-sentence Finnish summary; no repeated tool call |
+| FLUX schnell image module | Not recorded | Not recorded | Completed, reported $0.003 |
+| Wan 2.2 five-second video from that image | 6.753s | 179.089s | Completed, reported $0.30 |
+
+The specialist's actual final result was supplied to the small model as a native
+tool-result continuation. This establishes a real model-level handoff, not an
+end-to-end Open WebUI test. The image and video were real GPU outputs; app-side
+file persistence was not exercised by these connector probes. The browser again
+rejected access to the old chat view after top-up. Microphone input, playback,
+manual voice-button execution and the full app tool loop remain device-review
+items. No DeepSeek endpoint was created. All owned endpoints remain min=0/max=1.

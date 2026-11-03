@@ -20,6 +20,10 @@
   microphone/playback remain unverified. Existing public default is retained.
 - Small-model quality limits are recorded: factual error in a Finnish heat-pump
   response, and hidden reasoning returned despite requested non-thinking mode.
+- After the owner topped up depleted RunPod credit, live Fast Finnish, larger
+  Qwen reasoning, actual specialist-result continuation, FLUX image ($0.003) and
+  Wan five-second video ($0.30) checks passed. GitHub CI passes all 33 tests.
+  Browser access to the old chat view is still rejected; device/audio checks remain.
 - No new paid endpoint, CPU migration, deletion or cloud-computer work occurred.
 - See `docs/shared-modules-rollout.md` for exact state, install and rollback.
 

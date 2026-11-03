@@ -71,8 +71,9 @@ and its 10GB volume is listed at $0.70/month.
 
 `python -m unittest discover -s tests -v` runs the router/module/action checks
 without billed inference. GitHub Actions also runs these checks.
-The tests use local HTTP servers and replace Open WebUI storage/HTML boundaries;
-they do not establish real browser audio or file persistence.
+All 33 tests pass locally and in GitHub Actions. The tests use local HTTP
+servers and replace Open WebUI storage/HTML boundaries; they do not establish
+real browser audio or file persistence.
 
 Live E2B tests: Finnish image request selected `generate_image` correctly
 (1.055s warm execution); a Swedish RAM/storage answer was coherent.
@@ -93,3 +94,9 @@ No CPU migration or cloud-computer work is included.
 - `docs/`: rollout, history and previous research.
 
 
+
+After the owner topped up RunPod, direct live checks passed for Finnish chat,
+larger-model reasoning, return of the actual specialist answer to the small
+coordinator, image generation and a five-second video. The final Finnish summary
+was correct. Full Open WebUI execution, microphone/playback and persisted media
+still require device acceptance because browser policy blocked the old chat view.
