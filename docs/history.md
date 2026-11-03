@@ -1,5 +1,51 @@
 # History
 
+## 2026-11-03: Shared text/voice modules and Gemma E2B
+- Reused Fast endpoint `52cjk52hgbwag1` for Google Gemma 4 E2B IT, same 24GB
+  pool and zero minimum workers. Eager/text-only serving avoids compilation,
+  CUDA graphs and multimodal warmup. First startup delay 182.287s.
+- Added shared deep-reasoning access to the existing image/video tool. Auto
+  dispatches explicit deep requests directly as native tool calls; the real E2B
+  worker ignored a forced named tool call. Existing larger Qwen is the initial
+  specialist. Image attachments use the retained larger Gemma.
+- Added manual Start voice Action; STT transcripts use the same router/tools,
+  with final playback through existing Piper. No always-on speech worker.
+- Prepared an optional self-deployed DeepSeek-R1-Distill-Qwen-14B profile at the
+  checked $1.22/active-hour pool rate; not created without price approval.
+- 32 local checks pass. Actual UI installation, saved-media checks and real
+  microphone/playback acceptance remain blocked on Open WebUI admin sign-in.
+- Small-model quality limits are recorded: factual error in a Finnish heat-pump
+  response, and hidden reasoning returned despite requested non-thinking mode.
+- No new paid endpoint, CPU migration, deletion or cloud-computer work occurred.
+- See `docs/shared-modules-rollout.md` for exact state, install and rollback.
+
+## 2026-11-01: Contabo fresh-start authorized; access blocked
+- Owner explicitly selected the existing Contabo VPS and requested deleting its old contents.
+- Recorded target is `37.60.226.214` / `vmi3634750.contaboserver.net`; its current
+  identity still needs verification in an authenticated session before erasure.
+- Prepared private-bootstrap Open WebUI/Caddy Compose files and fresh-host instructions.
+- Bash syntax and YAML/private-binding checks passed; Docker runtime checks unavailable locally.
+- Cloud browser returned "Site Unavailable" for both documented Contabo panels;
+  there is no connected SSH credential. No remote wipe, installation or CPU cutover occurred.
+
+## 2026-11-01: Owner approved upload and small GPU creation
+- Uploaded the router implementation to branch `codex/gpu-router`, draft PR #1.
+- Created one Qwen3.5-9B serverless endpoint: `52cjk52hgbwag1`, min=0/max=1,
+  24GB GPU pool, 60-second idle timeout. The first request queued for 212.711s;
+  Swedish/Finnish short warm jobs completed in 2.133s/2.453s. The initial longer
+  Finnish response had errors and exceeded its length instruction. A forced tool
+  call streamed correct arguments; live UI tool execution remains unverified.
+- Existing CPU pod remains running; checked $0.08/hour cost and one utilization snapshot.
+- Added CPU savings/migration guidance. No new CPU hosting was purchased and no data was moved.
+
+## 2026-11-01: Routing implementation prepared (not deployed)
+- Reused the existing Family AI repository and read the three live Runpod endpoint configurations.
+- Added an Open WebUI routing Pipe with Auto/Pro/language choices and an optional Fast model.
+- Queued job polling handles cold starts without one blocking OpenAI-proxy request; native SSE/tool calls are preserved.
+- Added local HTTP transport tests, cancellation, bounded runtime/output and no automatic submission retries.
+- Added an unapplied official Qwen3.5-9B/24GB GPU proposal and rollout checklist.
+- No new paid endpoint, CPU migration, live UI installation or live language test was performed.
+
 ## 2026-10-26 to 10-27: Research and first setup
 - Researched open models: see `docs/research/`.
 - Chose "everything on RunPod":
@@ -42,3 +88,5 @@
 - Family accounts.
 - Decide on cheaper hosting (see `docs/research/cheaper-hosting-2026-10.md`).
 - A better Finnish voice.
+
+
