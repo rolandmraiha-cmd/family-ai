@@ -97,6 +97,15 @@ class ModuleTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Finnish", payload["messages"][0]["content"])
         self.assertEqual(self.tools._inflight, 0)
 
+    async def test_components_reuse_existing_encrypted_tool_valves_in_process(self):
+        tool_model = types.ModuleType("open_webui.models.tools")
+        tool_model.Tools = types.SimpleNamespace(get_tool_valves_by_id=AsyncMock(return_value={"RUNPOD_API_KEY": "local-test-only"}))
+        router = load_file("router_key_test", "openwebui/functions/family_router.py")
+        with patch.dict(sys.modules, {"open_webui.models.tools": tool_model}):
+            self.assertEqual(await router.Pipe().runpod_key(), "local-test-only")
+            self.assertEqual(await voice.Action().runpod_key(), "local-test-only")
+        self.assertEqual(tool_model.Tools.get_tool_valves_by_id.await_count, 2)
+
     async def test_reasoning_failure_is_sanitized_and_never_retried(self):
         self.fail_submit = True
         result = await self.tools.ask_deep_reasoning("Hard question", __event_emitter__=self.emit)

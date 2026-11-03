@@ -164,6 +164,18 @@ class Pipe:
             models.append({"id": "fast", "name": "Family AI · Fast"})
         return models
 
+    async def runpod_key(self):
+        if self.valves.RUNPOD_API_KEY:
+            return self.valves.RUNPOD_API_KEY
+        # Reuse the same admin-owned credential already used by this app's
+        # media tool. It remains inside Open WebUI's encrypted valve store.
+        try:
+            from open_webui.models.tools import Tools
+        except ImportError:
+            return ""
+        valves = await Tools.get_tool_valves_by_id("family_media") or {}
+        return valves.get("RUNPOD_API_KEY", "")
+
     def select(self, body):
         mode = body.get("model", "auto").rsplit(".", 1)[-1]
         if mode not in {"auto", "fast", "pro", "language"}:
@@ -270,7 +282,8 @@ class Pipe:
             pass  # Never mask the original timeout or client disconnect.
 
     async def _events(self, body, emit):
-        if not self.valves.RUNPOD_API_KEY:
+        key = await self.runpod_key()
+        if not key:
             raise RouterError("The admin must enter the Runpod key in this function's valves.")
         if self._inflight >= self.valves.MAX_INFLIGHT:
             raise RouterError("Family AI is busy. Wait for an existing task to finish.")
@@ -293,7 +306,7 @@ class Pipe:
         finished = False
         try:
             timeout = aiohttp.ClientTimeout(total=25, connect=10)
-            headers = {"Authorization": f"Bearer {self.valves.RUNPOD_API_KEY}"}
+            headers = {"Authorization": f"Bearer {key}"}
             async with aiohttp.ClientSession(timeout=timeout, headers=headers, trust_env=True) as session:
                 try:
                     async with asyncio.timeout(self.valves.REQUEST_TIMEOUT_SECONDS):

@@ -9,14 +9,23 @@ Zero minimum / one maximum worker, 60-second idle timeout, FlashBoot, 8K
 context, four sequences and eager execution. Text-only serving skips image,
 video and audio profiling. Image attachments go to the larger Gemma endpoint.
 
-The router/modules/manual voice action are **prepared, tested and committed**,
-but **not installed in live Open WebUI**. Its existing sign-in page blocks app
-configuration. No credentials were read, entered, copied or changed.
+The router/modules/manual voice action are **installed and enabled in live
+Open WebUI** after secure owner sign-in. The private workspace model
+`family-auto` uses `family_router.auto`, native function calling and the existing
+`family_media` tool. The Start voice Action is enabled globally. Its global
+setting only displays a button; it does not automatically start speech.
+No RunPod credential was read, copied or changed by the assistant.
+
+Live Auto chat showed queue progress. The view stopped updating before a final
+reply could be verified; endpoint health subsequently showed no queued/in-flight
+jobs, but this aggregate is not proof of that chat’s saved result. A browser
+security-policy rejection then blocked reloading the chat (URL/protocol authority).
+Do not claim full live acceptance or switch the existing public default yet.
 
 All other endpoint IDs, worker minimums and existing models are retained.
 No cloud computer, CPU migration, new paid endpoint or volume was provisioned.
 
-## Install together after admin sign-in
+## Installed configuration and reproduction steps
 
 1. Preserve an application-consistent backup of the current Open WebUI data and
    existing application key using the established backup process. Never put the
@@ -27,9 +36,11 @@ No cloud computer, CPU migration, new paid endpoint or volume was provisioned.
    `openwebui/tools/family_media.py`. It now includes `ask_deep_reasoning` as well
    as the existing image/video methods. Preserve its current valves and key.
 4. Admin → Functions: add the Action from `openwebui/actions/start_voice.py`.
-   Enable it for the test workspace model. Its button appears on assistant messages.
-5. The owner enters the existing RunPod key directly in any new component's
-   valves. Do not copy keys through chat, source files or terminal commands.
+   Enable it and set its Global switch so its manual button appears on assistant messages.
+5. The router and Action reuse `family_media`’s existing key through the checked
+   async `Tools.get_tool_valves_by_id` API, which decrypts it within Open WebUI.
+   Their explicit key valve may remain blank. The existing tool key stays in its
+   encrypted store. Never copy it through chat, source files or terminal commands.
 6. Create a private test model based on `family_router.auto`, with the existing
    family system prompt, Native function calling, the `family_media` tool and
    the Start voice action. Attach the same tools/action to Fast, Pro and language
@@ -97,9 +108,10 @@ After the owner approves the additional endpoint and it passes a real request:
 ## Verification
 
 Local command: `python -m unittest discover -s tests -v`.
-32 tests passed under Python 3.12, aiohttp 3.14.4 and pydantic 2.14.1.
+33 tests passed under Python 3.12, aiohttp 3.14.4 and pydantic 2.14.1.
 CI pins the checked Open WebUI v0.12.4 dependency versions (aiohttp 3.14.5,
-pydantic 2.13.4); the GitHub workflow passed for the initial PR #2 commit.
+pydantic 2.13.4); GitHub CI passed for the earlier 32-test commits; the credential-reuse change
+adds a 33rd local check and is included in the final review commit.
 Open WebUI storage and FastAPI HTML responses are test doubles; local tests
 verify real module/HTTP transport without generating billed media.
 
@@ -125,7 +137,7 @@ request still asks for non-thinking mode, but the live test shows that hidden
 reasoning computation may occur. Do not claim guaranteed non-thinking inference,
 instant startup, or uniformly better factual/language quality than larger models.
 
-## Live acceptance still required
+## Live acceptance still required after the browser restriction is resolved
 
 - Finnish, Swedish and English factual questions; review small-model accuracy.
 - One explicit deep request in typed chat, then the same through the microphone.
@@ -153,3 +165,14 @@ the **same** endpoint if desired. Never create a duplicate from a rollback file.
 - [Open WebUI v0.12.4 selected-model call/audio routing](https://github.com/open-webui/open-webui/blob/v0.12.4/src/lib/components/chat/Chat.svelte)
 - [DeepSeek R1 model instructions](https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-14B)
 - [vLLM v0.32.0 reasoning output support](https://docs.vllm.ai/en/v0.32.0/features/reasoning_outputs/)
+
+## Live app changes made
+
+- Imported and enabled `family_router` and `family_start_voice`.
+- Updated the same `family_media` tool to v1.2.0; preserved its stored valves.
+- Created private `family-auto` with the configuration in
+  `openwebui/models/family-auto.json`; native tool calling and shared modules attached.
+- Enabled Start voice globally; no voice warmup button was pressed by the assistant.
+- Submitted one Finnish RAM question in saved test chat
+  `388accb9-c041-45c7-9e96-405866374fcd`; queue progress observed, final answer unverified.
+- The existing public default and direct models remain unchanged.

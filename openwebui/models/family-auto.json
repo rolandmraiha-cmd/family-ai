@@ -1,0 +1,28 @@
+{
+  "id": "family-auto",
+  "base_model_id": "family_router.auto",
+  "name": "Family AI Auto",
+  "meta": {
+    "description": "Small Gemma for everyday chat; larger reasoning, image and video modules when needed. Works with Standard voice mode.",
+    "toolIds": ["family_media"],
+    "capabilities": {
+      "file_context": true,
+      "vision": true,
+      "file_upload": true,
+      "web_search": true,
+      "image_generation": true,
+      "code_interpreter": true,
+      "terminal": true,
+      "citations": true,
+      "status_updates": true,
+      "memory": true,
+      "builtin_tools": true
+    }
+  },
+  "params": {
+    "system": "You are Family AI, a private family assistant. Answer in the user's language: Finnish, Swedish or English. Be clear, honest and concise. Use available tools for requested media and specialist reasoning. Never claim a tool succeeded without its result. Preserve the user's facts and constraints. In voice mode, report concise final results suitable for speech.",
+    "function_calling": "native"
+  },
+  "access_grants": [],
+  "is_active": true
+}

@@ -24,8 +24,10 @@ executed in 5.416s. This is not instant startup or a latency guarantee.
 ## Shared routing and voice
 
 The reviewed implementation is in `openwebui/functions/family_router.py`.
-**It is not installed in the live Open WebUI yet.** Its existing login screen
-is the deployment blocker; no account or credential was changed.
+**Installed and enabled in live Open WebUI.** The private workspace model is
+`family-auto` (Family AI Auto), with native tool calling and `family_media`
+attached. Start voice is enabled globally as a manual action. Existing direct
+models and the existing default remain available. No credential was changed.
 
 - Auto uses the small coordinator for everyday requests.
 - Explicit hard requests emit a native `ask_deep_reasoning` call directly,
@@ -46,9 +48,13 @@ limits, not an account spending cap. Existing direct models stay available.
 ## Review / activation
 
 See [deployment and acceptance checklist](docs/shared-modules-rollout.md).
-The router, updated `family_media` tool and manual voice action must be installed
-together and attached to the test workspace models. The owner enters keys directly
-in their valves. No secrets belong in this repository.
+The router, updated `family_media` tool and manual voice action are installed.
+The new components reuse the admin-owned RunPod key through Open WebUI’s
+encrypted tool-valve API, inside the app process. No key was copied into code or
+chat. Live Auto chat showed queue progress; the view then stopped updating.
+A browser URL-policy rejection blocked reloading it to confirm the saved answer.
+Full UI/tool-loop/audio acceptance therefore remains incomplete; keep Auto in
+review rather than replacing the existing public default.
 
 The optional DeepSeek profile is ready in
 `runpod/deepseek-endpoint.proposed.json`. The checked AMPERE_48 rate is

@@ -20,12 +20,23 @@ class Action:
     def __init__(self):
         self.valves = self.Valves()
 
+    async def runpod_key(self):
+        if self.valves.RUNPOD_API_KEY:
+            return self.valves.RUNPOD_API_KEY
+        try:
+            from open_webui.models.tools import Tools
+        except ImportError:
+            return ""
+        valves = await Tools.get_tool_valves_by_id("family_media") or {}
+        return valves.get("RUNPOD_API_KEY", "")
+
     async def action(self, body: dict, __event_emitter__=None):
         async def status(text):
             if __event_emitter__:
                 await __event_emitter__({"type": "status", "data": {"description": text, "done": True}})
 
-        if not self.valves.RUNPOD_API_KEY:
+        key = await self.runpod_key()
+        if not key:
             await status("The admin must configure the Start voice action's RunPod key.")
             return body
         # This action runs only after a person presses its button. Ordinary
@@ -33,7 +44,7 @@ class Action:
         try:
             async with aiohttp.ClientSession(
                 timeout=aiohttp.ClientTimeout(total=25), trust_env=True,
-                headers={"Authorization": f"Bearer {self.valves.RUNPOD_API_KEY}"},
+                headers={"Authorization": f"Bearer {key}"},
             ) as session:
                 async with session.get(VOICE_URL) as response:
                     if response.status == 200:

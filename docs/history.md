@@ -12,8 +12,12 @@
   with final playback through existing Piper. No always-on speech worker.
 - Prepared an optional self-deployed DeepSeek-R1-Distill-Qwen-14B profile at the
   checked $1.22/active-hour pool rate; not created without price approval.
-- 32 local checks pass. Actual UI installation, saved-media checks and real
-  microphone/playback acceptance remain blocked on Open WebUI admin sign-in.
+- 33 local checks pass. Owner signed in securely; router, shared modules and
+  manual voice Action were installed and enabled. Created private `family-auto`
+  with native tools and the existing encrypted RunPod credential reused in-process.
+- Live chat showed queue progress, then its view stopped updating. Browser URL
+  policy rejected reload, so the saved reply, live tool loop, persisted media and
+  microphone/playback remain unverified. Existing public default is retained.
 - Small-model quality limits are recorded: factual error in a Finnish heat-pump
   response, and hidden reasoning returned despite requested non-thinking mode.
 - No new paid endpoint, CPU migration, deletion or cloud-computer work occurred.
