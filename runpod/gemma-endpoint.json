@@ -15,7 +15,14 @@
   },
   "dataCenterIds": [
     "EU-SE-1",
-    "EUR-IS-2"
+    "EUR-IS-2",
+    "EU-CZ-1",
+    "EU-RO-1",
+    "EU-NL-1",
+    "EU-FR-1",
+    "EUR-NO-1",
+    "EUR-IS-3",
+    "EUR-IS-4"
   ],
   "workers": {
     "min": 0,

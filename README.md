@@ -11,7 +11,7 @@ A private AI assistant for the family that speaks Swedish, Finnish and English. 
 | Chat app | Open WebUI v0.12.4 + Caddy in Docker, `/opt/family-ai` | Contabo VPS 37.60.226.214 | €6.90/month, always on |
 | Old storage | Network volume `vevppjlc9a` (10 GB), old chats, not used since the move | RunPod EUR-IS-1 | $0.70/month |
 | **Family AI Fast** | Gemma 4 E2B, serverless endpoint `52cjk52hgbwag1`, model id `family-fast` | 24 GB GPU | about $0.75/h while running |
-| **Family AI** (default) | Gemma 4 31B FP8, serverless endpoint `936leprwfzb9gr`, model id `family-gemma` | EU-SE-1 / EUR-IS-2, A40 48 GB | $1.22/h while running |
+| **Family AI** (default) | Gemma 4 31B FP8, serverless endpoint `936leprwfzb9gr`, model id `family-gemma` | Nine European locations, compatible 48 GB GPUs | A40 $1.22/h while running |
 | **Family AI Pro** | Qwen3.8 27B FP8, serverless endpoint `c3lm36gdhpctl2`, model id `family-brain` | EU-SE-1 / EUR-IS-2 | $1.22/h while running |
 | Voice | Speaches (Whisper STT + Piper TTS), load balancer endpoint `b8yk3ju5yc5kqx` | EU data centers | $0.58–0.69/h while running |
 | Pictures / video | RunPod public endpoints: FLUX schnell/dev, Wan 2.2 I2V | RunPod | $0.003 per quick image, about $0.02 per high-quality image, $0.30 per 5 s video |
@@ -38,6 +38,12 @@ probes observed startup wait falling from 131s to 114s, with slower generation
 in the second probe. FlashBoot is already enabled; under 20s after a retained
 worker resumes is not a guarantee for a fresh boot. See the
 [startup measurements and tradeoff](docs/startup-20261104.md).
+
+The larger Gemma's locations have been widened from Sweden/Iceland to nine
+European data centers. Available compatible GPUs can still be concentrated in
+Sweden; a wider location list does not guarantee a free GPU. The separate
+[llama.cpp trial](docs/startup-llamacpp-20261105.md) records model staging,
+adapter failures, accounting and the acceptance requirements for an engine swap.
 
 The preview distinguishes provider-reported job costs from **budget held as an
 estimate**. Unknown compute costs stay covered by the admission limit; the

@@ -17,6 +17,7 @@ Read `README.md` first, then `docs/history.md`.
 ## Gotchas learned the hard way
 - RunPod `update-endpoint` with `env` **replaces the whole env**. `MAX_NUM_BATCHED_TOKENS` is shown as `[redacted]` but its value is `8192`: always send it.
 - An env change cuts a new release, but old workers keep serving or failing jobs. Set max workers to 0 and then back to 1 to roll them.
+- `MODEL_NAME` does not update RunPod's separate `modelReferences` cache attachment, which REST v2 omits. Verify the pinned attachment before testing another model; restore it as well as the env on rollback. See `docs/startup-llamacpp-20261105.md`.
 - "Initializing" workers are pre-staged and not billed; only "Running" workers cost money.
 - Qwen3.8 emits XML tool calls: `TOOL_CALL_PARSER=qwen3_coder`. `hermes` silently drops them, which gives empty answers.
 - Gemma 4 31B on an A40 runs out of memory at 16k context, so keep `MAX_MODEL_LEN=8192`. Open WebUI `WEB_FETCH_MAX_CONTENT_LENGTH=4000` keeps fetched web pages from overflowing it.

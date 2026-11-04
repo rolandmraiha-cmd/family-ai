@@ -1,5 +1,31 @@
 # History
 
+## 2026-11-05: European capacity and llama.cpp startup trial
+- Owner approved another USD 5, bringing cumulative test authorization to USD 17.
+  Expanded only larger Gemma's preferred locations from Sweden/Iceland to nine
+  European locations; no resources were created or made always-on.
+- Tested a cached Google QAT Q4 Gemma 31B with llama.cpp on an A5000. The model
+  loaded in 6.067s inside the adapter, but the request took 452.864s overall,
+  mostly waiting for provider allocation. A fast model load does not remove
+  capacity queues or guarantee an under-20s first response.
+- Short fi/sv/en explanations, valid native tool arguments and SSE output worked.
+  The longer Finnish answer had several errors; the image answer mislabeled a
+  rectangle as a square. Rejected the candidate and restored the previous eager
+  FP8 engine and its pinned cache attachment; wider European placement is kept.
+- Found that REST/env updates leave a separate modelReferences attachment
+  unchanged. Earlier failed probes had staged the old FP8 model. Corrected cache
+  attachment, pinned-file validation and loaded-model readiness; no runtime
+  weight-download fallback remains in the experimental adapter.
+- Added a disabled candidate generator and cache attachment plan. 113 Python
+  tests and nine JavaScript tests pass; bundle build and compilation pass.
+- Restored-engine smoke completed in 129.335s. Nine probes retained USD 3.15 in
+  estimates, bringing cumulative held estimates to USD 14.869672 of USD 17
+  approved. All 67 ledger records settled, reservations zero, normal USD 2/day
+  and USD 20/month restored. These estimates are not verified wallet spend.
+- See `docs/startup-llamacpp-20261105.md` for measurements, failed attempts,
+  accounting, acceptance limitations and rollback. Browser/device testing and
+  candidate quality promotion are not claimed.
+
 ## 2026-11-03: Shared text/voice modules and Gemma E2B
 - Reused Fast endpoint `52cjk52hgbwag1` for Google Gemma 4 E2B IT, same 24GB
   pool and zero minimum workers. Eager/text-only serving avoids compilation,
