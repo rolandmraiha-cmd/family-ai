@@ -15,3 +15,9 @@ __pycache__/
 
 # VPS runtime data (lives only on the server)
 vps/data/
+.venv/
+.reference/
+web/build/
+dist/
+__pycache__/
+*.sqlite3*

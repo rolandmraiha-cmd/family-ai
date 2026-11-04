@@ -39,6 +39,10 @@ class FrameworkTests(unittest.IsolatedAsyncioTestCase):
         self.app = FastAPI()
         @self.app.get('/native-sentinel')
         async def native(): return {'untouched': True}
+        fallback = FastAPI()
+        @fallback.get('/{path:path}')
+        async def spa(path: str): return {'spa': True}
+        self.app.mount('/', fallback)
         with patch.dict(sys.modules, {'open_webui.utils.auth': auth}):
             install_api(self.app)
             install_api(self.app)
@@ -59,6 +63,25 @@ class FrameworkTests(unittest.IsolatedAsyncioTestCase):
         self.app.state.family_control_api_active = False
         result = await self.client.get('/api/v1/family/usage', headers={'Authorization': 'Bearer alice'})
         self.assertEqual(result.status_code, 503)
+
+    async def test_manual_voice_intent_uses_verified_owner_and_same_origin_without_gpu_work(self):
+        chats = types.ModuleType('open_webui.models.chats')
+        from unittest.mock import AsyncMock
+        chats.Chats = types.SimpleNamespace(get_chat_by_id_and_user_id=AsyncMock(
+            side_effect=lambda conversation, owner: object() if conversation == 'chat-a' and owner == 'alice' else None))
+        path = '/api/v1/family/voice/session?chat_id=chat-a&turn=manual-click'
+        with patch.dict(sys.modules, {'open_webui.models.chats': chats}):
+            self.assertEqual((await self.client.post(path)).status_code, 401)
+            headers = {'Authorization': 'Bearer alice', 'Origin': 'https://evil.test'}
+            self.assertEqual((await self.client.post(path, headers=headers)).status_code, 403)
+            headers['Origin'] = 'https://family.test'
+            result = await self.client.post(path, headers=headers)
+            self.assertEqual(result.status_code, 200)
+            self.assertFalse(result.json()['wakes_voice'])
+            headers['Authorization'] = 'Bearer bob'
+            self.assertEqual((await self.client.post(path, headers=headers)).status_code, 404)
+        self.assertEqual(default_ledger().list_jobs('alice'), [])
+        self.assertEqual(default_ledger().voice('alice')['conversation'], 'chat-a')
 
     async def test_real_framework_body_limits_origin_and_policy(self):
         path = '/api/v1/family/policy'

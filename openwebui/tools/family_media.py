@@ -20,7 +20,7 @@ from open_webui.routers.images import upload_image
 from open_webui.utils.chat_id import is_saved_chat_id
 from pydantic import BaseModel, Field
 
-from family_backend.control import ControlError, Operation, CURRENT_CONTEXT, CURRENT_JOB, controlled_tool, default_ledger
+from family_backend.control import ControlError, Operation, CURRENT_CONTEXT, CURRENT_JOB, controlled_tool, default_ledger, configured_runpod_key
 
 RUNPOD = "https://api.runpod.ai/v2"
 
@@ -62,8 +62,11 @@ class Tools:
         self.valves = self.Valves()
         self._inflight = 0
 
-    def _headers(self) -> dict:
-        return {"Authorization": f"Bearer {self.valves.RUNPOD_API_KEY}", "Content-Type": "application/json"}
+    async def _key(self):
+        return self.valves.RUNPOD_API_KEY or await configured_runpod_key()
+
+    async def _headers(self) -> dict:
+        return {"Authorization": f"Bearer {await self._key()}", "Content-Type": "application/json"}
 
     async def _run(self, session: aiohttp.ClientSession, model: str, payload: dict, emit, label: str, timeout_s: int) -> dict:
         if not re.fullmatch(r"[A-Za-z0-9_-]+", model):
@@ -82,7 +85,7 @@ class Tools:
                 # Never retry this POST: a lost response can still mean a billed job.
                 operation.submitting()
                 await emit(f"{label}: reserving estimated ${operation.row['reserved'] / 1_000_000:.3f}; job {operation.id}")
-                async with session.post(f"{RUNPOD}/{model}/run", headers=self._headers(), json={
+                async with session.post(f"{RUNPOD}/{model}/run", headers=await self._headers(), json={
                     "input": payload,
                     "policy": {"executionTimeout": timeout_s * 1000, "ttl": timeout_s * 1000},
                 }) as r:
@@ -98,7 +101,7 @@ class Tools:
                 operation.accepted(job_id)
                 waited = 0
                 while True:
-                    async with session.get(f"{RUNPOD}/{model}/status/{job_id}", headers=self._headers()) as r:
+                    async with session.get(f"{RUNPOD}/{model}/status/{job_id}", headers=await self._headers()) as r:
                         if r.status >= 400:
                             raise RuntimeError(f"RunPod polling failed (HTTP {r.status})")
                         st = await r.json()
@@ -126,7 +129,7 @@ class Tools:
         finally:
             try:
                 if job_id and not finished:
-                    async with session.post(f"{RUNPOD}/{model}/cancel/{job_id}", headers=self._headers()) as r:
+                    async with session.post(f"{RUNPOD}/{model}/cancel/{job_id}", headers=await self._headers()) as r:
                         if r.status == 200 and (await r.json()).get("status") == "CANCELLED":
                             operation.terminal("CANCELLED")
             except (aiohttp.ClientError, asyncio.TimeoutError, ValueError):
@@ -149,7 +152,7 @@ class Tools:
         :param context: Relevant facts, constraints and previous results only.
         :param language: Language of the final answer, e.g. Finnish, Swedish or English.
         """
-        if not self.valves.RUNPOD_API_KEY:
+        if not await self._key():
             return "The admin must configure the shared modules' RunPod key."
         if not question.strip() or len(question) + len(context) > 24000 or len(language) > 40:
             return "Provide a question with at most 24,000 total characters of question and context."
@@ -271,7 +274,7 @@ class Tools:
             if __event_emitter__:
                 await __event_emitter__({"type": "status", "data": {"description": msg, "done": done}})
 
-        if not self.valves.RUNPOD_API_KEY:
+        if not await self._key():
             return "The image tool is not set up yet: the admin must enter the RunPod API key in the tool settings."
         w, h = (1344, 768) if landscape else (1024, 1024)
         try:
@@ -321,7 +324,7 @@ class Tools:
             if __event_emitter__:
                 await __event_emitter__({"type": "status", "data": {"description": msg, "done": done}})
 
-        if not self.valves.RUNPOD_API_KEY:
+        if not await self._key():
             return "The video tool is not set up yet: the admin must enter the RunPod API key in the tool settings."
         cost = 0.0
         cost_reported = True

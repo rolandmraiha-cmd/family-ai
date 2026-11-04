@@ -17,7 +17,7 @@ from typing import Optional
 import aiohttp
 from pydantic import BaseModel, Field
 
-from family_backend.control import ControlError, Operation, context_for, operation_context, default_ledger, CURRENT_CONTEXT
+from family_backend.control import ControlError, Operation, context_for, operation_context, default_ledger, CURRENT_CONTEXT, configured_runpod_key
 
 API = "https://api.runpod.ai/v2"
 TERMINAL = {"COMPLETED", "FAILED", "CANCELLED", "TIMED_OUT"}
@@ -177,8 +177,7 @@ class Pipe:
             from open_webui.models.tools import Tools
         except ImportError:
             return ""
-        valves = await Tools.get_tool_valves_by_id("family_media") or {}
-        return valves.get("RUNPOD_API_KEY", "")
+        return await configured_runpod_key()
 
     def select(self, body):
         mode = body.get("model", "auto").rsplit(".", 1)[-1]

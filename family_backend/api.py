@@ -10,7 +10,8 @@ import time
 from dataclasses import asdict
 from urllib.parse import urlsplit
 
-from family_backend.control import ControlError, Ledger, default_ledger, OperationContext, ENDPOINT_CAPABILITIES
+from family_backend.control import ControlError, Ledger, default_ledger, OperationContext, ENDPOINT_CAPABILITIES, configured_runpod_key
+from family_backend.speech import install_speech_api
 
 
 def check_origin(headers, unsafe):
@@ -54,7 +55,7 @@ class ControlAPI:
             return {"jobs": [public_job(j) for j in self.ledger.list_jobs(owner)]}
         if method == "GET" and path == "/capabilities":
             return {"version": "1", "capabilities": ["fast", "reasoning", "vision", "image", "image_quality", "video", "voice"],
-                    "voice_activation": "manual", "public_default_changed": False,
+                    "voice_activation": "manual", "guarded_voice_prefix": "/api/v1/family/voice", "public_default_changed": False,
                     "chat_transport": "/api/chat/completions", "provider_hard_spending_cap": False}
         if method == "GET" and path == "/models/state":
             if self.provider_call is None:
@@ -176,8 +177,7 @@ def install_api(app):
         from open_webui.models.tools import Tools
         if endpoint not in ENDPOINT_CAPABILITIES or not re.fullmatch(r"health|(?:status|cancel)/[A-Za-z0-9_-]+", operation):
             raise ControlError("invalid_provider_request", "Provider route is not approved.")
-        valves = await Tools.get_tool_valves_by_id("family_media") or {}
-        key = valves.get("RUNPOD_API_KEY")
+        key = await configured_runpod_key()
         if not key:
             raise ControlError("provider_unavailable", "The admin must configure the existing tool credential.")
         try:
@@ -241,5 +241,15 @@ def install_api(app):
                           ("/jobs/{job_id}/refresh", ["POST"]),
                           ("/jobs/{job_id}/retry", ["POST"]), ("/jobs/{job_id}/resolve", ["POST"])]:
         router.add_api_route(path, dispatch, methods=methods)
+    install_speech_api(app, router, check_origin)
+    # Native Open WebUI already mounted its SPA at '/' before lifecycle Events
+    # run. Appending routes after that Mount silently serves HTML/405 instead.
+    original_routes = list(app.router.routes)
     app.include_router(router)
+    added_routes = app.router.routes[len(original_routes):]
+    from starlette.routing import Mount
+    fallback_index = next((index for index, route in enumerate(original_routes)
+                           if isinstance(route, Mount) and route.path in {"", "/"}), len(original_routes))
+    app.router.routes[:] = original_routes[:fallback_index] + added_routes + original_routes[fallback_index:]
+    app.openapi_schema = None
     app.state.family_control_api_installed = True

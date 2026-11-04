@@ -1,19 +1,20 @@
-# Security and control review — 2026-11-03
+# Security and control review — 2026-11-04
 
-Prepared controls are not yet deployed. Source/unit/HTTP verification does not
-constitute a production security audit of a recovered Open WebUI instance.
+Controls are installed in the Contabo review deployment. Source/unit/HTTP checks
+and live unsigned-request rejection do not constitute a production security audit.
+Signed-in account and media acceptance remains pending.
 
 | Boundary | Implemented control | Remaining verification / limitation |
 | --- | --- | --- |
 | User identity | Existing Open WebUI verified-user dependency, role checks, owned jobs/events; pending rejected | Real JWT/cookie/API-key and family account isolation require live app test |
 | Control writes | Same-origin cookie writes, explicit origin denial,64KiB bodies | Native routes retain their existing controls; no new cross-origin deployment |
-| Provider keys | Reuse encrypted tool valves in-process, fixed provider domains/approved endpoints, no credentials in ledger | Original app encryption key may have been lost with missing host; recover privately before any setting update |
+| Provider keys | Reuse existing tool valves or exact approved RunPod connections in-process; no credentials in ledger/browser | Existing Contabo key/configuration preserved; do not copy credentials into new plugin valves |
 | Job/data access | Owned ledger rows and asset references; saved-chat owner check before media submission | Native uploads, signed URL expiration, iframe/cookie file permissions require real acceptance |
 | Admin recovery | Metadata-only uncertain-job list and audited reconciliation; other users' outputs remain owner-only | Admin must review actual provider Requests before releasing uncertain work |
 | Tool-result injection | Treat results as data; strict FAST/PRO labels; reasoning specialist receives no tools; endpoint catalog fixed | Prompt instructions cannot guarantee semantic resistance; quality/injection red-team acceptance still needed |
 | Recursive/billed work | One reasoning per turn, video duration/count, atomic global concurrency, persistent deduplication and no automatic POST retry | Other native tools/direct models are outside this governor; model quality remains variable |
 | Media/files | Approved HTTPS object-storage suffixes, no redirect following, size bound64MiB default, JPEG/MP4 signature checks, saved authenticated file URLs | Signature checks are not malware scanning; no DNS pinning or full media decoder validation; only trusted provider outputs intended |
-| Input/output exhaustion | Bounded specialist/media prompts, speech JSON/text, max tokens, control bodies, event131KiB/result2MB limits | App/native multipart ingress and overall disk quotas remain outside these adapters; monitor 10GB volume |
+| Input/output exhaustion | Bounded specialist/media prompts, speech JSON/text/WAV duration, max tokens, control bodies, event131KiB/result2MB limits | Native multipart ingress and overall disk quotas remain outside these adapters; monitor VPS disk |
 | Spending | SQLite BEGIN IMMEDIATE reservations across processes, per-day/month/capability quotas, warnings and estimates | No provider/account hard cap; CPU, disk, native speech, direct models/API use bypass; prices can change; interrupted GPU may exceed estimates |
 | Failure recovery | Persist IDs/results/events, cursor replay, cancel confirmation, unknown holds, explicit refresh/reconcile/retry | App crash cannot guarantee provider cancellation; provider output retention finite; saving after GPU completion can fail |
 | Privacy/storage | Ledger on existing persistent mount,0600 database,0700 created directory; no raw input payload/key stored | Outputs/events and private source URLs can contain sensitive content; protect full data volume/backups, no end-to-end encryption added |
@@ -53,8 +54,8 @@ load tests; SQLite WAL across multiple machines is not claimed supported.
 
 ## Operational requirements before production
 
-Restore the original encryption key and verified backup; pin app version and
-check directory/file permissions. Verify real account/asset ownership and test
+Preserve the existing Contabo encryption key and establish a private backup;
+retain pinned app version and check file permissions. Verify real account/asset ownership and test
 native voice bypasses. Keep unknown-job reconciliation visible to the admin.
 Review disk growth and take private backups; no automatic retention deletion
 was introduced. Never commit the ledger, family chats, uploaded media or keys.

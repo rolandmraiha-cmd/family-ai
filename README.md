@@ -18,6 +18,13 @@ A private AI assistant for the family that speaks Swedish, Finnish and English. 
 
 URL: `https://37-60-226-214.sslip.io` (sign-up off; new users are "pending" until the admin approves them).
 
+The integrated UI is in review at [`/preview/`](https://37-60-226-214.sslip.io/preview/).
+It uses existing Open WebUI accounts, saved conversations and server-side tools.
+The router, job/budget ledger and guarded manual speech API are installed on the
+VPS; signed-in chat, media and device acceptance is still pending. The public
+default and native `/` interface remain unchanged. See
+[integration status and rollback](docs/contabo-integration.md). PR #2 stays draft.
+
 Both LLM endpoints scale to zero and stay warm for 10 min after the last message. A cold start takes about 2–4 min.
 
 ## Repo layout
@@ -27,6 +34,9 @@ runpod/            Endpoint settings (env, GPUs, scaling) for each serverless en
 openwebui/         Open WebUI settings and the custom tools uploaded to it
   tools/family_media.py   Image + video tool (FLUX / Wan 2.2)
 voice/voice_start.py      Start command for the voice endpoint (adds /ping and per-language voice choice)
+family_backend/    Persistent jobs, budgets, authenticated controls and guarded speech
+web/              Real preview UI source (index.html, app.mjs, api.mjs)
+scripts/          Build isolated Open WebUI plugin imports and install reviewed IDs
 vps/               Copies of the VPS docker-compose.yml and Caddyfile (no secrets)
 docs/vps.md        The VPS: what runs, security, commands, what's next
 docs/history.md    What was done, when, and why (decisions + problems solved)

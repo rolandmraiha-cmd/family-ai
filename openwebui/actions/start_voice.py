@@ -10,7 +10,7 @@ import asyncio
 import aiohttp
 from pydantic import BaseModel, Field
 
-from family_backend.control import ControlError, Operation, context_for, operation_context, default_ledger
+from family_backend.control import ControlError, Operation, context_for, operation_context, default_ledger, configured_runpod_key
 
 VOICE_URL = "https://b8yk3ju5yc5kqx.api.runpod.ai/v1/models"
 
@@ -29,8 +29,7 @@ class Action:
             from open_webui.models.tools import Tools
         except ImportError:
             return ""
-        valves = await Tools.get_tool_valves_by_id("family_media") or {}
-        return valves.get("RUNPOD_API_KEY", "")
+        return await configured_runpod_key()
 
     async def action(self, body: dict, __event_emitter__=None, __user__=None):
         async def status(text):

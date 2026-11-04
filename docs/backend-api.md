@@ -1,9 +1,9 @@
 # Backend integration contract — v1, prepared for Open WebUI v0.12.4
 
-**Not live yet:** the application Pod is missing. This contract describes the
-implementation in PR #2; native chat/audio behavior still requires restored-app
-acceptance. It supplements Open WebUI, with orchestration in Python and no UI
-replacement. A future cloud-computer adapter can join the approved capability
+**Installed for review on Contabo, 2026-11-04.** The `/preview/` UI uses these
+controls and native saved chats. Authentication rejection and startup are checked;
+signed-in chat/audio acceptance remains pending. See [live status](contabo-integration.md).
+The existing native `/` interface is retained. A future cloud-computer adapter can join the approved capability
 catalog later; no such capability exists or is enabled now.
 
 ## Authentication and transport
@@ -11,7 +11,7 @@ catalog later; no such capability exists or is enabled now.
 Use HTTPS and the existing Open WebUI account/session. Added control routes use
 `get_verified_user`, not an independent shared browser secret. Verified `user`
 and `admin` roles are allowed; pending accounts are not. Backend RunPod keys stay
-in the existing encrypted tool valves. Never ship them in frontend bundles,
+in existing Open WebUI tool valves or approved provider connections. Never ship them in frontend bundles,
 query strings, localStorage or example payloads.
 
 Same-origin browser requests use existing session authentication. Control writes
@@ -53,8 +53,10 @@ Minimal native saved-chat creation example:
 After receiving the actual chat ID, a chat request can carry this shape (IDs below
 are examples, not real data). `user_message` supplies the new turn, and `messages`
 contains the appropriate retained context. Use new UUIDs for genuinely new turns;
-retain IDs for transport retry/reconnection. Test against the actual instance's
-OpenAPI schema before wiring persistence:
+retain IDs for reconciliation after a lost reply; do not automatically submit
+again. The preview uses background processing and polls authoritative saved chat
+state. Native source was checked in the installed v0.12.4 container; public
+OpenAPI is disabled there.
 
 ```json
 {
@@ -64,6 +66,7 @@ OpenAPI schema before wiring persistence:
   "user_message":{"id":"user-message-uuid","parentId":null,"role":"user","content":"Selitä RAM-muisti lyhyesti.","timestamp":1793707200},
   "messages":[{"role":"user","content":"Selitä RAM-muisti lyhyesti."}],
   "stream":true,
+  "session_id":"browser-delivery-session-uuid",
   "tool_ids":["family_media"],
   "params":{"function_calling":"native"}
 }
@@ -108,11 +111,14 @@ context is rejected before GPU submission. Preserve the current public default.
 | `GET /reconciliation` | Admin metadata-only list of uncertain jobs across family accounts; no prompts, owners, chats or outputs |
 | `POST /jobs/{id}/resolve` | Admin reconcile an `unknown` job after provider review; requires reason, optional estimated charge |
 | `GET, DELETE /voice/session` | Manual voice intent/readiness state with5min expiry; DELETE clears intent, does not terminate active speech or a GPU |
+| `POST /voice/session?chat_id=...&turn=...` | Activate manual intent for an owned saved chat; no provider request or reservation |
+| `POST /voice/transcriptions?chat_id=...&turn=...&language=fi` | Guarded Whisper; raw complete PCM16 WAV, at most30s,6MiB,8–48kHz; `fi/sv/en` |
+| `POST /voice/speech?chat_id=...&turn=...&language=fi` | Guarded Piper; JSON `input`1–2000characters; owned saved WAV result, same-turn replay |
 | `POST /billing` | Admin import RunPod billing snapshot; labeled admin-imported, not independently fetched/verified or a cap |
 
-Start voice remains the existing native manual Action, not an undocumented
-`POST /voice/start` route. STT/TTS are not proxied or governed by the new control
-API; see [voice limitations](voice.md). No automatic retry endpoint reconstructs
+The preview uses the guarded speech routes above. The separate native Start voice
+Action is retained; native `/api/v1/audio/*` still bypasses the Family governor.
+See [voice limitations](voice.md). No automatic retry endpoint reconstructs
 private prompts or replays tools behind the user's back.
 
 Example estimate:
@@ -167,7 +173,10 @@ retry saving that output before generating again. Saved assets use Open WebUI
 file permissions and the persistent data volume. The ledger privately retains
 provider source URLs for generated-image animation; expiring provider links are
 not permanent assets and may need manual restoration/reupload after expiration.
-Audio uses the native cache; durable audio attachment is not implemented here.
+Guarded preview audio is uploaded into owned native file storage, returned in the
+job result and attached to its saved assistant turn when present. A provider
+success followed by storage failure remains uncertain; no automatic regeneration
+is attempted. Native audio still uses its separate cache.
 
 ## Cancellation and recovery
 
@@ -190,14 +199,14 @@ Intentional repeat within that window reuses the result; change input or wait.
 
 ## Source and version limits
 
-The supplemental v1 schema is in `family_backend/api.py`; deployment bundles
+The supplemental v1 routes are in `family_backend/api.py` and `speech.py`; deployment bundles
 inline it into the native lifecycle Event. Native APIs come from inspected
 [main.py](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/main.py),
 [chats.py](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/routers/chats.py),
 and [audio router](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/routers/audio/__init__.py).
 This is not proof of live authentication, native storage or future-version
-compatibility. Pin the restored app version and complete acceptance before
-integrating the standalone UI or merging this PR.
+compatibility. The current app is pinned to v0.12.4. Complete signed-in acceptance
+before promoting the preview or merging this PR.
 
 The current Wan profile accepts five-second clips. Setting the duration cap below
 five seconds disables this profile; unsupported shorter durations are rejected

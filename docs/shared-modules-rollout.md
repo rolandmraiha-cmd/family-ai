@@ -1,5 +1,10 @@
 # Shared model modules — 2026-11-03
 
+**Historical rollout on the former RunPod app.** Current Contabo installation,
+guarded preview speech and outstanding acceptance are recorded in
+[contabo-integration.md](contabo-integration.md). Instructions below describe
+the previous app and are not evidence of acceptance on the fresh VPS.
+
 ## Exact deployment state
 
 RunPod Fast endpoint `52cjk52hgbwag1` now serves `google/gemma-4-E2B-it` as

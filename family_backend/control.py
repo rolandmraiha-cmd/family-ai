@@ -146,6 +146,31 @@ def default_ledger():
     return Ledger(path)
 
 
+async def configured_runpod_key():
+    """Read an existing credential in-process; never copy it into another store."""
+    try:
+        from open_webui.models.tools import Tools
+    except ImportError:
+        return ""
+    valves = await Tools.get_tool_valves_by_id("family_media") or {}
+    if valves.get("RUNPOD_API_KEY"):
+        return valves["RUNPOD_API_KEY"]
+    from open_webui.models.config import Config
+    from urllib.parse import urlsplit
+    settings = await Config.get_many("openai.api_base_urls", "openai.api_keys")
+    urls = settings.get("openai.api_base_urls") or []
+    keys = settings.get("openai.api_keys") or []
+    for index, base in enumerate(urls):
+        parsed = urlsplit(base)
+        if (parsed.scheme == "https" and parsed.netloc == "api.runpod.ai"
+                and parsed.path.rstrip("/") in {
+                    f"/v2/{endpoint}/openai/v1" for endpoint in ENDPOINT_CAPABILITIES
+                } and not parsed.query and not parsed.fragment
+                and index < len(keys) and keys[index]):
+            return keys[index]
+    return ""
+
+
 class Ledger:
     def __init__(self, path, clock=time.time):
         self.path = Path(path)

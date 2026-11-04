@@ -100,6 +100,12 @@
 - First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
 
 ## Open items
+- 2026-11-04: Integrated real `/preview/` with native Open WebUI accounts, saved
+  chat/tools and added guarded manual speech. Reviewed plugins/private Auto
+  installed on Contabo; public config/default retained.93Python and6JS checks
+  pass locally; live added APIs reject unsigned calls. Owner login and approved
+  paid end-to-end acceptance remain pending; PR #2 stays draft. See
+  `docs/contabo-integration.md` for evidence, limitations and reversible rollback.
 - Backups: a free sync of the volume to the owner's PC through RunPod's S3 API (EUR-IS-1). It needs an S3 key that the owner creates.
 - Family accounts.
 - Decide on cheaper hosting (see `docs/research/cheaper-hosting-2026-10.md`).

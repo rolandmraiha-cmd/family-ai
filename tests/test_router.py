@@ -222,7 +222,9 @@ class TransportTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.calls, ["run"])
 
     async def test_timeout_cancels_queued_job(self):
-        self.pipe.valves.REQUEST_TIMEOUT_SECONDS = 0.025
+        # Allow the local submission to finish even on Windows/loaded CI;
+        # the fake provider remains queued until this deadline expires.
+        self.pipe.valves.REQUEST_TIMEOUT_SECONDS = 0.5
         with self.assertRaises(router.RouterError):
             await self.pipe.pipe(request())
         self.assertIn("cancel", self.calls)

@@ -39,7 +39,8 @@ class LedgerTests(unittest.TestCase):
         self.assertFalse(created)
         self.assertEqual(job['id'], same['id'])
         self.assertNotIn('Hello', json.dumps(same))
-        self.assertEqual(os.stat(self.ledger.path).st_mode & 0o777, 0o600)
+        if os.name != 'nt':  # Windows uses ACLs, not Unix permission bits.
+            self.assertEqual(os.stat(self.ledger.path).st_mode & 0o777, 0o600)
 
     def test_lost_reply_with_new_assistant_id_does_not_submit_twice(self):
         first, _ = self.reserve()

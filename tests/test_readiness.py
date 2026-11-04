@@ -222,7 +222,7 @@ class BundleAndVoiceTests(unittest.IsolatedAsyncioTestCase):
             with patch.dict(sys.modules, stubs):
                 loaded = []
                 for path in output.glob('*.py'):
-                    source = path.read_text()
+                    source = path.read_text(encoding='utf-8')
                     self.assertTrue(source.startswith('"""\ntitle:'))
                     self.assertNotIn('from family_backend', source)
                     spec = importlib.util.spec_from_file_location('bundled_' + path.stem, path)
