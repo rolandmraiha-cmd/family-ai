@@ -22,7 +22,9 @@ The integrated UI is in review at [`/preview/`](https://37-60-226-214.sslip.io/p
 It uses existing Open WebUI accounts, saved conversations and server-side tools.
 The router, job/budget ledger and guarded manual speech API are installed on the
 VPS; live acceptance results and remaining device/model issues are recorded in
-the integration notes. The public
+the integration notes. Follow-up tests passed image understanding and verified
+five-second saved video, but E2B still fails Finnish/Swedish quality. See the
+[follow-up report](docs/acceptance-followup-20261104.md). The public
 default and native `/` interface remain unchanged. See
 [integration status and rollback](docs/contabo-integration.md). PR #2 stays draft.
 

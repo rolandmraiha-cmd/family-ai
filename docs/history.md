@@ -100,6 +100,15 @@
 - First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
 
 ## Open items
+- 2026-11-04 follow-up: owner approved USD 5 more (USD 12 cumulative). Existing
+  larger Gemma passed a synthetic image probe and three-language comparison;
+  its earlier weight failure did not recur on the cached worker. Implemented
+  actual video-duration measurement/trimming before saving; a new Wan output
+  saved/reopened at exactly 5.00s/150 frames. E2B still fails Finnish/Swedish with
+  stronger instructions and deterministic sampling; both experiments were
+  withdrawn. 101 Python and seven JS tests pass. Cumulative conservative estimate
+  USD 11.019672; normal USD 2/day restored, usage retained. No new resource,
+  model/default change or voice job. See `docs/acceptance-followup-20261104.md`.
 - 2026-11-04 owner rule update: owner-performed login is not required when tests
   can use existing authorized access. Report actual test coverage and gaps.
   Existing-resource testing is pre-authorized up to USD 7 cumulatively, including

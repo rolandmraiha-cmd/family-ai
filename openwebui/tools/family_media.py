@@ -9,6 +9,10 @@ import asyncio
 import re
 import html
 import ipaddress
+import json
+import math
+from pathlib import Path
+import tempfile
 from urllib.parse import urlsplit
 from typing import Literal
 
@@ -23,6 +27,50 @@ from pydantic import BaseModel, Field
 from family_backend.control import ControlError, Operation, CURRENT_CONTEXT, CURRENT_JOB, controlled_tool, default_ledger, configured_runpod_key
 
 RUNPOD = "https://api.runpod.ai/v2"
+
+
+async def bounded_video(data, seconds, max_bytes):
+    """Verify actual output, trimming provider padding before persistent upload."""
+    async def command(*args):
+        process = await asyncio.create_subprocess_exec(
+            *args, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+        try:
+            stdout, _ = await asyncio.wait_for(process.communicate(), timeout=60)
+        except BaseException:
+            if process.returncode is None:
+                process.kill()
+            await process.wait()
+            raise
+        if process.returncode:
+            raise RuntimeError("Generated video could not be checked or trimmed; no GPU retry was submitted.")
+        return stdout
+
+    async def duration(path):
+        raw = await command("ffprobe", "-v", "error", "-show_entries",
+                            "format=duration:stream=duration", "-of", "json", str(path))
+        try:
+            probe = json.loads(raw)
+            values = [float(probe["format"]["duration"])]
+            values.extend(float(s["duration"]) for s in probe.get("streams", []) if "duration" in s)
+            if not all(math.isfinite(value) and value > 0 for value in values):
+                raise ValueError("Invalid video duration")
+            return max(values)
+        except (KeyError, TypeError, ValueError):
+            raise RuntimeError("Generated video has no valid duration.") from None
+
+    with tempfile.TemporaryDirectory(prefix="family-video-") as folder:
+        source, target = Path(folder) / "input.mp4", Path(folder) / "bounded.mp4"
+        source.write_bytes(data)
+        if await duration(source) <= seconds:
+            return data
+        # Re-encode rather than copy: a copied keyframe/GOP can exceed the cap.
+        await command("ffmpeg", "-nostdin", "-v", "error", "-i", str(source),
+                      "-map", "0:v:0", "-map", "0:a?", "-t", str(seconds),
+                      "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+                      "-c:a", "aac", "-movflags", "+faststart", str(target))
+        if target.stat().st_size > max_bytes or await duration(target) > seconds:
+            raise RuntimeError("Generated video exceeds the configured output limits.")
+        return target.read_bytes()
 
 
 def public_media_url(url):
@@ -226,6 +274,8 @@ class Tools:
             raise RuntimeError("The image response was not a JPEG file.")
         if content_type == "video/mp4" and b"ftyp" not in data[:32]:
             raise RuntimeError("The video response was not an MP4 file.")
+        if content_type == "video/mp4":
+            data = await bounded_video(data, self.valves.MAX_VIDEO_SECONDS, self.valves.MAX_MEDIA_BYTES)
         meta = {"chat_id": chat_id, "message_id": message_id} if is_saved_chat_id(chat_id) and message_id else {}
         _, info = await upload_image(request, data, content_type, meta, UserModel(**user))
         if context and CURRENT_JOB.get():

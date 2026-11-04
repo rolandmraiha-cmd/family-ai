@@ -1,5 +1,10 @@
 # Contabo integration — 2026-11-04 review deployment
 
+**Follow-up:** the owner approved another USD 5 (USD 12 cumulative). See
+[follow-up acceptance](acceptance-followup-20261104.md) for the successful new
+vision probe, enforced saved-video duration and continuing E2B language failures.
+The observations and USD 5.361336 accounting below describe the earlier phase.
+
 The existing VPS runs Open WebUI v0.12.4 and Caddy in `/opt/family-ai`.
 `/preview/` now serves the real review UI; `/` remains native Open WebUI. PR #2
 stays draft. The initial installation made no inference request. Subsequent live
