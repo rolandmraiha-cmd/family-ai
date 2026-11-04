@@ -33,6 +33,12 @@ Qwen/the larger Gemma. Shorter idle waits reduce paid waiting but can cause more
 cold starts. Available GPU capacity can add several minutes. Fast's earlier
 shutdown needed a manual worker recycle; natural shutdown is not yet proven.
 
+The larger Gemma now uses eager mode to reduce startup work. Two fresh-worker
+probes observed startup wait falling from 131s to 114s, with slower generation
+in the second probe. FlashBoot is already enabled; under 20s after a retained
+worker resumes is not a guarantee for a fresh boot. See the
+[startup measurements and tradeoff](docs/startup-20261104.md).
+
 The preview distinguishes provider-reported job costs from **budget held as an
 estimate**. Unknown compute costs stay covered by the admission limit; the
 display is not your RunPod wallet or a finalized account bill. Historical test

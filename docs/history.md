@@ -100,6 +100,13 @@
 - First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
 
 ## Open items
+- 2026-11-04 startup: enabled eager mode on the existing larger Gemma after a
+  bounded fresh-worker comparison. Provider delay 130.697s to 114.498s; full
+  response 138.645s to 123.463s, but generation 4.857s to 7.392s. Weight-loading
+  variance contributes; under 20s remains unmet. FlashBoot already enabled;
+  min0/max1 retained. Two requests added USD 0.70 conservative budget held,
+  cumulative USD 11.719672, with USD 2/day restored after each. See
+  `docs/startup-20261104.md` for scope, limitations, sources and rollback.
 - 2026-11-04 cost correction: separated explicit provider job costs from retained
   admission estimates; old ledger values keep their budget coverage and remain
   unconfirmed. No wallet balance or finalized invoice is inferred. Shortened

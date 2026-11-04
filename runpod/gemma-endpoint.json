@@ -7,7 +7,7 @@
   "disk": 60,
   "gpu": {
     "count": 1,
-    "minCudaVersion": "12.8",
+    "minCudaVersion": "13.0",
     "pools": [
       "AMPERE_48",
       "ADA_48_PRO"
@@ -24,7 +24,7 @@
   },
   "scaling": {
     "type": "QUEUE_DELAY",
-    "queueDelay": 4
+    "queueDelay": 1
   },
   "timeout": 600000,
   "env": {
@@ -39,6 +39,7 @@
     "TOOL_CALL_PARSER": "gemma4",
     "REASONING_PARSER": "gemma4",
     "LIMIT_MM_PER_PROMPT": "{\"image\":4,\"video\":0,\"audio\":0}",
-    "COMPILATION_CONFIG": "{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\"}"
+    "COMPILATION_CONFIG": "{\"mode\":0,\"cudagraph_mode\":\"FULL_DECODE_ONLY\",\"cudagraph_capture_sizes\":[1,2,4,8,16]}",
+    "ENFORCE_EAGER": "true"
   }
 }
