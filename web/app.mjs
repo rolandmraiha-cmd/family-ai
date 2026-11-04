@@ -1,4 +1,4 @@
-import {MODELS, activeStates, request, post, messageText, orderedMessages, fileUrl, completionBody, pcmWav} from './api.mjs';
+import {MODELS, activeStates, request, post, messageText, orderedMessages, fileUrl, completionBody, pcmWav, jobCostText, usageCostText} from './api.mjs';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -71,7 +71,7 @@ function render() {
   // Preserve media playback and focus when a polling response has no changes.
   patchThread(html); if (nearEnd) thread.scrollTop=thread.scrollHeight;
   $('#activity').hidden = !state.drawer; $('#app').classList.toggle('act-open', state.drawer);
-  $('#actBody').innerHTML = `<p class="hint">Governed estimates only. Hosting and direct Open WebUI calls are separate.</p>${state.usage ? Object.entries(state.usage.periods).map(([k,v])=>`<p>${esc(k)}: ${usd(v.estimated_and_reserved_usd)} estimated and reserved / ${usd(v.limit_usd)}</p>`).join('') : ''}${state.jobs.map(j=>`<div class="card"><div class="c-t"><b>${esc(j.capability)} · ${esc(j.state)}</b><span>${usd(j.estimated_charge_usd)} estimated; ${usd(j.reserved_usd)} reserved</span><small>${esc(j.cancel_requested ? 'Cancellation requested; waiting for confirmation.' : j.state === 'unknown' ? 'Outcome uncertain. Inspect before retrying.' : '')}</small></div>${activeStates.has(j.state) ? `<button class="mini" data-cancel="${esc(j.id)}">Cancel</button>` : ''}${j.state === 'unknown' ? `<button class="mini" data-refresh="${esc(j.id)}">Check provider result</button>` : ''}</div>`).join('') || '<p>No governed jobs yet.</p>'}`;
+  $('#actBody').innerHTML = `<p class="hint">Family AI job costs only. Hosting and direct Open WebUI calls are separate. Budget limits do not stop all RunPod account charges.</p>${state.usage ? Object.entries(state.usage.periods).map(([k,v])=>`<p>${esc(k)}: ${esc(usageCostText(v))}</p>`).join('') : ''}${state.jobs.map(j=>`<div class="card"><div class="c-t"><b>${esc(j.capability)} · ${esc(j.state)}</b><span>${esc(jobCostText(j))}</span><small>${esc(j.cancel_requested ? 'Cancellation requested; waiting for confirmation.' : j.state === 'unknown' ? 'Outcome uncertain. Inspect before retrying.' : '')}</small></div>${activeStates.has(j.state) ? `<button class="mini" data-cancel="${esc(j.id)}">Cancel</button>` : ''}${j.state === 'unknown' ? `<button class="mini" data-refresh="${esc(j.id)}">Check provider result</button>` : ''}</div>`).join('') || '<p>No governed jobs yet.</p>'}`;
 }
 async function loadChat(id) {
   if (state.voice && id !== state.chatId) await closeVoice();

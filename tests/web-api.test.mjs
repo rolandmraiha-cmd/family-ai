@@ -1,6 +1,23 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {completionBody, messageText, orderedMessages, fileUrl, pcmWav} from '../web/api.mjs';
+import {completionBody, messageText, orderedMessages, fileUrl, pcmWav, jobCostText, usageCostText} from '../web/api.mjs';
+
+test('unknown compute and legacy costs never appear as reported spend',()=>{
+  assert.match(jobCostText({estimated_charge_usd:0.1375,reserved_usd:0,provider_reported_usd:null}),/Cost unconfirmed; \$0.138 held as an estimate/);
+  assert.match(jobCostText({estimated_charge_usd:0,reserved_usd:0.1375}),/Cost unconfirmed/);
+  assert.equal(jobCostText({cost_basis:'not_submitted'}),'Not submitted; no job charge');
+  assert.equal(jobCostText({provider_reported_usd:0}),'$0.000 provider-reported');
+  assert.equal(jobCostText({provider_reported_usd:0.003}),'$0.003 provider-reported');
+});
+
+test('partial job costs are labeled separately from budget and the account bill',()=>{
+  const text=usageCostText({budget_held_usd:11.02,limit_usd:12,provider_reported_usd:0.303,provider_reported_jobs:2,unreported_jobs:53});
+  assert.match(text,/Budget held \$11.020/);
+  assert.match(text,/\$0.303 reported for 2 jobs; 53 job costs unconfirmed/);
+  assert.match(text,/not your account bill/);
+  assert.match(usageCostText({estimated_and_reserved_usd:1,limit_usd:2}),/Provider billing unavailable/);
+  assert.match(usageCostText({budget_held_usd:1,limit_usd:2,provider_reported_usd:0,provider_reported_jobs:0,unreported_jobs:1}),/No provider-reported job costs yet/);
+});
 
 test('native background turn keeps stable IDs, selected history and tool execution on server',()=>{
   const chat={history:{currentId:'a1',messages:{u1:{id:'u1',role:'user',content:'Moi'},a1:{id:'a1',parentId:'u1',role:'assistant',content:'Hei'},other:{id:'other',role:'user',content:'excluded'}}}};

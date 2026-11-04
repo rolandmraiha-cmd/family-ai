@@ -4,6 +4,21 @@ export const MODELS = {
 };
 export const activeStates = new Set(['reserved', 'submitting', 'queued', 'running', 'unknown', 'cancel_requested']);
 
+const costUSD = value => '$' + Number(value).toFixed(3);
+export function jobCostText(job) {
+  if (job.cost_basis === 'not_submitted') return 'Not submitted; no job charge';
+  if (job.provider_reported_usd != null) return `${costUSD(job.provider_reported_usd)} provider-reported`;
+  const held = job.reserved_usd || job.estimated_charge_usd || 0;
+  return `Cost unconfirmed; ${costUSD(held)} held as an estimate`;
+}
+export function usageCostText(period) {
+  const held = period.budget_held_usd ?? period.estimated_and_reserved_usd;
+  const budget = `Budget held ${costUSD(held)} / ${costUSD(period.limit_usd)} (includes estimates).`;
+  if (period.provider_reported_jobs == null) return `${budget} Provider billing unavailable.`;
+  const reported = period.provider_reported_jobs ? `${costUSD(period.provider_reported_usd)} reported for ${period.provider_reported_jobs} jobs` : 'No provider-reported job costs yet';
+  return `${budget} ${reported}; ${period.unreported_jobs} job costs unconfirmed. This is not your account bill.`;
+}
+
 export async function request(path, options = {}) {
   const response = await fetch(path, {credentials: 'same-origin', ...options});
   if (!response.ok) {

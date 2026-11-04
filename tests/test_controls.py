@@ -13,7 +13,7 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 
 from family_backend.control import ControlError, Ledger, Limits, OperationContext, micros
-from family_backend.api import ControlAPI, check_origin
+from family_backend.api import ControlAPI, check_origin, public_job
 
 FAST = '52cjk52hgbwag1'
 PRO = 'c3lm36gdhpctl2'
@@ -163,6 +163,61 @@ class LedgerTests(unittest.TestCase):
         self.assertFalse(usage['provider_hard_cap'])
         self.assertEqual(usage['cost_kind'], 'conservative_estimate')
         self.assertEqual(usage['provider_billing'][0]['source'], 'RunPod billing API')
+
+    def test_compute_estimate_remains_covered_without_becoming_reported_spend(self):
+        first, _ = self.reserve()
+        self.ledger.finish('alice', first['id'], 'completed')
+        job = public_job(self.ledger.get('alice', first['id']))
+        self.assertIsNone(job['provider_reported_usd'])
+        self.assertEqual(job['cost_basis'], 'unreconciled_estimate')
+        day = self.ledger.usage()['periods']['day']
+        self.assertEqual(day['budget_held_usd'], first['reserved'] / 1_000_000)
+        self.assertEqual(day['unreconciled_estimate_usd'], day['budget_held_usd'])
+        self.assertEqual((day['provider_reported_jobs'], day['unreported_jobs']), (0, 1))
+        self.ledger.set_policy({'daily_usd': str(day['budget_held_usd'])})
+        self.ledger.billing_snapshot('partial-published-hour', '0.01')
+        self.assertFalse(self.ledger.quote(FAST)['allowed_at_quote_time'])
+
+    def test_partial_provider_costs_are_separate_from_pending_and_finished_estimates(self):
+        image, _ = self.ledger.reserve(self.context, 'black-forest-labs-flux-1-schnell', {})
+        self.ledger.finish('alice', image['id'], 'completed', charge='0.003')
+        compute, _ = self.reserve()
+        self.ledger.finish('alice', compute['id'], 'completed')
+        active, _ = self.ledger.reserve(OperationContext('alice', 'other', 'b'), FAST, {'other': True})
+        rejected, _ = self.ledger.reserve(OperationContext('alice', 'rejected', 'c'), FAST, {'rejected': True})
+        self.ledger.finish('alice', rejected['id'], 'rejected', charge=0)
+        day = self.ledger.usage()['periods']['day']
+        self.assertEqual(day['provider_reported_usd'], 0.003)
+        self.assertEqual((day['provider_reported_jobs'], day['unreported_jobs']), (1, 2))
+        self.assertEqual(day['active_reserved_usd'], active['reserved'] / 1_000_000)
+        self.assertEqual(day['budget_held_usd'], (3000 + compute['reserved'] + active['reserved']) / 1_000_000)
+        self.assertEqual(public_job(self.ledger.get('alice', image['id']))['cost_basis'], 'provider_reported')
+        self.assertEqual(public_job(self.ledger.get('alice', rejected['id']))['cost_basis'], 'not_submitted')
+
+    def test_legacy_costs_migrate_once_without_relabeling_or_resetting_usage(self):
+        first, _ = self.reserve()
+        self.ledger.finish('alice', first['id'], 'completed', {'answer': 'saved'}, '0.003')
+        before = self.ledger.usage()['periods']['day']['budget_held_usd']
+        with self.ledger.connection() as db:
+            db.execute('ALTER TABLE jobs DROP COLUMN provider_reported')
+        with ThreadPoolExecutor(max_workers=4) as pool:
+            list(pool.map(lambda _: Ledger(self.ledger.path, lambda: self.now), range(4)))
+        row = self.ledger.get('alice', first['id'])
+        self.assertIsNone(row['provider_reported'])
+        self.assertEqual(row['output'], {'answer': 'saved'})
+        day = self.ledger.usage()['periods']['day']
+        self.assertEqual(day['budget_held_usd'], before)
+        self.assertEqual(day['provider_reported_jobs'], 0)
+        self.assertEqual(day['unreported_jobs'], 1)
+
+    def test_admin_resolution_is_an_estimate_even_with_an_explicit_amount(self):
+        first, _ = self.reserve()
+        self.ledger.transition('alice', first['id'], 'unknown')
+        self.ledger.resolve_unknown(first['id'], 'admin', 'Reviewed provider outcome manually', '0.01')
+        job = public_job(self.ledger.get('alice', first['id']))
+        self.assertEqual(job['cost_basis'], 'admin_estimate')
+        self.assertIsNone(job['provider_reported_usd'])
+        self.assertEqual(self.ledger.usage()['periods']['day']['budget_held_usd'], 0.01)
 
     def test_voice_session_does_not_exist_until_manual_activation_and_expires(self):
         self.assertEqual(self.ledger.voice('alice')['state'], 'off')

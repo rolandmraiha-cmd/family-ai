@@ -42,7 +42,7 @@ ENDPOINT_CAPABILITIES = {
     "wan-2-2-i2v-720": "video", "b8yk3ju5yc5kqx": "voice",
 }
 HOURLY_USD = {"fast": "0.75", "reasoning": "1.75", "vision": "1.75", "voice": "0.75"}
-IDLE_SECONDS = {"fast": 60, "reasoning": 600, "vision": 600, "voice": 300}
+IDLE_SECONDS = {"fast": 60, "reasoning": 120, "vision": 120, "voice": 60}
 TERMINAL_STATES = {"completed", "failed", "cancelled", "rejected", "resolved"}
 ACTIVE_STATES = {"reserved", "submitting", "queued", "running", "unknown", "cancel_requested"}
 
@@ -188,6 +188,7 @@ class Ledger:
               state TEXT NOT NULL, reserved INTEGER NOT NULL, charged INTEGER NOT NULL DEFAULT 0,
               created REAL NOT NULL, updated REAL NOT NULL, day TEXT NOT NULL, month TEXT NOT NULL,
               provider_id TEXT, cancel_requested INTEGER NOT NULL DEFAULT 0, output TEXT,
+              provider_reported INTEGER,
               UNIQUE(owner, request_key));
             CREATE INDEX IF NOT EXISTS jobs_budget ON jobs(month, day, state);
             CREATE INDEX IF NOT EXISTS jobs_owner ON jobs(owner, conversation, created);
@@ -206,7 +207,13 @@ class Ledger:
             CREATE TABLE IF NOT EXISTS voice_sessions (
               owner TEXT PRIMARY KEY, conversation TEXT NOT NULL, state TEXT NOT NULL, expires REAL NOT NULL);
             """)
+            # Old `charged` values mix estimates and explicit provider costs.
+            # Preserve them for admission; never invent billing provenance.
+            db.execute("BEGIN IMMEDIATE")
+            if "provider_reported" not in {r["name"] for r in db.execute("PRAGMA table_info(jobs)")}:
+                db.execute("ALTER TABLE jobs ADD COLUMN provider_reported INTEGER")
             db.execute("INSERT OR IGNORE INTO policy VALUES(1,?)", (json.dumps(asdict(Limits())),))
+            db.commit()
         os.chmod(self.path, 0o600)
 
     @contextmanager
@@ -366,12 +373,13 @@ class Ledger:
             if row["state"] in TERMINAL_STATES:
                 db.commit()
                 return
-            # Without a provider invoice keep the conservative reservation as
-            # an estimated charge; do not pretend token usage equals GPU billing.
+            # Keep unreported compute covered by admission. It is not spend.
             settled = row["reserved"] if charge is None else micros(charge)
-            db.execute("UPDATE jobs SET state=?,charged=?,reserved=0,output=?,updated=? WHERE id=?",
-                       (state, settled, encoded, self.clock(), job_id))
-            self._event(db, job_id, "job.finished", {"state": state, "estimated_charge_usd": settled / 1_000_000})
+            reported = settled if charge is not None and state not in {"resolved", "rejected"} else None
+            db.execute("UPDATE jobs SET state=?,charged=?,reserved=0,output=?,updated=?,provider_reported=? WHERE id=?",
+                       (state, settled, encoded, self.clock(), reported, job_id))
+            self._event(db, job_id, "job.finished", {"state": state, "estimated_charge_usd": settled / 1_000_000,
+                "provider_reported_usd": reported / 1_000_000 if reported is not None else None})
             db.commit()
 
     def event(self, owner, job_id, kind, data):
@@ -401,12 +409,26 @@ class Ledger:
                   "cost_kind": "conservative_estimate", "provider_hard_cap": False, "periods": {}}
         with self.connection() as db:
             for column, period, ceiling in [("day", day, micros(policy.daily_usd)), ("month", month, micros(policy.monthly_usd))]:
-                rows = db.execute(f"SELECT capability,sum(CASE WHEN state!='rejected' THEN 1 ELSE 0 END) count,sum(charged) charged,sum(reserved) reserved FROM jobs WHERE {column}=? GROUP BY capability", (period,)).fetchall()
+                rows = db.execute(f"""SELECT capability,
+                    sum(CASE WHEN state!='rejected' THEN 1 ELSE 0 END) count,
+                    sum(charged) charged, sum(reserved) reserved,
+                    sum(provider_reported) reported, count(provider_reported) reported_jobs,
+                    sum(CASE WHEN provider_reported IS NULL THEN charged ELSE 0 END) unreconciled,
+                    sum(CASE WHEN provider_reported IS NULL AND state!='rejected' THEN 1 ELSE 0 END) unreported_jobs
+                    FROM jobs WHERE {column}=? GROUP BY capability""", (period,)).fetchall()
                 total = sum((r["charged"] or 0) + (r["reserved"] or 0) for r in rows)
                 result["periods"][column] = {"period": period, "estimated_and_reserved_usd": total / 1_000_000,
+                    "budget_held_usd": total / 1_000_000,
+                    "provider_reported_usd": sum(r["reported"] or 0 for r in rows) / 1_000_000,
+                    "provider_reported_jobs": sum(r["reported_jobs"] for r in rows),
+                    "unreported_jobs": sum(r["unreported_jobs"] for r in rows),
+                    "unreconciled_estimate_usd": sum(r["unreconciled"] or 0 for r in rows) / 1_000_000,
+                    "active_reserved_usd": sum(r["reserved"] or 0 for r in rows) / 1_000_000,
                     "limit_usd": ceiling / 1_000_000, "warning": total >= ceiling * policy.warning_fraction,
                     "capabilities": [{"capability": r["capability"], "count": r["count"],
                         "charged_usd": (r["charged"] or 0) / 1_000_000,
+                        "provider_reported_usd": (r["reported"] or 0) / 1_000_000,
+                        "unreconciled_estimate_usd": (r["unreconciled"] or 0) / 1_000_000,
                         "reserved_usd": (r["reserved"] or 0) / 1_000_000} for r in rows]}
             result["provider_billing"] = [{"period": r["period"], "amount_usd": r["amount"] / 1_000_000,
                 "observed": r["observed"], "source": r["source"], "provenance": "admin_imported"}

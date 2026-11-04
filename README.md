@@ -28,8 +28,15 @@ five-second saved video, but E2B still fails Finnish/Swedish quality. See the
 default and native `/` interface remain unchanged. See
 [integration status and rollback](docs/contabo-integration.md). PR #2 stays draft.
 
-Fast scales to zero after 60 seconds idle; Qwen and the larger Gemma after 10 minutes.
-Cold starts and available GPU capacity can add several minutes.
+Idle shutdown is configured at 60 seconds for Fast/voice and two minutes for
+Qwen/the larger Gemma. Shorter idle waits reduce paid waiting but can cause more
+cold starts. Available GPU capacity can add several minutes. Fast's earlier
+shutdown needed a manual worker recycle; natural shutdown is not yet proven.
+
+The preview distinguishes provider-reported job costs from **budget held as an
+estimate**. Unknown compute costs stay covered by the admission limit; the
+display is not your RunPod wallet or a finalized account bill. Historical test
+estimates have not been reset. See the [cost correction](docs/cost-accounting-20261104.md).
 
 ## Repo layout
 

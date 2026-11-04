@@ -100,6 +100,12 @@
 - First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
 
 ## Open items
+- 2026-11-04 cost correction: separated explicit provider job costs from retained
+  admission estimates; old ledger values keep their budget coverage and remain
+  unconfirmed. No wallet balance or finalized invoice is inferred. Shortened
+  existing Gemma/Qwen idle timeout 600s to 120s, voice 300s to 60s, Fast stays
+  60s; min0/max1 retained. No inference was submitted for this change. See
+  `docs/cost-accounting-20261104.md` for verification and remaining reconciliation.
 - 2026-11-04 follow-up: owner approved USD 5 more (USD 12 cumulative). Existing
   larger Gemma passed a synthetic image probe and three-language comparison;
   its earlier weight failure did not recur on the cached worker. Implemented

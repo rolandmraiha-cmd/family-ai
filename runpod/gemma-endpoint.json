@@ -20,7 +20,7 @@
   "workers": {
     "min": 0,
     "max": 1,
-    "idleTimeout": 600
+    "idleTimeout": 120
   },
   "scaling": {
     "type": "QUEUE_DELAY",

@@ -29,7 +29,12 @@ def public_job(row):
     return {key: row[key] for key in (
         "id", "conversation", "turn", "capability", "endpoint", "state", "created", "updated",
         "provider_id", "cancel_requested", "output",
-    )} | {"reserved_usd": row["reserved"] / 1_000_000, "estimated_charge_usd": row["charged"] / 1_000_000}
+    )} | {"reserved_usd": row["reserved"] / 1_000_000, "estimated_charge_usd": row["charged"] / 1_000_000,
+          "provider_reported_usd": row["provider_reported"] / 1_000_000 if row["provider_reported"] is not None else None,
+          "cost_basis": "provider_reported" if row["provider_reported"] is not None else
+                        "not_submitted" if row["state"] == "rejected" else
+                        "admin_estimate" if row["state"] == "resolved" else
+                        "reservation" if row["reserved"] else "unreconciled_estimate"}
 
 
 class ControlAPI:
