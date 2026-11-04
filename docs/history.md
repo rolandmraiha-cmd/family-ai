@@ -107,10 +107,14 @@
   application authentication remain protected. See `AGENTS.md`.
 - 2026-11-04: Integrated real `/preview/` with native Open WebUI accounts, saved
   chat/tools and added guarded manual speech. Reviewed plugins/private Auto
-  installed on Contabo; public config/default retained.93Python and6JS checks
-  passed initially; live added APIs reject unsigned calls. Live API acceptance
-  now proceeds under the owner's USD 7 allowance; browser/device gaps are
-  reported separately. PR #2 stays draft. See
+  installed on Contabo; public config/default retained.97Python and7JS checks
+  pass. Native authenticated control routes and same-chat specialist continuation
+  were tested; media reopened from persistent files and fi/sv/en speech API
+  loopbacks passed. Acceptance found Gemma weight-loading failure, unnecessary
+  Fast delegation/visible analysis, and a 5.37s output for a requested 5s video.
+  Coordinator guidance/final-answer display were fixed; native E2B template and
+  reviewed speech wrapper deployed on the existing endpoints. Browser/device
+  gaps and bounded test costs are reported separately. PR #2 stays draft. See
   `docs/contabo-integration.md` for evidence, limitations and reversible rollback.
 - Backups: a free sync of the volume to the owner's PC through RunPod's S3 API (EUR-IS-1). It needs an S3 key that the owner creates.
 - Family accounts.

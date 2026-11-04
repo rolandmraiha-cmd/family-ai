@@ -23,12 +23,17 @@ export const post = (path, body, options = {}) => request(path, {
 });
 
 export function messageText(message) {
+  if (Array.isArray(message.output) && message.output.length) {
+    // Native content aggregates pre-tool narration and the final answer. Use
+    // only public message items after the last tool boundary, including for TTS.
+    const boundary = message.output.findLastIndex(item => item.type === 'function_call' || item.type === 'function_call_output');
+    return message.output.slice(boundary + 1).filter(item => item.type === 'message' && item.role !== 'user')
+      .flatMap(item => item.content || []).filter(p => p.type === 'output_text' || p.type === 'text')
+      .map(p => p.text || '').join('\n');
+  }
   if (typeof message.content === 'string' && message.content) return message.content;
   if (Array.isArray(message.content)) return message.content.filter(p => p.type === 'text').map(p => p.text || '').join('\n');
-  // Deliberately omit reasoning and untrusted tool HTML from native output.
-  return (message.output || []).filter(item => item.type === 'message' && item.role !== 'user')
-    .flatMap(item => item.content || []).filter(p => p.type === 'output_text' || p.type === 'text')
-    .map(p => p.text || '').join('\n');
+  return '';
 }
 
 export function orderedMessages(chat) {

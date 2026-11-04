@@ -63,9 +63,10 @@ The server folder is its own git repo (local commits only). When you change `vps
 
 ## Next
 
-- Complete chat/routing, images/video, cancellation, saved media and all three
-  voice-language checks under the owner's USD 7 test allowance. Existing
-  authorized access may be used; report browser/device checks separately.
+- Live API testing used an estimated $5.36 of the owner's $7 allowance. Saved
+  media, cancellation and fi/sv/en speech loopbacks passed; mixed-language Fast
+  answers, Gemma weight loading and actual video duration remain acceptance
+  blockers. See [full results](contabo-integration.md). Device checks are separate.
 - Keep `/` and the public default until those checks pass; PR #2 remains draft.
 - Backups of `/opt/family-ai/data` (nightly, off the server).
 - The owner: the Oct 10 Contabo snapshot expires 2026-11-09; back up the PC's SSH key.

@@ -21,11 +21,13 @@ URL: `https://37-60-226-214.sslip.io` (sign-up off; new users are "pending" unti
 The integrated UI is in review at [`/preview/`](https://37-60-226-214.sslip.io/preview/).
 It uses existing Open WebUI accounts, saved conversations and server-side tools.
 The router, job/budget ledger and guarded manual speech API are installed on the
-VPS; signed-in chat, media and device acceptance is still pending. The public
+VPS; live acceptance results and remaining device/model issues are recorded in
+the integration notes. The public
 default and native `/` interface remain unchanged. See
 [integration status and rollback](docs/contabo-integration.md). PR #2 stays draft.
 
-Both LLM endpoints scale to zero and stay warm for 10 min after the last message. A cold start takes about 2–4 min.
+Fast scales to zero after 60 seconds idle; Qwen and the larger Gemma after 10 minutes.
+Cold starts and available GPU capacity can add several minutes.
 
 ## Repo layout
 

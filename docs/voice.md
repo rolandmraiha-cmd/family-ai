@@ -18,10 +18,10 @@ speech provides no queued-job ID, so disconnect cannot prove GPU work stopped.
 An unconfirmed request or failed save retains its reservation and is never
 automatically resubmitted.
 
-The selected language/model/voice is sent explicitly. The RunPod wrapper update
-below remains unapplied: its current heuristics may override the requested voice.
-No speech endpoint configuration was changed. Device and paid acceptance remain
-pending; see [Contabo integration](contabo-integration.md).
+The selected language/model/voice is sent explicitly. The reviewed RunPod wrapper
+was deployed on 2026-11-04 to the existing speech endpoint. Its image, environment
+and min0/max1/300s settings were retained; workers were cycled for the new command.
+See [Contabo integration](contabo-integration.md) for live test results and device gaps.
 
 ## Existing native Action and endpoint wrapper
 
@@ -44,7 +44,7 @@ disconnect handling and explicit `language=fi/sv/en` for Piper selection. Existi
 heuristics remain for Standard mode, which may not send that override. Short
 names or mixed-language text can select the wrong voice. Finnish harri, Swedish
 nst and English amy are retained. Local language/bounds tests pass. This command
-update has **not** been deployed to the existing speech endpoint.
+update is deployed to the existing speech endpoint.
 
 ## Standard mode limitations confirmed in source
 

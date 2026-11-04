@@ -29,7 +29,7 @@
     "MODEL_NAME": "google/gemma-4-E2B-it",
     "OPENAI_SERVED_MODEL_NAME_OVERRIDE": "family-fast",
     "MAX_MODEL_LEN": "8192",
-    "MAX_NUM_BATCHED_TOKENS": "2048",
+    "MAX_NUM_BATCHED_TOKENS": "8192",
     "MAX_NUM_SEQS": "4",
     "GPU_MEMORY_UTILIZATION": "0.90",
     "ENABLE_PREFIX_CACHING": "true",
@@ -37,9 +37,7 @@
     "TOOL_CALL_PARSER": "gemma4",
     "REASONING_PARSER": "gemma4",
     "LIMIT_MM_PER_PROMPT": "{\"image\":0,\"video\":0,\"audio\":0}",
-    "ENFORCE_EAGER": "true",
-    "CUSTOM_CHAT_TEMPLATE": "/vllm-workspace/examples/tool_chat_template_gemma4.jinja"
+    "ENFORCE_EAGER": "true"
   },
   "id": "52cjk52hgbwag1"
 }
-

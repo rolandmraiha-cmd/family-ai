@@ -27,6 +27,18 @@ test('tool HTML and reasoning are never rendered as assistant output',()=>{
 test('history cycle cannot hang the client',()=>{
   assert.equal(orderedMessages({history:{currentId:'a',messages:{a:{id:'a',parentId:'a'}}}}).length,1);
 });
+
+test('native combined content never replaces the final answer after a tool',()=>{
+  const output=[{type:'message',role:'assistant',content:[{type:'output_text',text:'Intermediate narration'}]},
+    {type:'function_call',name:'ask_deep_reasoning'}, {type:'function_call_output',output:'specialist evidence'},
+    {type:'message',role:'assistant',content:[{type:'output_text',text:'Jää on kiinteää vettä. Vastaus on 42.'}]}];
+  const message={role:'assistant',content:'Intermediate narration\nJää on kiinteää vettä. Vastaus on 42.',output};
+  assert.equal(messageText(message),'Jää on kiinteää vettä. Vastaus on 42.');
+  assert.equal(messageText({...message,output:output.slice(0,3)}),'');
+  assert.equal(messageText({content:'private aggregate',output:[{type:'reasoning'}]}),'');
+  const history={history:{currentId:'answer',messages:{answer:{id:'answer',...message}}}};
+  assert.equal(completionBody('saved',history,'Kiitos','auto',{user:'u',assistant:'a',session:'s'}).messages[0].content,messageText(message));
+});
 test('microphone produces bounded PCM WAV that the server can validate',()=>{
   const wav=pcmWav(new Float32Array(8000),8000), view=new DataView(wav);
   assert.equal(wav.byteLength,16044);assert.equal(view.getUint32(24,true),8000);

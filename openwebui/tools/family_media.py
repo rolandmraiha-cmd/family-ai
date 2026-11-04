@@ -143,8 +143,9 @@ class Tools:
         self, question: str, context: str = "", language: str = "English", __event_emitter__=None,
         __user__=None, __chat_id__=None, __message_id__=None, __request__=None,
     ) -> str:
-        """Ask the larger GPU specialist for difficult reasoning, maths, planning or code.
-        Call when a task needs more analysis than the lightweight coordinator can provide.
+        """Ask the larger GPU specialist for difficult multi-step reasoning, maths, planning or code.
+        Answer everyday questions, basic facts and single-step arithmetic directly without this tool.
+        Call only when a task needs more analysis than the lightweight coordinator can provide.
         Include relevant user facts, prior results and constraints in context. This module
         cannot create media or execute tools; use generate_image/generate_video separately.
         Return its findings to the user in their language, also in voice mode.
