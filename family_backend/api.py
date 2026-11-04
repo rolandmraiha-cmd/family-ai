@@ -233,6 +233,11 @@ def install_api(app):
         return StreamingResponse(api.stream_events(user.id, job_id, after), media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
+    # Native plugin exec() inherits postponed annotations; Request is a local
+    # import here, so FastAPI cannot resolve its string through module globals.
+    # Bind the concrete type before it builds dependencies for these routes.
+    dispatch.__annotations__["request"] = Request
+    events.__annotations__["request"] = Request
     router.add_api_route("/jobs/{job_id}/events", events, methods=["GET"])
     for path, methods in [("/usage", ["GET"]), ("/jobs", ["GET"]), ("/capabilities", ["GET"]), ("/models/state", ["GET"]),
                           ("/policy", ["GET", "POST"]), ("/quote", ["POST"]),

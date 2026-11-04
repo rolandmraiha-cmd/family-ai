@@ -7,8 +7,10 @@ Read `README.md` first, then `docs/history.md`.
 - The assistant must speak Swedish, Finnish and English. Finnish quality is the hardest part, so test Finnish after any model change.
 
 ## Hard rules
-- **Never write passwords, API keys or tokens** into files, commits, chats or forms. The owner enters them in RunPod or Open WebUI. If a login screen appears, stop and ask.
-- **State the price before creating anything that costs money**, and wait for an OK.
+- **Never write passwords, API keys or tokens** into files, commits, chats or forms. The owner enters new credentials in RunPod or Open WebUI when needed. Reuse existing authorized access securely in server memory.
+- Owner-performed login is not an acceptance prerequisite when the tests can be completed through existing authorized access. Run those tests and report what was actually tested and what remains unverified. Keep application authentication enabled; do not claim browser/device testing from server-side checks.
+- Necessary project work and testing on the existing approved resources is pre-authorized up to **USD 7 total for the authorized work/test run**, including estimated GPU idle costs. No separate cost approval is needed within that cumulative limit. Track and report estimated/known costs; ask before exceeding USD 7. Do not split work into multiple runs to evade the limit.
+- The allowance does not authorize resources outside the README list or new recurring commitments. Obtain approval for those and for spending above USD 7.
 - Change only the resources listed in `README.md`. Reuse the existing IDs instead of creating duplicates.
 - Don't permanently delete data; ask the owner to do it.
 

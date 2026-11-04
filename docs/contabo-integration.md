@@ -2,8 +2,9 @@
 
 The existing VPS runs Open WebUI v0.12.4 and Caddy in `/opt/family-ai`.
 `/preview/` now serves the real review UI; `/` remains native Open WebUI. PR #2
-stays draft. No new paid resource, inference request, RunPod configuration change,
-SSH/firewall change or data deletion was made during this integration.
+stays draft. The initial installation made no inference request. Subsequent live
+acceptance uses the owner's USD 7 allowance below. No new paid resource,
+RunPod configuration change, SSH/firewall change or data deletion was made.
 
 ## Implemented and installed
 
@@ -22,23 +23,25 @@ SSH/firewall change or data deletion was made during this integration.
 - Existing RunPod connection credentials are reused only in server memory. No
   new credential, browser token store or copied key valve was created.
 
-Native startup installs added APIs before the existing SPA fallback mount. A
-real deployment check caught the former HTML/405 fallthrough; an ASGI regression
-case now includes that mount and verifies authentication still runs.
+Native startup installs added APIs before the existing SPA fallback mount. Live
+checks caught HTML/405 fallthrough and, after authentication, an unresolved
+`Request` annotation inherited through native plugin `exec()`. Both are fixed;
+regression tests exercise the SPA mount and native postponed-annotation loading.
 
 ## Evidence and boundaries
 
 | Check | Result |
 |---|---|
-| Local Python 3.12 suite | 93 tests pass, including admission/recovery, speech bounds/replay, ownership/origin and isolated plugin imports |
+| Local Python 3.12 suite | 97 tests pass, including native plugin loading, admission/recovery, speech bounds/replay and ownership/origin |
 | Node 24 browser-helper suite | 6 tests pass: stable turns/history, vision input, owned file URLs, output filtering, cycles and bounded PCM |
-| Existing Linux app container | All 93 Python tests pass without installing dependencies |
+| Existing Linux app container | All 97 Python tests pass without installing dependencies |
 | Live native health | `/health` returns 200 JSON |
 | Live added routes without login | GET capabilities and POST manual voice session return 401 JSON |
+| Native authenticated control API | Capabilities, policy and usage return 200 using a short-lived session held only in server memory through authorized SSH; native verification remains enabled |
 | Actual phone-sized preview | Renders real signed-out gate; message input disabled; no inference submitted |
 | Stored Open WebUI configuration | Same SHA-256 fingerprint before/after installation and restart |
 | RunPod read-only check | All four existing endpoints min0/max1; no running workers at inspection; no inference used to check health |
-| Signed-in chat/tools/media/voice | **Pending owner login and approved paid acceptance** |
+| Signed-in chat/tools/media/voice | Pending live acceptance; owner authorizes existing-access testing up to USD 7 total |
 
 Local checks use test identities/provider seams. They do not establish live
 cookie isolation, model quality, actual GPU cancellation, durable media playback
@@ -47,13 +50,16 @@ not acceptance of this fresh Contabo interface.
 
 ## Next acceptance run
 
-The owner signs in through the existing Open WebUI login themselves. No password,
-key, token or authentication bypass is requested. Then approve a bounded paid
-test run before any inference: quick FLUX image estimate $0.003, Wan 5s $0.30,
-GPU compute at the existing pool rates. The ledger uses conservative $0.75/h
-Fast/voice and $1.75/h Qwen/Gemma estimates including configured idle tails.
-Existing $2/day and $20/month policy is retained; obtaining approval does not
-silently raise it or create more resources.
+The owner updated project rules: owner-performed login is not a prerequisite
+when existing authorized access supports the tests. Authentication stays enabled;
+report server/API evidence separately from browser and real-device evidence.
+Testing on existing resources is pre-authorized up to USD 7 cumulatively for
+this run, including estimated idle time. Ask before exceeding that amount.
+Quick FLUX image estimate is $0.003, Wan 5s $0.30; the ledger uses conservative
+$0.75/h Fast/voice and $1.75/h Qwen/Gemma estimates including idle tails.
+Temporarily raise only the governed daily test allowance from $2 to $7 and
+restore $2 afterward; retain the $20 monthly limit and other controls. No new
+resource or recurring commitment is authorized by the testing allowance.
 
 1. Finnish, Swedish and English ordinary chat; verify actual saved answers.
 2. Qwen specialist and Fast continuation in the same chat; image understanding

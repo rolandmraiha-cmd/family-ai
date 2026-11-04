@@ -63,8 +63,9 @@ The server folder is its own git repo (local commits only). When you change `vps
 
 ## Next
 
-- Owner sign-in, then approved paid acceptance of chat/routing, images/video,
-  cancellation, saved media and all three voice languages in `/preview/`.
+- Complete chat/routing, images/video, cancellation, saved media and all three
+  voice-language checks under the owner's USD 7 test allowance. Existing
+  authorized access may be used; report browser/device checks separately.
 - Keep `/` and the public default until those checks pass; PR #2 remains draft.
 - Backups of `/opt/family-ai/data` (nightly, off the server).
 - The owner: the Oct 10 Contabo snapshot expires 2026-11-09; back up the PC's SSH key.

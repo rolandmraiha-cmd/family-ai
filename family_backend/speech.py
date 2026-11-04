@@ -202,5 +202,6 @@ def install_speech_api(app, router, origin_checker):
         except (ValueError, OSError, asyncio.TimeoutError):
             return JSONResponse({"error": {"code": "speech_unconfirmed", "message": "Speech did not confirm completion. Check the existing job before retrying."}}, status_code=502)
 
+    speech_route.__annotations__["request"] = Request
     for suffix in ("session", "speech", "transcriptions"):
         router.add_api_route(f"/voice/{suffix}", speech_route, methods=["POST"])

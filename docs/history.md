@@ -100,11 +100,17 @@
 - First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
 
 ## Open items
+- 2026-11-04 owner rule update: owner-performed login is not required when tests
+  can use existing authorized access. Report actual test coverage and gaps.
+  Existing-resource testing is pre-authorized up to USD 7 cumulatively, including
+  estimated GPU idle time; obtain approval before exceeding it. Credentials and
+  application authentication remain protected. See `AGENTS.md`.
 - 2026-11-04: Integrated real `/preview/` with native Open WebUI accounts, saved
   chat/tools and added guarded manual speech. Reviewed plugins/private Auto
   installed on Contabo; public config/default retained.93Python and6JS checks
-  pass locally; live added APIs reject unsigned calls. Owner login and approved
-  paid end-to-end acceptance remain pending; PR #2 stays draft. See
+  passed initially; live added APIs reject unsigned calls. Live API acceptance
+  now proceeds under the owner's USD 7 allowance; browser/device gaps are
+  reported separately. PR #2 stays draft. See
   `docs/contabo-integration.md` for evidence, limitations and reversible rollback.
 - Backups: a free sync of the volume to the owner's PC through RunPod's S3 API (EUR-IS-1). It needs an S3 key that the owner creates.
 - Family accounts.

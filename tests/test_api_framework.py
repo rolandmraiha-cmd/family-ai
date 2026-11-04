@@ -43,9 +43,25 @@ class FrameworkTests(unittest.IsolatedAsyncioTestCase):
         @fallback.get('/{path:path}')
         async def spa(path: str): return {'spa': True}
         self.app.mount('/', fallback)
+        installer = install_api
+        if getattr(self, 'native_bundle', False):
+            # Native v0.12.4 exec() inherits postponed annotations from its
+            # loader. Normal importlib loading does not reproduce that boundary.
+            import __future__
+            from scripts.build_openwebui_bundle import build
+            output = Path(self.directory.name) / 'bundle'
+            build(Path(__file__).resolve().parents[1], output)
+            module = types.ModuleType('family_native_runtime_test')
+            patcher = patch.dict(sys.modules, {module.__name__: module})
+            patcher.start()
+            self.addCleanup(patcher.stop)
+            source = (output / 'family_runtime.py').read_text(encoding='utf-8')
+            exec(compile(source, 'family_runtime.py', 'exec',
+                         flags=__future__.annotations.compiler_flag, dont_inherit=True), module.__dict__)
+            installer = module.install_api
         with patch.dict(sys.modules, {'open_webui.utils.auth': auth}):
-            install_api(self.app)
-            install_api(self.app)
+            installer(self.app)
+            installer(self.app)
         self.client = httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url='https://family.test')
 
     async def asyncTearDown(self):
@@ -106,3 +122,7 @@ class FrameworkTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('text/event-stream', result.headers['content-type'])
         self.assertIn('job.finished', result.text)
         self.assertNotIn('job.created', result.text)
+
+
+class NativePluginFrameworkTests(FrameworkTests):
+    native_bundle = True
