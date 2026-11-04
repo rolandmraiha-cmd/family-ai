@@ -12,3 +12,6 @@ backups/
 
 .claude/settings.local.json
 __pycache__/
+
+# VPS runtime data (lives only on the server)
+vps/data/

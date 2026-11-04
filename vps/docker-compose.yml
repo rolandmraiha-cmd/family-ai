@@ -1,0 +1,84 @@
+# Family AI on the Contabo VPS.
+# Lives in its own directory (/opt/family-ai) and Compose project ("familyai"). No language model runs here;
+# all inference is on RunPod.
+#
+# Now: Open WebUI (fresh install) is the engine: accounts, chats, files, RunPod connections and the repo's
+#      backend plugins (router, budgets, jobs). Caddy serves HTTPS.
+# The new Family AI UI replaces Open WebUI's screens once it talks to the real API; until then it is
+# served as a preview at /preview/ (see Caddyfile).
+# The separate gateway is off (profile "gateway"): its job/budget role is covered by the repo's
+# family_backend plugins inside Open WebUI.
+
+name: familyai
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: "10m", max-file: "5" }
+
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:${OWUI_TAG:-v0.12.4}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:8080"               # loopback only: first-admin setup over an SSH tunnel
+    environment:
+      WEBUI_NAME: Family AI
+      WEBUI_AUTH: "true"
+      ENABLE_SIGNUP: "false"
+      DEFAULT_USER_ROLE: pending
+      ENABLE_OLLAMA_API: "false"
+      WEB_FETCH_MAX_CONTENT_LENGTH: "4000"
+      DATA_DIR: /app/backend/data
+      # Generated on first start and kept in the data folder, so sessions and encrypted settings survive updates.
+      WEBUI_SECRET_KEY_FILE: /app/backend/data/.webui_secret_key
+      WEBUI_URL: https://${FAMILY_AI_DOMAIN}
+    volumes:
+      - ./data/openwebui:/app/backend/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=5)"]
+      interval: 15s
+      timeout: 10s
+      retries: 30
+      start_period: 120s
+    deploy: { resources: { limits: { memory: 3g, cpus: "2.0" } } }
+    logging: *logging
+
+  caddy:
+    image: caddy:2.8-alpine
+    profiles: ["public"]                    # off until the first admin account exists
+    restart: unless-stopped
+    ports:
+      - "${CADDY_HTTP_BIND:-80}:80"
+      - "${CADDY_HTTPS_BIND:-443}:443"
+      - "${CADDY_HTTPS_BIND:-443}:443/udp"
+    environment:
+      FAMILY_AI_DOMAIN: ${FAMILY_AI_DOMAIN:?set FAMILY_AI_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./web/build:/srv/web:ro            # new UI (prototype until it is wired to the real API)
+      - ./data/caddy/data:/data
+      - ./data/caddy/config:/config
+    depends_on:
+      openwebui: { condition: service_started }
+    deploy: { resources: { limits: { memory: 128m } } }
+    logging: *logging
+
+  gateway:
+    profiles: ["gateway"]                   # not used now; kept for reference
+    build: ./gateway
+    image: familyai-gateway:${GATEWAY_TAG:-local}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      GATEWAY_DB: /data/gateway.sqlite3
+      REGISTRY_PATH: /app/registry.yaml
+    volumes:
+      - ./data/gateway:/data
+      - ./registry.yaml:/app/registry.yaml:ro
+    expose: ["8000"]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    deploy: { resources: { limits: { memory: 256m, cpus: "1.0" } } }
+    logging: *logging

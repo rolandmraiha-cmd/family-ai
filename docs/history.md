@@ -37,6 +37,14 @@
 - Decided against network storage: it would cost about $5/month for about 0 s gained (loading from it is about as slow as downloading), and EU-SE-1 doesn't support it.
 - Research on cheaper hosting: `docs/research/cheaper-hosting-2026-10.md`. The always-on Open WebUI pod (about $58/month) is the biggest cost.
 
+## 2026-11-03/04: Chat app moved to the Contabo VPS
+- The owner didn't want to pay for an always-on RunPod CPU pod, so Open WebUI now runs on the Contabo VPS (details in `docs/vps.md`).
+- Fresh start: old chats on volume `vevppjlc9a` were not moved.
+- Server hardened first: key-only SSH, firewall, fail2ban, swap, non-root `deploy` user.
+- Open WebUI v0.12.4 behind Caddy with HTTPS at `https://37-60-226-214.sslip.io`. The new UI prototype is at `/preview/`.
+- Plan: Open WebUI stays as the hidden engine, and the new UI replaces its screens part by part.
+- First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
+
 ## Open items
 - Backups: a free sync of the volume to the owner's PC through RunPod's S3 API (EUR-IS-1). It needs an S3 key that the owner creates.
 - Family accounts.
