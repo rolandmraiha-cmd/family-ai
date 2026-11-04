@@ -1,0 +1,46 @@
+{
+	servers {
+		protocols h1 h2 h3
+	}
+}
+
+{$FAMILY_AI_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), geolocation=(), microphone=(self)"
+		-Server
+	}
+
+	# New Family AI UI preview (simulated until it is wired to the real API).
+	# When it is ready it moves to / and Open WebUI keeps only /api/*, /ws/*, /oauth/* and /cache/*.
+	handle_path /preview/* {
+		root * /srv/web
+		@html path / /index.html
+		header @html Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+	redir /preview /preview/
+
+	# Everything else: Open WebUI (screens, API and Socket.IO streaming).
+	handle {
+		reverse_proxy openwebui:8080 {
+			flush_interval -1
+			transport http {
+				read_timeout 15m
+			}
+		}
+	}
+
+	log {
+		output file /data/access.log {
+			roll_size 10MiB
+			roll_keep 5
+		}
+		format json
+	}
+}

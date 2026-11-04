@@ -1,102 +1,39 @@
 # Family AI
 
-Private chat in Finnish, Swedish and English, using Open WebUI and on-demand RunPod GPUs.
+A private AI assistant for the family that speaks Swedish, Finnish and English. The AI runs on [RunPod](https://runpod.io) GPUs; the chat app ([Open WebUI](https://openwebui.com)) runs on the owner's Contabo VPS (see `docs/vps.md`). The GPUs start when someone uses the assistant and shut down when nobody does, so you mostly pay only for what you use.
 
-## Current deployment (checked 2026-11-03)
+> This repo holds the **setup, scripts and notes**. It holds no passwords or API keys: those live only in RunPod and Open WebUI.
 
-| Part | Model / resource | State |
-| --- | --- | --- |
-| Chat app | Existing CPU pod `ix476koa61pd4o`, Open WebUI; data volume `vevppjlc9a` | Running; live UI currently requires admin sign-in |
-| Lightweight coordinator | Google Gemma 4 E2B IT, endpoint `52cjk52hgbwag1`, served as `family-fast` | **Updated and response-tested on RunPod** |
-| Larger reasoning | Qwen3.8 27B FP8, `c3lm36gdhpctl2`, `family-brain` | Existing endpoint; shared reasoning tool targets this initially |
-| Larger vision / language | Gemma 4 31B FP8, `936leprwfzb9gr`, `family-gemma` | Existing endpoint retained |
-| Speech | Whisper large-v3 + Finnish/Swedish/English Piper voices, `b8yk3ju5yc5kqx` | Existing endpoint; manual voice-start action prepared |
-| Image generation | FLUX schnell/dev public endpoints | Existing tools retained |
-| Video generation | Wan 2.2 I2V public endpoint | Existing tool retained; can create a starting image first |
-| Optional DeepSeek specialist | DeepSeek-R1-Distill-Qwen-14B, proposed 48GB GPU | **Not created: price approval and live validation pending** |
+## What is running
 
-All four owned GPU endpoints have zero minimum / one maximum worker.
-Fast uses FlashBoot, an 8K context, text-only mode and eager execution to skip
-multimodal warmup, compilation and CUDA graph capture. Image attachments route
-to larger Gemma. Fast's first measured request queued for **182.287s**, then
-executed in 5.416s. This is not instant startup or a latency guarantee.
+| Part | What it is | Where | Cost |
+|---|---|---|---|
+| Chat app | Open WebUI v0.12.4 + Caddy in Docker, `/opt/family-ai` | Contabo VPS 37.60.226.214 | €6.90/month, always on |
+| Old storage | Network volume `vevppjlc9a` (10 GB), old chats, not used since the move | RunPod EUR-IS-1 | $0.70/month |
+| **Family AI Fast** | Gemma 4 E2B, serverless endpoint `52cjk52hgbwag1`, model id `family-fast` | 24 GB GPU | about $0.75/h while running |
+| **Family AI** (default) | Gemma 4 31B FP8, serverless endpoint `936leprwfzb9gr`, model id `family-gemma` | EU-SE-1 / EUR-IS-2, A40 48 GB | $1.22/h while running |
+| **Family AI Pro** | Qwen3.8 27B FP8, serverless endpoint `c3lm36gdhpctl2`, model id `family-brain` | EU-SE-1 / EUR-IS-2 | $1.22/h while running |
+| Voice | Speaches (Whisper STT + Piper TTS), load balancer endpoint `b8yk3ju5yc5kqx` | EU data centers | $0.58–0.69/h while running |
+| Pictures / video | RunPod public endpoints: FLUX schnell/dev, Wan 2.2 I2V | RunPod | $0.003 per quick image, about $0.02 per high-quality image, $0.30 per 5 s video |
 
-## Shared routing and voice
+URL: `https://37-60-226-214.sslip.io` (sign-up off; new users are "pending" until the admin approves them).
 
-The reviewed implementation is in `openwebui/functions/family_router.py`.
-**Installed and enabled in live Open WebUI.** The private workspace model is
-`family-auto` (Family AI Auto), with native tool calling and `family_media`
-attached. Start voice is enabled globally as a manual action. Existing direct
-models and the existing default remain available. No credential was changed.
+Both LLM endpoints scale to zero and stay warm for 10 min after the last message. A cold start takes about 2–4 min.
 
-- Auto uses the small coordinator for everyday requests.
-- Explicit hard requests emit a native `ask_deep_reasoning` call directly,
-  without first starting the small GPU. The real Gemma test ignored a forced
-  named tool, so deterministic dispatch lives in the router.
-- The model can also call the reasoning tool when a rule misses a difficult task.
-- Images and videos use the attached shared tools. Media generation and image
-  understanding use different paths.
-- STT text goes to the same selected Auto model and tools as typed text.
-  Open WebUI sends the final reply to Piper when the user enables voice playback.
-- The Start voice action manually wakes the speech endpoint. It does not change
-  worker minimums, keep it alive, or run during ordinary typed chat.
+## Repo layout
 
-The module transport submits once, polls through cold starts, bounds duration and
-output, and requests cancellation on timeout/disconnect. These are per-instance
-limits, not an account spending cap. Existing direct models stay available.
+```
+runpod/            Endpoint settings (env, GPUs, scaling) for each serverless endpoint
+openwebui/         Open WebUI settings and the custom tools uploaded to it
+  tools/family_media.py   Image + video tool (FLUX / Wan 2.2)
+voice/voice_start.py      Start command for the voice endpoint (adds /ping and per-language voice choice)
+vps/               Copies of the VPS docker-compose.yml and Caddyfile (no secrets)
+docs/vps.md        The VPS: what runs, security, commands, what's next
+docs/history.md    What was done, when, and why (decisions + problems solved)
+docs/research/     Model research (October 2026)
+AGENTS.md          Rules for AI assistants working on this project
+```
 
-## Review / activation
+## Languages
 
-See [deployment and acceptance checklist](docs/shared-modules-rollout.md).
-The router, updated `family_media` tool and manual voice action are installed.
-The new components reuse the admin-owned RunPod key through Open WebUI’s
-encrypted tool-valve API, inside the app process. No key was copied into code or
-chat. Live Auto chat showed queue progress; the view then stopped updating.
-A browser URL-policy rejection blocked reloading it to confirm the saved answer.
-Full UI/tool-loop/audio acceptance therefore remains incomplete; keep Auto in
-review rather than replacing the existing public default.
-
-The optional DeepSeek profile is ready in
-`runpod/deepseek-endpoint.proposed.json`. The checked AMPERE_48 rate is
-**$1.22 per active GPU hour**, including startup/idle time, before tax and any
-storage charges. It has no always-on worker. Do not create it before the owner
-approves this additional endpoint. Qwen is the usable larger-model target until
-then; no DeepSeek or Kimi deployment is claimed.
-
-Fast stays in its existing $0.75/hour pool; no new GPU resource, storage volume,
-CPU host or cloud computer was created. The current CPU app remains $0.08/hour
-and its 10GB volume is listed at $0.70/month.
-
-## Verification and limits
-
-`python -m unittest discover -s tests -v` runs the router/module/action checks
-without billed inference. GitHub Actions also runs these checks.
-All 33 tests pass locally and in GitHub Actions. The tests use local HTTP
-servers and replace Open WebUI storage/HTML boundaries; they do not establish
-real browser audio or file persistence.
-
-Live E2B tests: Finnish image request selected `generate_image` correctly
-(1.055s warm execution); a Swedish RAM/storage answer was coherent.
-A Finnish heat-pump answer incorrectly mentioned rotational motion. A forced
-reasoning-tool test produced text instead. Keep larger Gemma available and review
-small-model factual/Finnish quality before making Auto the public default.
-
-No CPU migration or cloud-computer work is included.
-
-## Layout
-
-- `runpod/`: deployed endpoint snapshots, rollback and explicitly proposed profiles.
-- `openwebui/functions/`: shared Auto/Fast/Pro/language routing.
-- `openwebui/tools/family_media.py`: reasoning, image and video modules.
-- `openwebui/actions/start_voice.py`: manual speech startup.
-- `voice/voice_start.py`: existing speech service and per-language voice selection.
-- `tests/`: routing, transport, module and manual voice checks.
-- `docs/`: rollout, history and previous research.
-
-
-
-After the owner topped up RunPod, direct live checks passed for Finnish chat,
-larger-model reasoning, return of the actual specialist answer to the small
-coordinator, image generation and a five-second video. The final Finnish summary
-was correct. Full Open WebUI execution, microphone/playback and persisted media
-still require device acceptance because browser policy blocked the old chat view.
+Finnish quality is the weak spot. Gemma 4 writes clearly better Finnish than Qwen: EuroEval scores 57.5 vs 49.3 for Finnish and 71.4 vs 67.0 for Swedish. That's why Gemma is the default.
