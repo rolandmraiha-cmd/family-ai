@@ -1,5 +1,32 @@
 # History
 
+## 2026-11-05: Faster Q8 serving on the existing Gemma endpoint
+- Continued within the same USD 17 cumulative allowance. Matched FP8/vLLM
+  baseline took 154.920s overall, including 122.484s provider delay.
+- Switched only larger Gemma to pinned cached Q8 Gemma 31B with llama.cpp.
+  Fresh cached process loaded in 9.466s, first full answer 22.417s. After
+  natural shutdown, the same retained process resumed and answered in 6.718s;
+  this second result is not a second fresh-process measurement.
+- Longer fi/sv/en output was mostly readable, with an odd Finnish word and a
+  short Swedish wording error documented. Simple image colours/positions,
+  a clearly wide rectangle, native tool arguments, tool-result continuation,
+  installed-router streaming and the existing OpenAI gateway worked. Detailed
+  image parity and browser/device acceptance remain unverified.
+- Kept the Q8 profile live with min0/max1, idle120 and nine European locations.
+  Increased Q8 microbatch to 2048 to avoid the previous vision-budget cap.
+  The original FP8 JSON remains the rollback configuration; the generator
+  reproduces Q8 and its separate pinned cache-attachment plan.
+- Initial model staging took 10m21s. Cached engine speed does not guarantee
+  available capacity or an under-20s first answer on a new host.
+- 113 Python tests and nine JavaScript tests pass in the project environment;
+  bundle build, compilation and diff checks pass. The unrelated system Python
+  lacks the project's timezone/dependencies and was not the validation runtime.
+- Ten accepted probes in this continuation retained USD 1.779167 in estimates;
+  one HTTP409 rejection retained zero. Cumulative USD 16.648839 of USD 17,
+  78 settled records, zero reservations, normal USD 2/day and USD 20/month.
+  These estimates are not a provider invoice. No new resources or keepalive.
+- See `docs/startup-q8-20261105.md` for evidence, limitations and rollback.
+
 ## 2026-11-05: European capacity and llama.cpp startup trial
 - Owner approved another USD 5, bringing cumulative test authorization to USD 17.
   Expanded only larger Gemma's preferred locations from Sweden/Iceland to nine

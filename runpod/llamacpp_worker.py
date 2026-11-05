@@ -104,7 +104,7 @@ def main():
     command = ["/app/llama-server", *args, "--host", "127.0.0.1", "--port", "3098",
                "--alias", "family-gemma", "--ctx-size", "8192", "--parallel", "1",
                "--n-gpu-layers", "999", "--jinja", "--flash-attn", "on",
-               "--batch-size", "2048", "--ubatch-size", "512"]
+               "--batch-size", "2048", "--ubatch-size", "2048" if PROFILE == "q8" else "512"]
     env = dict(os.environ, LD_LIBRARY_PATH="/app:" + os.environ.get("LD_LIBRARY_PATH", ""))
     server = subprocess.Popen(command, env=env)
     def stop(signum, frame):
