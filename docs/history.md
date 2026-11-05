@@ -12,7 +12,9 @@
   `/opt/family-ai/integration/20261105-access/Caddyfile-before` for rollback.
   Automatic certificate issuance succeeded. Public HTTPS health, preview and
   sign-in pages return 200 on the alternative address; original HTTPS still
-  works. Phone access still requires owner confirmation.
+  works. Native authenticated session, capabilities and account APIs return 200
+  through the alternative HTTPS address; unsigned account access returns 401.
+  The owner confirmed that the alternative address opens on the iPhone.
 
 ## 2026-11-05: RunPod balance and spending in the preview
 - Added an administrator-only header balance and Activity account card with
