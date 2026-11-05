@@ -62,6 +62,7 @@ class FrameworkTests(unittest.IsolatedAsyncioTestCase):
         with patch.dict(sys.modules, {'open_webui.utils.auth': auth}):
             installer(self.app)
             installer(self.app)
+        self.account_type = installer.__globals__['RunPodAccount']
         self.client = httpx.AsyncClient(transport=httpx.ASGITransport(app=self.app), base_url='https://family.test')
 
     async def asyncTearDown(self):
@@ -79,6 +80,18 @@ class FrameworkTests(unittest.IsolatedAsyncioTestCase):
         self.app.state.family_control_api_active = False
         result = await self.client.get('/api/v1/family/usage', headers={'Authorization': 'Bearer alice'})
         self.assertEqual(result.status_code, 503)
+
+    async def test_account_auth_admin_scope_and_no_browser_cache(self):
+        from unittest.mock import AsyncMock
+        with patch.object(self.account_type, 'get', new=AsyncMock(return_value={'balance': {'amount_usd': 15.53}})) as monitor:
+            path = '/api/v1/family/account'
+            self.assertEqual((await self.client.get(path)).status_code, 401)
+            self.assertEqual((await self.client.get(path, headers={'Authorization':'Bearer alice'})).status_code, 403)
+            monitor.assert_not_awaited()
+            result = await self.client.get(path, headers={'Authorization':'Bearer admin'})
+            self.assertEqual(result.status_code, 200)
+            self.assertEqual(result.json()['balance']['amount_usd'], 15.53)
+            self.assertEqual(result.headers['cache-control'], 'private, no-store')
 
     async def test_manual_voice_intent_uses_verified_owner_and_same_origin_without_gpu_work(self):
         chats = types.ModuleType('open_webui.models.chats')

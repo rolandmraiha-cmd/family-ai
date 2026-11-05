@@ -1,6 +1,16 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {completionBody, messageText, orderedMessages, fileUrl, pcmWav, jobCostText, usageCostText} from '../web/api.mjs';
+import {completionBody, messageText, orderedMessages, fileUrl, pcmWav, jobCostText, usageCostText, accountFigure} from '../web/api.mjs';
+
+test('account display distinguishes missing, real zero, stale and negative balances',()=>{
+  assert.equal(accountFigure(null).amount, 'Unavailable');
+  assert.equal(accountFigure({amount_usd:null}).amount, 'Unavailable');
+  assert.equal(accountFigure({amount_usd:0, status:'fresh', observed_at:100},100).amount, '$0.00');
+  assert.equal(accountFigure({amount_usd:-1.25, status:'fresh', observed_at:100},100).amount, '-$1.25');
+  assert.equal(accountFigure({amount_usd:15.53, status:'fresh', observed_at:100},221).stale, true);
+  assert.equal(accountFigure({amount_usd:15.53, status:'stale', observed_at:100},100).stale, true);
+  assert.equal(accountFigure({amount_usd:.00194, status:'fresh', observed_at:100},100,3).amount, '$0.002');
+});
 
 test('unknown compute and legacy costs never appear as reported spend',()=>{
   assert.match(jobCostText({estimated_charge_usd:0.1375,reserved_usd:0,provider_reported_usd:null}),/Cost unconfirmed; \$0.138 held as an estimate/);

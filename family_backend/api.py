@@ -12,6 +12,7 @@ from urllib.parse import urlsplit
 
 from family_backend.control import ControlError, Ledger, default_ledger, OperationContext, ENDPOINT_CAPABILITIES, configured_runpod_key
 from family_backend.speech import install_speech_api
+from family_backend.account import RunPodAccount
 
 
 def check_origin(headers, unsafe):
@@ -38,10 +39,11 @@ def public_job(row):
 
 
 class ControlAPI:
-    def __init__(self, ledger=None, provider_call=None):
+    def __init__(self, ledger=None, provider_call=None, account=None):
         self.ledger = ledger or default_ledger()
         self.provider_call = provider_call
         self.health_cache = None
+        self.account = account or RunPodAccount()
 
     async def dispatch(self, method, path, user, body=None, headers=None):
         if (not isinstance(user, dict) or not isinstance(user.get("id"), str)
@@ -51,6 +53,10 @@ class ControlAPI:
         check_origin(headers, method not in {"GET", "HEAD"})
         body = body or {}
         owner = user["id"]
+        if method == "GET" and path == "/account":
+            if user["role"] != "admin":
+                raise ControlError("forbidden", "Only the administrator can view the RunPod account balance.")
+            return await self.account.get()
         if method == "GET" and path == "/usage":
             usage = self.ledger.usage()
             if user["role"] != "admin":
@@ -220,7 +226,7 @@ def install_api(app):
                 raise HTTPException(400, "A JSON object is required")
         try:
             result = await api.dispatch(request.method, path, {"id": user.id, "role": user.role}, body, dict(request.headers))
-            return JSONResponse(result)
+            return JSONResponse(result, headers={"Cache-Control": "private, no-store"} if path == "/account" else None)
         except ControlError as error:
             status = 404 if error.code == "not_found" else 403 if error.code in {"forbidden", "origin_forbidden", "origin_required"} else 400
             return JSONResponse({"error": {"code": error.code, "message": str(error)}}, status_code=status)
@@ -244,7 +250,7 @@ def install_api(app):
     dispatch.__annotations__["request"] = Request
     events.__annotations__["request"] = Request
     router.add_api_route("/jobs/{job_id}/events", events, methods=["GET"])
-    for path, methods in [("/usage", ["GET"]), ("/jobs", ["GET"]), ("/capabilities", ["GET"]), ("/models/state", ["GET"]),
+    for path, methods in [("/usage", ["GET"]), ("/account", ["GET"]), ("/jobs", ["GET"]), ("/capabilities", ["GET"]), ("/models/state", ["GET"]),
                           ("/policy", ["GET", "POST"]), ("/quote", ["POST"]),
                           ("/billing", ["POST"]), ("/reconciliation", ["GET"]), ("/voice/session", ["GET", "DELETE"]),
                           ("/jobs/{job_id}", ["GET"]), ("/jobs/{job_id}/cancel", ["POST"]),

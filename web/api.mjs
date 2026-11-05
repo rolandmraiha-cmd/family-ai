@@ -19,6 +19,16 @@ export function usageCostText(period) {
   return `${budget} ${reported}; ${period.unreported_jobs} job costs unconfirmed. This is not your account bill.`;
 }
 
+export function accountFigure(value, now = Date.now() / 1000, decimals = 2) {
+  const available = typeof value?.amount_usd === 'number' && Number.isFinite(value.amount_usd);
+  const stale = available && (value.status !== 'fresh' || !Number.isFinite(value.observed_at) || now - value.observed_at > 120);
+  return {
+    amount: available ? new Intl.NumberFormat('en-US', {style:'currency', currency:'USD', minimumFractionDigits:decimals, maximumFractionDigits:decimals}).format(value.amount_usd) : 'Unavailable',
+    stale,
+    updated: available && Number.isFinite(value.observed_at) ? new Date(value.observed_at * 1000).toLocaleString() : null,
+  };
+}
+
 export async function request(path, options = {}) {
   const response = await fetch(path, {credentials: 'same-origin', ...options});
   if (!response.ok) {

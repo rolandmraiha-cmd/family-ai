@@ -124,6 +124,16 @@ kbd{font:500 11px/1 var(--f-mono);color:var(--muted);border:1px solid var(--line
 .iconbtn:hover{background:var(--sunk);color:var(--fg)}
 .iconbtn .badge{position:absolute;top:3px;right:3px}
 #pillWrap{flex:none;display:flex}
+.account-btn{flex:none;max-width:46vw;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.account-card{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface);display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.account-card h3{margin:0;font-size:15px}
+.account-card dl{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:14px 12px}
+.account-stat:first-child{grid-column:1/-1}
+.account-stat dt{font-size:12px;color:var(--muted)}
+.account-stat dd{margin:2px 0;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.account-stat:first-child dd{font-size:30px}
+.account-stat small{display:block;font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.account-card a{font-size:12px;color:var(--accent)}
 .pill{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 13px 0 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13.5px;color:var(--fg-2);white-space:nowrap}
 .pill:hover{border-color:var(--line-2);color:var(--fg)}
 .pill[aria-expanded="true"]{border-color:var(--accent);color:var(--fg)}
@@ -470,6 +480,7 @@ legend{font-size:13px;font-weight:600;padding:0;margin-bottom:6px}
       <button class="iconbtn" id="sideBtn" data-act="side-toggle" aria-label="Show chat list"><svg class="ic"><use href="#i-menu"/></svg></button>
       <button class="title-btn" id="titleBtn" title="Conversation"><h1 id="convTitle">New chat</h1></button>
       <span id="pillWrap"></span>
+      <button class="pill account-btn" id="accountBtn" data-act="act-toggle" hidden>RunPod balance</button>
       <button class="iconbtn" data-act="settings" aria-label="Settings"><svg class="ic"><use href="#i-gear"/></svg></button>
     </header>
     <div class="banner" id="banner" role="status" hidden></div>

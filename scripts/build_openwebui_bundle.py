@@ -14,6 +14,7 @@ def build(root, output):
     core = (root / "family_backend/control.py").read_text(encoding="utf-8")
     api = (root / "family_backend/api.py").read_text(encoding="utf-8")
     speech = (root / "family_backend/speech.py").read_text(encoding="utf-8")
+    account = (root / "family_backend/account.py").read_text(encoding="utf-8")
     definitions = [
         ("family_router", "Family AI Router", "functions/family_router.py", False),
         ("family_start_voice", "Start voice", "actions/start_voice.py", False),
@@ -40,7 +41,7 @@ def build(root, output):
         body = "".join(original.splitlines(keepends=True)[first.end_lineno:])
         source = '"""\n' + docstring + '\n"""\n\n' + core + "\n"
         if include_api:
-            source += inline_imports(speech) + "\n" + inline_imports(api) + "\n"
+            source += inline_imports(speech) + "\n" + inline_imports(account) + "\n" + inline_imports(api) + "\n"
         source += inline_imports(body)
         compile(source, identifier, "exec")
         (output / f"{identifier}.py").write_text(source, encoding="utf-8")

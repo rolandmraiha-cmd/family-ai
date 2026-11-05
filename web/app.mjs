@@ -1,15 +1,15 @@
-import {MODELS, activeStates, request, post, messageText, orderedMessages, fileUrl, completionBody, pcmWav, jobCostText, usageCostText} from './api.mjs';
+import {MODELS, activeStates, request, post, messageText, orderedMessages, fileUrl, completionBody, pcmWav, jobCostText, usageCostText, accountFigure} from './api.mjs';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon = name => `<svg class="ic" aria-hidden="true"><use href="#i-${name}"/></svg>`;
 const usd = value => value == null ? '—' : '$' + Number(value).toFixed(3);
 const state = {
-  user: null, ready: false, chats: [], chat: null, chatId: null, mode: 'auto', jobs: [], usage: null,
+  user: null, ready: false, chats: [], chat: null, chatId: null, mode: 'auto', jobs: [], usage: null, account: null,
   submitting: false, transportUncertain: false, drawer: false, error: '', files: [],
   session: crypto.randomUUID(), voice: false, recording: null, audio: null, speechRequest: null, speechTurn: null,
 };
-let refreshRunning = false, recordingTimer;
+let refreshRunning = false, recordingTimer, accountCheckedAt = 0;
 const renderedMessages = new Map();
 
 function patchThread(html) {
@@ -31,6 +31,21 @@ function patchThread(html) {
 }
 
 function notify(error) { state.error = error instanceof Error ? error.message : error; render(); }
+
+function renderAccount() {
+  const admin = state.user?.role === 'admin', button = $('#accountBtn');
+  button.hidden = !admin;
+  if (!admin) return '';
+  const balance = accountFigure(state.account?.balance);
+  button.textContent = `RunPod ${balance.amount}${balance.stale ? ' · stale' : ''}`;
+  button.title = 'RunPod account balance · open spending details';
+  const figure = (label, part, digits = 3) => {
+    const value = accountFigure(state.account?.[part], undefined, digits);
+    return `<div class="account-stat"><dt>${label}</dt><dd>${esc(value.amount)}</dd><small>${value.updated ? `${value.stale ? 'Last known · ' : 'Checked '}${esc(value.updated)}` : 'No reading available'}${value.stale ? ' · stale' : ''}</small></div>`;
+  };
+  const rate = state.account?.balance?.rate_usd_per_hour;
+  return `<section class="account-card" aria-labelledby="accountTitle"><h3 id="accountTitle">RunPod account</h3><dl>${figure('Available balance', 'balance', 2)}${figure('Reported today · UTC', 'day')}${figure('Reported this month · UTC', 'month')}</dl>${typeof rate === 'number' && Number.isFinite(rate) ? `<p class="hint">RunPod-reported rate: ${esc(usd(rate))}/h${balance.stale ? ' · last known' : ''}.</p>` : ''}<p class="hint">Full RunPod account, including storage and use outside Family AI. Refreshes every minute while open. Billing totals may lag; app budget estimates below are separate.</p><a href="https://console.runpod.io/billing" target="_blank" rel="noopener noreferrer">Open RunPod billing</a></section>`;
+}
 function busy() { return state.submitting || state.transportUncertain || orderedMessages(state.chat).some(m => m.role === 'assistant' && m.done === false); }
 function rememberChat() { if (state.chatId) location.hash = 'chat=' + encodeURIComponent(state.chatId); else history.replaceState(null, '', location.pathname); }
 function renderFiles(files) {
@@ -71,7 +86,7 @@ function render() {
   // Preserve media playback and focus when a polling response has no changes.
   patchThread(html); if (nearEnd) thread.scrollTop=thread.scrollHeight;
   $('#activity').hidden = !state.drawer; $('#app').classList.toggle('act-open', state.drawer);
-  $('#actBody').innerHTML = `<p class="hint">Family AI job costs only. Hosting and direct Open WebUI calls are separate. Budget limits do not stop all RunPod account charges.</p>${state.usage ? Object.entries(state.usage.periods).map(([k,v])=>`<p>${esc(k)}: ${esc(usageCostText(v))}</p>`).join('') : ''}${state.jobs.map(j=>`<div class="card"><div class="c-t"><b>${esc(j.capability)} · ${esc(j.state)}</b><span>${esc(jobCostText(j))}</span><small>${esc(j.cancel_requested ? 'Cancellation requested; waiting for confirmation.' : j.state === 'unknown' ? 'Outcome uncertain. Inspect before retrying.' : '')}</small></div>${activeStates.has(j.state) ? `<button class="mini" data-cancel="${esc(j.id)}">Cancel</button>` : ''}${j.state === 'unknown' ? `<button class="mini" data-refresh="${esc(j.id)}">Check provider result</button>` : ''}</div>`).join('') || '<p>No governed jobs yet.</p>'}`;
+  $('#actBody').innerHTML = `${renderAccount()}<p class="hint">Family AI job costs only. Hosting and direct Open WebUI calls are separate. Budget limits do not stop all RunPod account charges.</p>${state.usage ? Object.entries(state.usage.periods).map(([k,v])=>`<p>${esc(k)}: ${esc(usageCostText(v))}</p>`).join('') : ''}${state.jobs.map(j=>`<div class="card"><div class="c-t"><b>${esc(j.capability)} · ${esc(j.state)}</b><span>${esc(jobCostText(j))}</span><small>${esc(j.cancel_requested ? 'Cancellation requested; waiting for confirmation.' : j.state === 'unknown' ? 'Outcome uncertain. Inspect before retrying.' : '')}</small></div>${activeStates.has(j.state) ? `<button class="mini" data-cancel="${esc(j.id)}">Cancel</button>` : ''}${j.state === 'unknown' ? `<button class="mini" data-refresh="${esc(j.id)}">Check provider result</button>` : ''}</div>`).join('') || '<p>No governed jobs yet.</p>'}`;
 }
 async function loadChat(id) {
   if (state.voice && id !== state.chatId) await closeVoice();
@@ -83,16 +98,30 @@ async function ensureChat() {
   const result = await post('/api/v1/chats/new', {chat:{title:'New chat',models:[MODELS[state.mode][0]],history:{messages:{},currentId:null},messages:[],files:[]}});
   state.chatId=result.id; state.chat=result.chat; rememberChat();
 }
+async function refreshAccount() {
+  if (state.user?.role !== 'admin' || Date.now() - accountCheckedAt < 60000) return;
+  accountCheckedAt = Date.now();
+  try {
+    const account = await request('/api/v1/family/account');
+    if (state.user?.role === 'admin') state.account = account;
+  } catch {
+    if (state.account) for (const part of ['balance','day','month']) {
+      if (state.account[part]) state.account[part].status = 'stale';
+    }
+  }
+  render();
+}
 async function refresh() {
   if (!state.ready || refreshRunning || document.hidden) return;
   refreshRunning=true;
+  void refreshAccount(); // Account refresh must never delay chat or media updates.
   const id=state.chatId;
   try {
     const values = await Promise.all([request('/api/v1/chats/list'),request('/api/v1/family/jobs'),request('/api/v1/family/usage'),id ? request('/api/v1/chats/'+encodeURIComponent(id)) : null]);
     state.chats=values[0]; state.jobs=values[1].jobs; state.usage=values[2];
     if (id && state.chatId === id) state.chat=values[3].chat;
     render();
-  } catch (error) { if (error.status === 401) {state.ready=false;state.user=null;} notify(error); }
+  } catch (error) { if (error.status === 401) {state.ready=false;state.user=null;state.account=null;} notify(error); }
   finally {refreshRunning=false;}
 }
 async function send(text) {

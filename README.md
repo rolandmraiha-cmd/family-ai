@@ -57,6 +57,12 @@ estimate**. Unknown compute costs stay covered by the admission limit; the
 display is not your RunPod wallet or a finalized account bill. Historical test
 estimates have not been reset. See the [cost correction](docs/cost-accounting-20261104.md).
 
+Administrators also see the **RunPod account balance** in the preview header.
+Open it for RunPod-reported spending today and this month (UTC), refreshed once
+per minute while the page is visible. These account-wide figures include storage
+and other RunPod use; billing can lag. Missing or older readings are marked
+unavailable or stale. See [account tracker details](docs/account-tracker-20261105.md).
+
 ## Repo layout
 
 ```

@@ -1,5 +1,22 @@
 # History
 
+## 2026-11-05: RunPod balance and spending in the preview
+- Added an administrator-only header balance and Activity account card with
+  RunPod-reported daily/monthly spending (UTC), timestamps and hourly rate.
+  Refreshes once per minute while visible; provider billing can lag. Account-wide
+  figures remain separate from the preserved job estimates and budget controls.
+- Installed the reviewed backend bundle on the existing VPS, restarted only
+  Open WebUI and published the three preview assets. Saved prior plugin sources
+  and assets for rollback; native `/` and the public default remain unchanged.
+- Live admin API 200/no-store, unsigned 401, fresh provider figures, server cache
+  reuse and exact public asset/source matches passed. All 78 ledger records,
+  configuration, credential valves and normal USD 2/day / USD 20/month limits
+  are unchanged. No inference jobs or additional GPU test costs.
+- 121 Python and 10 JavaScript tests pass, including member 403, cache/outage
+  and period rollover checks. No ordinary member exists for a live member test;
+  browser/phone rendering remains unverified because browser URL safety stopped
+  inspection. See `docs/account-tracker-20261105.md` for details and rollback.
+
 ## 2026-11-05: Faster Q8 serving on the existing Gemma endpoint
 - Continued within the same USD 17 cumulative allowance. Matched FP8/vLLM
   baseline took 154.920s overall, including 122.484s provider delay.
