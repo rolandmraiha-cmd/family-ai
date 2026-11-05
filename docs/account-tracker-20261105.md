@@ -46,6 +46,8 @@ inspection was stopped by its URL safety check before deployment.
 Live VPS checks after deployment: Open WebUI healthy, administrator account API
 200 with no-store caching, unsigned API 401, all three figures fresh, repeated
 reads reuse the server cache, and installed plugin sources match the bundle.
+After the 60-second cache period, another real API read returned newer provider
+observation timestamps, again with all three figures fresh and no ledger changes.
 Public HTTPS preview assets returned 200 and matched the source bytes exactly.
 There are no ordinary member accounts on this installation; member 403 behavior
 was tested locally in the real framework and bundled route tests.
