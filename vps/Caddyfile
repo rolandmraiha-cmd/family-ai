@@ -4,7 +4,7 @@
 	}
 }
 
-{$FAMILY_AI_DOMAIN} {
+{$FAMILY_AI_DOMAIN}, 37-60-226-214.nip.io {
 	encode zstd gzip
 
 	header {

@@ -1,5 +1,19 @@
 # History
 
+## 2026-11-05: Alternative HTTPS address for phone access
+- The owner's iPhone reported that Safari could not find the sslip.io server.
+  Public Google DNS and external HTTPS checks still resolved/reached the original
+  address; the specific phone/network DNS cause is not established.
+- Added `37-60-226-214.nip.io` to the same Caddy site on the existing Contabo VPS.
+  Caddy configuration validation and graceful reload passed. Existing hostname,
+  application authentication and stored data remain in place; no app restart,
+  inference job, new resource, SSH or firewall change.
+- Previous Caddyfile is saved at
+  `/opt/family-ai/integration/20261105-access/Caddyfile-before` for rollback.
+  Automatic certificate issuance succeeded. Public HTTPS health, preview and
+  sign-in pages return 200 on the alternative address; original HTTPS still
+  works. Phone access still requires owner confirmation.
+
 ## 2026-11-05: RunPod balance and spending in the preview
 - Added an administrator-only header balance and Activity account card with
   RunPod-reported daily/monthly spending (UTC), timestamps and hourly rate.

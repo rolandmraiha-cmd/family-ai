@@ -18,6 +18,11 @@ A private AI assistant for the family that speaks Swedish, Finnish and English. 
 
 URL: `https://37-60-226-214.sslip.io` (sign-up off; new users are "pending" until the admin approves them).
 
+Alternative address on the same VPS: `https://37-60-226-214.nip.io/preview/`.
+Use it if the original hostname fails to resolve on your network. It uses the
+same accounts and saved data; signing in again on the alternative address may
+be necessary.
+
 The integrated UI is in review at [`/preview/`](https://37-60-226-214.sslip.io/preview/).
 It uses existing Open WebUI accounts, saved conversations and server-side tools.
 The router, job/budget ledger and guarded manual speech API are installed on the
