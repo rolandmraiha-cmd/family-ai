@@ -19,7 +19,7 @@ Since 2026-11-03 the chat app runs on the owner's Contabo VPS instead of a RunPo
 | Container | What it does |
 |---|---|
 | `openwebui` | Open WebUI v0.12.4, a fresh install with no old chats. Only reachable from the server itself (127.0.0.1:3000). Data in `/opt/family-ai/data/openwebui`. |
-| `caddy` | HTTPS with an automatic Let's Encrypt certificate, HTTP/3. Forwards everything to Open WebUI, except `/preview/`, which serves the new UI prototype from `web/build`. |
+| `caddy` | HTTPS with an automatic Let's Encrypt certificate, HTTP/3. Forwards everything to Open WebUI, except `/preview/`, which serves the integrated review UI from `web/build`. |
 | `gateway` | Off (Compose profile `gateway`). Its job/budget role moves into the `family_backend` plugins from branch `codex/shared-model-modules`. |
 
 ## Connections in Open WebUI (entered by the owner; keys only in Open WebUI)
@@ -56,11 +56,17 @@ The server folder is its own git repo (local commits only). When you change `vps
 2. Hardening: firewall, fail2ban, swap, `deploy` user, then key-only SSH (tested by the owner).
 3. Fresh Open WebUI + Caddy on the VPS; the admin account was created over an SSH tunnel before the site went public.
 4. The owner connected the three chat models and voice. First test: `family-gemma` answered in good Finnish after about 1.5 min of cold start.
+5. Installed the reviewed router, media tool, lifecycle API and manual voice Action;
+   created private `family-auto`. Connected `/preview/` to native authentication,
+   saved chats and tools, with ledger-controlled speech. No provider request or
+   default/configuration change was made. See [acceptance status](contabo-integration.md).
 
 ## Next
 
-- Install the `family_backend` plugins (router, family_media, budgets) from `codex/shared-model-modules` with `scripts/build_openwebui_bundle.py`.
-- Connect the new UI (`/preview/`) to Open WebUI's real API, then move it to `/`.
-- Test family-brain, family-fast and voice.
+- Live API testing used an estimated $5.36 of the owner's $7 allowance. Saved
+  media, cancellation and fi/sv/en speech loopbacks passed; mixed-language Fast
+  answers, Gemma weight loading and actual video duration remain acceptance
+  blockers. See [full results](contabo-integration.md). Device checks are separate.
+- Keep `/` and the public default until those checks pass; PR #2 remains draft.
 - Backups of `/opt/family-ai/data` (nightly, off the server).
 - The owner: the Oct 10 Contabo snapshot expires 2026-11-09; back up the PC's SSH key.

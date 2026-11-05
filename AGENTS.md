@@ -7,14 +7,17 @@ Read `README.md` first, then `docs/history.md`.
 - The assistant must speak Swedish, Finnish and English. Finnish quality is the hardest part, so test Finnish after any model change.
 
 ## Hard rules
-- **Never write passwords, API keys or tokens** into files, commits, chats or forms. The owner enters them in RunPod or Open WebUI. If a login screen appears, stop and ask.
-- **State the price before creating anything that costs money**, and wait for an OK.
+- **Never write passwords, API keys or tokens** into files, commits, chats or forms. The owner enters new credentials in RunPod or Open WebUI when needed. Reuse existing authorized access securely in server memory.
+- Owner-performed login is not an acceptance prerequisite when the tests can be completed through existing authorized access. Run those tests and report what was actually tested and what remains unverified. Keep application authentication enabled; do not claim browser/device testing from server-side checks.
+- Necessary project work and testing on the existing approved resources is pre-authorized up to **USD 7 total for the authorized work/test run**, including estimated GPU idle costs. No separate cost approval is needed within that cumulative limit. Track and report estimated/known costs; ask before exceeding USD 7. Do not split work into multiple runs to evade the limit.
+- The allowance does not authorize resources outside the README list or new recurring commitments. Obtain approval for those and for spending above USD 7.
 - Change only the resources listed in `README.md`. Reuse the existing IDs instead of creating duplicates.
 - Don't permanently delete data; ask the owner to do it.
 
 ## Gotchas learned the hard way
 - RunPod `update-endpoint` with `env` **replaces the whole env**. `MAX_NUM_BATCHED_TOKENS` is shown as `[redacted]` but its value is `8192`: always send it.
 - An env change cuts a new release, but old workers keep serving or failing jobs. Set max workers to 0 and then back to 1 to roll them.
+- `MODEL_NAME` does not update RunPod's separate `modelReferences` cache attachment, which REST v2 omits. Verify the pinned attachment before testing another model; restore it as well as the env on rollback. See `docs/startup-llamacpp-20261105.md`.
 - "Initializing" workers are pre-staged and not billed; only "Running" workers cost money.
 - Qwen3.8 emits XML tool calls: `TOOL_CALL_PARSER=qwen3_coder`. `hermes` silently drops them, which gives empty answers.
 - Gemma 4 31B on an A40 runs out of memory at 16k context, so keep `MAX_MODEL_LEN=8192`. Open WebUI `WEB_FETCH_MAX_CONTENT_LENGTH=4000` keeps fetched web pages from overflowing it.

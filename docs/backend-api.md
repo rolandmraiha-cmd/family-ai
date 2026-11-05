@@ -1,0 +1,216 @@
+# Backend integration contract — v1, prepared for Open WebUI v0.12.4
+
+**Installed for review on Contabo, 2026-11-04.** The `/preview/` UI uses these
+controls and native saved chats. Authentication rejection and startup are checked;
+signed-in chat/audio acceptance remains pending. See [live status](contabo-integration.md).
+The existing native `/` interface is retained. A future cloud-computer adapter can join the approved capability
+catalog later; no such capability exists or is enabled now.
+
+## Authentication and transport
+
+Use HTTPS and the existing Open WebUI account/session. Added control routes use
+`get_verified_user`, not an independent shared browser secret. Verified `user`
+and `admin` roles are allowed; pending accounts are not. Backend RunPod keys stay
+in existing Open WebUI tool valves or approved provider connections. Never ship them in frontend bundles,
+query strings, localStorage or example payloads.
+
+Same-origin browser requests use existing session authentication. Control writes
+require a matching `Origin` and `Host` when cookie authenticated; cross-origin
+writes are rejected, including requests carrying Bearer credentials. Server
+clients can use an owner-provisioned Open WebUI Bearer API key with no Origin if
+API keys are enabled and this prefix is allowed by the app's restrictions. No
+new key or CORS allowlist was created. A separate-origin custom UI should use a
+same-origin authenticated backend proxy; design its login/deployment separately.
+
+Control JSON bodies are objects, maximum64KiB. Errors have
+`{"error":{"code":"budget_exceeded","message":"..."}}`; owned resources hide
+other users' job existence. Control API403 = role/origin denial,404 = missing
+owned resource,400 = invalid input/state. Native auth supplies401/403; disabled
+runtime returns503. Do not log auth headers, prompts or signed media URLs.
+
+## Existing chat, persistence and speech APIs
+
+These are native version-specific APIs, inspected in Open WebUI v0.12.4 source;
+they are not reimplemented by `family_backend`.
+
+| Method / native route | Purpose |
+| --- | --- |
+| `POST /api/v1/chats/new` | Create an owned saved conversation using `{"chat":{...}}`; retain returned `id` |
+| `GET /api/v1/chats/{chat_id}` | Reopen authoritative conversation, files and active response state |
+| `POST /api/chat/completions` | Full selected-model pipeline; choose workspace `family-auto`, native tools and streaming |
+| `POST /api/tasks/chat/{chat_id}/stop` | Stop native conversation processing for the authorized participant; also request Family job cancellation |
+| `POST /api/v1/chats/{chat_id}` | Native chat update; carefully preserve full existing history when needed; avoid overwriting another client’s changes |
+| `POST /api/v1/audio/transcriptions` | Native multipart speech input (`file`, optional `language=fi/sv/en`), when explicitly activated |
+| `POST /api/v1/audio/speech` | Native speech output (`input`, configured model/voice); only with user playback enabled |
+| `GET /api/v1/files/{file_id}/content` | Authenticated saved image/video/file content; use returned file URL rather than constructing paths |
+
+Minimal native saved-chat creation example:
+
+```json
+{"chat":{"title":"Family AI test","models":["family-auto"],"history":{"messages":{},"currentId":null},"messages":[],"files":[]}}
+```
+
+After receiving the actual chat ID, a chat request can carry this shape (IDs below
+are examples, not real data). `user_message` supplies the new turn, and `messages`
+contains the appropriate retained context. Use new UUIDs for genuinely new turns;
+retain IDs for reconciliation after a lost reply; do not automatically submit
+again. The preview uses background processing and polls authoritative saved chat
+state. Native source was checked in the installed v0.12.4 container; public
+OpenAPI is disabled there.
+
+```json
+{
+  "model":"family-auto",
+  "chat_id":"saved-chat-id-from-server",
+  "id":"assistant-message-uuid",
+  "user_message":{"id":"user-message-uuid","parentId":null,"role":"user","content":"Selitä RAM-muisti lyhyesti.","timestamp":1793707200},
+  "messages":[{"role":"user","content":"Selitä RAM-muisti lyhyesti."}],
+  "stream":true,
+  "session_id":"browser-delivery-session-uuid",
+  "tool_ids":["family_media"],
+  "params":{"function_calling":"native"}
+}
+```
+
+The native handler injects authenticated `__user__`, `chat_id` and stable assistant
+`message_id` into adapters/tools. The router fails closed without a stable turn;
+client-supplied user IDs are not authorization. A disposable unsaved call is not
+a substitute for a saved conversation. Native `session_id` changes delivery to
+background tasks / Socket.IO; without it the completion uses the HTTP stream.
+Integrate one delivery mode deliberately, then verify final native chat contents.
+The added Family API does not claim that raw OpenAI SSE alone persists a chat.
+
+Chat chunks preserve OpenAI `choices[].delta.content`, native tool calls and
+finish reasons. Open WebUI executes the registered tools; frontend code must not
+execute returned tools again. Native status events carry description/done, and
+chat transport status can include `job_id`, capability, active model, GPU phase
+and estimated reservation. File events use `chat:message:files`. Inline video
+HTML is generated by the trusted adapter; never execute arbitrary tool-output
+HTML in a future frontend. Render owned file IDs in your own media elements.
+
+For advanced model selection expose existing `family_router.fast`, `.pro`,
+`.language` aliases only with their existing permissions/tools; Auto is
+`family_router.auto` / private workspace `family-auto`. A forced Fast image
+context is rejected before GPU submission. Preserve the current public default.
+
+## Added control routes: `/api/v1/family`
+
+| Method / suffix | Implemented behavior |
+| --- | --- |
+| `GET /capabilities` | Contract version, capability names and native chat path; manual voice flag |
+| `GET /models/state` | Read-only health for four approved endpoints, cached5s; does not request speech inference |
+| `GET /usage` | Household governed estimates/reservations, per-capability counts, budget warnings; provider snapshots admin-only |
+| `GET, POST /policy` | Admin inspect/update validated policy; omitted fields/counts preserve current values atomically |
+| `POST /quote` | Estimate a single operation before dispatch; no submission/reservation |
+| `GET /jobs` | Most recent50 jobs owned by caller; correlate `conversation`/`turn` |
+| `GET /jobs/{id}` | Owned state, endpoint, provider ID, reservation/estimated charge, persisted output |
+| `GET /jobs/{id}/events` | Owned resumable SSE; `Last-Event-ID` or `?after=` numeric cursor |
+| `POST /jobs/{id}/cancel` | Record cancel request; best-effort known provider cancellation, confirmed state only when acknowledged |
+| `POST /jobs/{id}/refresh` | Recover known provider job result into ledger; never a replacement paid POST |
+| `POST /jobs/{id}/retry` | Return whether explicit retry is allowed; **never submits** |
+| `GET /reconciliation` | Admin metadata-only list of uncertain jobs across family accounts; no prompts, owners, chats or outputs |
+| `POST /jobs/{id}/resolve` | Admin reconcile an `unknown` job after provider review; requires reason, optional estimated charge |
+| `GET, DELETE /voice/session` | Manual voice intent/readiness state with5min expiry; DELETE clears intent, does not terminate active speech or a GPU |
+| `POST /voice/session?chat_id=...&turn=...` | Activate manual intent for an owned saved chat; no provider request or reservation |
+| `POST /voice/transcriptions?chat_id=...&turn=...&language=fi` | Guarded Whisper; raw complete PCM16 WAV, at most30s,6MiB,8–48kHz; `fi/sv/en` |
+| `POST /voice/speech?chat_id=...&turn=...&language=fi` | Guarded Piper; JSON `input`1–2000characters; owned saved WAV result, same-turn replay |
+| `POST /billing` | Admin import RunPod billing snapshot; labeled admin-imported, not independently fetched/verified or a cap |
+
+The preview uses the guarded speech routes above. The separate native Start voice
+Action is retained; native `/api/v1/audio/*` still bypasses the Family governor.
+See [voice limitations](voice.md). No automatic retry endpoint reconstructs
+private prompts or replays tools behind the user's back.
+
+Example estimate:
+
+```json
+{"endpoint":"wan-2-2-i2v-720","duration_seconds":5,"timeout_seconds":840}
+```
+
+Returns `capability`, `estimated_usd`, `currency`, `cost_kind`,
+`allowed_at_quote_time`, `reservation_required` and idle-reserve flag. A video
+quote is $0.30; an automatically created starting image adds estimated$0.003 in
+the tool's workflow preflight. Quotes are advisory; atomic submission rechecks
+budgets, counts and concurrency. They do not lock price/capacity or show a new
+frontend confirmation dialog. The tool emits a cost status before submission.
+
+## Jobs and events
+
+States: `reserved → submitting → queued → running → completed`; failures can
+end `failed`, `cancelled`, `rejected`, `unknown`, or admin `resolved`.
+`cancel_requested` is a separate durable flag until provider acknowledgement.
+Unknown submissions retain their reservation and concurrency slot: a lost POST
+response can mean the provider accepted a billed task. Never clear unknown jobs
+just because a client disconnected. Admin reconciliation includes an audit reason.
+
+SSE events contain their durable sequence, type, created timestamp and payload:
+
+```text
+id: 42
+event: job.progress
+data: {"id":42,"type":"job.progress","created":1793707200,"data":{"status":"IN_PROGRESS","elapsed_seconds":12,"active_model":"family-brain","gpu_state":"running"}}
+```
+
+Implemented event types are `job.created`, `job.state`, `job.progress`,
+`model.delta`, `usage.warning`, `job.cancel_requested`, `job.finished`.
+Creation carries job ID, capability and estimated reservation. Chat progress
+carries model/phase; media progress carries specialist/endpoint/elapsed time.
+Delta payloads retain native completion frames. A separate operation/job is
+created for each classifier, specialist, coordinator or media generation step.
+Correlate them by conversation/turn; job IDs are not conversation IDs.
+
+Streams send heartbeats, close after roughly25s, and can reconnect with the last
+sequence. Terminal streams finish after buffered events are drained. No automatic
+paid submission occurs during reconnect. Fetch the job's persisted output and
+reopen the native chat to reconcile rendering. GPU state inferred from queued/
+running jobs or health counts is approximate; `standby`/health is not proof of
+billable GPU activity or that weights are loaded. Capacity pressure is `throttled` and failed workers can be `unhealthy`. Unknown provider health is
+`unavailable`, not “ready.” Model health checks do not wake load-balanced speech.
+
+Generation output and application delivery are separate. A completed media job
+may still have a failed download/attach. Refresh can recover its provider output;
+retry saving that output before generating again. Saved assets use Open WebUI
+file permissions and the persistent data volume. The ledger privately retains
+provider source URLs for generated-image animation; expiring provider links are
+not permanent assets and may need manual restoration/reupload after expiration.
+Guarded preview audio is uploaded into owned native file storage, returned in the
+job result and attached to its saved assistant turn when present. A provider
+success followed by storage failure remains uncertain; no automatic regeneration
+is attempted. Native audio still uses its separate cache.
+
+## Cancellation and recovery
+
+Abort the HTTP chat stream or invoke the native chat-stop route to stop the tool
+loop; request cancellation for its active Family jobs too. Stopping a GPU job
+alone does not stop browser audio. Pause/dispose the playback element separately.
+A timeout requests cancellation once, never falls back to another billed model.
+Provider confirmation determines terminal state. Completion racing with cancel
+preserves the completed result. Native asynchronous tasks may outlive an HTTP
+connection; do not equate socket loss with cancellation.
+
+`refresh` returns raw provider data as untrusted data under
+`recovered_provider_output`, with `automatic_tool_execution=false`. It does not
+reattach files, resume native tools or rewrite conversation history. Explicitly
+reconcile native saved messages before retrying. `retry` tells the caller to
+review the previous attempt, then resubmit the original chat only when terminal
+or admin-reconciled, with a new turn ID. Exact same-turn requests replay a stored
+completion; identical requests with a new assistant ID are deduplicated for120s.
+Intentional repeat within that window reuses the result; change input or wait.
+
+## Source and version limits
+
+The supplemental v1 routes are in `family_backend/api.py` and `speech.py`; deployment bundles
+inline it into the native lifecycle Event. Native APIs come from inspected
+[main.py](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/main.py),
+[chats.py](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/routers/chats.py),
+and [audio router](https://github.com/open-webui/open-webui/blob/v0.12.4/backend/open_webui/routers/audio/__init__.py).
+This is not proof of live authentication, native storage or future-version
+compatibility. The current app is pinned to v0.12.4. Complete signed-in acceptance
+before promoting the preview or merging this PR.
+
+The current Wan profile accepts five-second clips. Setting the duration cap below
+five seconds disables this profile; unsupported shorter durations are rejected
+before generating a starting image or submitting paid work.
+
+Identical active/uncertain jobs remain protected against changed-message-ID
+resubmission beyond the120s completed-result replay window, until reconciled.
